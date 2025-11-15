@@ -1,4 +1,4 @@
-package com.example.b07demosummer2024;
+package com.example.b07demosummer2024.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -6,6 +6,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.b07demosummer2024.Item;
+import com.example.b07demosummer2024.R;
+
 import java.util.List;
 
 public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder> {
