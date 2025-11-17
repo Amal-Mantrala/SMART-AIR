@@ -22,13 +22,13 @@
             android:name=".Item2"
             android:exported="false" />
         <activity
-            android:name=".SpinnerFragment"
+            android:name=".fragments.SpinnerFragment"
             android:exported="false" />
         <activity
-            android:name=".RecyclerViewFragment"
+            android:name=".fragments.RecyclerViewFragment"
             android:exported="false" />
         <activity
-            android:name=".HomeFragment"
+            android:name=".fragments.HomeFragment"
             android:exported="false" />
         <activity
             android:name=".Activity2"

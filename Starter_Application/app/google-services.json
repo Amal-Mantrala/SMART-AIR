@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "103450168850",
-    "project_id": "b07-demo-summer-2024",
-    "storage_bucket": "b07-demo-summer-2024.appspot.com"
+    "project_number": "590753517334",
+    "project_id": "smart-air-86ad0",
+    "storage_bucket": "smart-air-86ad0.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:103450168850:android:18be49669e0000df0552cb",
+        "mobilesdk_app_id": "1:590753517334:android:814e3157b6225eb7480a37",
         "android_client_info": {
           "package_name": "com.example.b07demosummer2024"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCNPIMxlsDkuYk5s1-Uycc9s8Hqz2YKIDs"
+          "current_key": "AIzaSyBvDpQzmV5DSThwpm6kqjsAvgdkj9vrrmY"
         }
       ],
       "services": {

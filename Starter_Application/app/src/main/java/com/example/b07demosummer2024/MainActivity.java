@@ -2,20 +2,14 @@ package com.example.b07demosummer2024;
 
 import android.os.Bundle;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
-import android.widget.Button;
-import android.view.View;
-import android.content.Intent;
-
+import com.example.b07demosummer2024.fragments.HomeFragment;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.example.b07demosummer2024.fragments.LoginFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,7 +27,9 @@ public class MainActivity extends AppCompatActivity {
         myRef.child("movies").setValue("B07 Demo!");
 
         if (savedInstanceState == null) {
-            loadFragment(new HomeFragment());
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new LoginFragment())
+                    .commit();
         }
     }
 
