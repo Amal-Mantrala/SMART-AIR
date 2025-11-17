@@ -11,22 +11,26 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import android.widget.TextView;
 
 import com.example.b07demosummer2024.R;
 import com.example.b07demosummer2024.auth.AuthService;
+import com.example.b07demosummer2024.auth.LoginContract;
+import com.example.b07demosummer2024.auth.LoginPresenter;
 import com.example.b07demosummer2024.auth.AuthValidator;
 
-public class LoginFragment extends Fragment {
+public class LoginFragment extends Fragment implements LoginContract.View {
 
     private EditText emailInput;
     private EditText passwordInput;
 
-    public LoginFragment() {
-    }
+    private LoginContract.Presenter presenter;
 
+    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_login, container, false);
     }
 
@@ -37,30 +41,51 @@ public class LoginFragment extends Fragment {
         emailInput = view.findViewById(R.id.editTextEmail);
         passwordInput = view.findViewById(R.id.editTextPassword);
         Button loginButton = view.findViewById(R.id.buttonSignIn);
+        TextView forgotPassword = view.findViewById(R.id.textForgotPassword);
 
-        AuthService authService = new AuthService();
+        presenter = new LoginPresenter(this, new AuthService());
+
+        forgotPassword.setOnClickListener(v -> {
+            String email = emailInput.getText().toString().trim();
+            presenter.onForgotPasswordClicked(email);
+        });
 
         loginButton.setOnClickListener(v -> {
             String email = emailInput.getText().toString().trim();
             String password = passwordInput.getText().toString().trim();
-
-            if (!AuthValidator.isEmailValidFormat(email)) {
-                emailInput.setError("Invalid email");
-                return;
-            }
-            if (!AuthValidator.isPasswordStrongEnough(password)) {
-                passwordInput.setError("Password too short");
-                return;
-            }
-
-            authService.signIn(email, password, (success, message) -> requireActivity().runOnUiThread(() -> {
-                if (success) {
-                    Toast.makeText(getContext(), "Login successful!", Toast.LENGTH_SHORT).show();
-                    // code for navigating to HomeFragment later (for person implementing going to homepage)
-                } else {
-                    Toast.makeText(getContext(), "Login failed: " + message, Toast.LENGTH_LONG).show();
-                }
-            }));
+            presenter.onLoginClicked(email, password);
         });
+    }
+
+
+    @Override
+    public void showEmailError(String message) {
+        emailInput.setError(message);
+    }
+
+    @Override
+    public void showPasswordError(String message) {
+        passwordInput.setError(message);
+    }
+
+    @Override
+    public void showLoginError(String message) {
+        Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void navigateToHome() {
+        requireActivity().runOnUiThread(() -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new HomeFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        presenter.onDestroy();
     }
 }

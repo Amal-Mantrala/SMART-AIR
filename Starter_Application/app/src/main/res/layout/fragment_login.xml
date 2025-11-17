@@ -29,4 +29,13 @@
         android:text="@string/sign_in_text"
         android:layout_marginTop="16dp" />
 
+    <TextView
+        android:id="@+id/textForgotPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/forgot_password"
+        android:textStyle="bold"
+        android:paddingTop="12dp"
+        android:layout_gravity="center_horizontal"/>
+
 </LinearLayout>

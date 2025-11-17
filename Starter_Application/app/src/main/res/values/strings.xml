@@ -12,6 +12,7 @@
     <string name="email_hint">Email</string>
     <string name="password_hint">Password</string>
     <string name="sign_in_text">Sign in</string>
+    <string name="forgot_password">Forgot password?</string>
 
     <string-array name="categories_array">
         <item>Books</item>

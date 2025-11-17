@@ -2,7 +2,7 @@ package com.example.b07demosummer2024.auth;
 
 import com.google.firebase.auth.FirebaseAuth;
 
-public class AuthService {
+public class AuthService implements IAuthService{
     private final FirebaseAuth auth;
 
     public AuthService() {
@@ -35,7 +35,7 @@ public class AuthService {
                     } else {
                         String msg = task.getException() != null ?
                                 task.getException().getMessage() :
-                                "Unknown error";
+                                "Error sending email";
                         callback.onResult(false, msg);
                     }
                 });
