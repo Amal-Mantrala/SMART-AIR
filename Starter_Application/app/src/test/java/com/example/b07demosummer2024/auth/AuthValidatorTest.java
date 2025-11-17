@@ -1,9 +1,8 @@
-package com.example.b07demosummer2024;
+package com.example.b07demosummer2024.auth;
 
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import com.example.b07demosummer2024.auth.AuthValidator;
 
 
 public class AuthValidatorTest {
