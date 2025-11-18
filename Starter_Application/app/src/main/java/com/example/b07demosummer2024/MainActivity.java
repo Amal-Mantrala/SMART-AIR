@@ -4,7 +4,6 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 
 import com.example.b07demosummer2024.auth.AuthService;
 import com.example.b07demosummer2024.fragments.HomeFragment;
@@ -23,8 +22,6 @@ public class MainActivity extends AppCompatActivity {
 
         db = FirebaseDatabase.getInstance("https://b07-demo-summer-2024-default-rtdb.firebaseio.com/");
         DatabaseReference myRef = db.getReference("testDemo");
-
-//        myRef.setValue("B07 Demo!");
         myRef.child("movies").setValue("B07 Demo!");
 
         if (savedInstanceState == null) {
@@ -35,12 +32,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Check if current fragment is protected and user is signed out
         Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
         if (currentFragment != null && !(currentFragment instanceof LoginFragment)) {
             AuthService authService = new AuthService();
             if (!authService.isSignedIn()) {
-                // User signed out, redirect to login
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, new LoginFragment())
                         .commit();
@@ -48,10 +43,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Checks authentication status and loads appropriate fragment.
-     * If signed in, loads HomeFragment; otherwise loads LoginFragment.
-     */
     private void checkAuthAndLoadFragment() {
         AuthService authService = new AuthService();
         Fragment fragment;
