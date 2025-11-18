@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.b07demosummer2024.R;
 
-public class ScrollerFragment extends Fragment {
+public class ScrollerFragment extends ProtectedFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {

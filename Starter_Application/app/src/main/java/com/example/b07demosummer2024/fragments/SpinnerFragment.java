@@ -12,7 +12,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.b07demosummer2024.R;
 
-public class SpinnerFragment extends Fragment {
+public class SpinnerFragment extends ProtectedFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {

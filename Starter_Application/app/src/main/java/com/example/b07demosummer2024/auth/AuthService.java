@@ -44,4 +44,9 @@ public class AuthService implements IAuthService{
     public void signOut() {
         auth.signOut();
     }
+
+    @Override
+    public boolean isSignedIn() {
+        return auth.getCurrentUser() != null;
+    }
 }

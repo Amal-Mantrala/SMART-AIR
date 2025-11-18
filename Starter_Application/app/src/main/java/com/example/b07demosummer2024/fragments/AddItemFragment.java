@@ -18,7 +18,7 @@ import com.example.b07demosummer2024.R;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-public class AddItemFragment extends Fragment {
+public class AddItemFragment extends ProtectedFragment {
     private EditText editTextTitle, editTextAuthor, editTextGenre, editTextDescription;
     private Spinner spinnerCategory;
     private Button buttonAdd;
