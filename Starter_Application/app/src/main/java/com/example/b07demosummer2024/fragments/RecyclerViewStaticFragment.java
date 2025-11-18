@@ -17,7 +17,7 @@ import com.example.b07demosummer2024.R;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RecyclerViewStaticFragment extends Fragment {
+public class RecyclerViewStaticFragment extends ProtectedFragment {
     private RecyclerView recyclerView;
     private ItemAdapter itemAdapter;
     private List<Item> itemList;

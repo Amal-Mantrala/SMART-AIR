@@ -12,7 +12,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.example.b07demosummer2024.R;
 
-public class ManageItemsFragment extends Fragment {
+public class ManageItemsFragment extends ProtectedFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {

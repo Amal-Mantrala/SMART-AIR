@@ -21,7 +21,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public class DeleteItemFragment extends Fragment {
+public class DeleteItemFragment extends ProtectedFragment {
     private EditText editTextTitle;
     private Spinner spinnerCategory;
     private Button buttonDelete;

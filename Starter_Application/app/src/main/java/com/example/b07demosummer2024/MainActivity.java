@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.example.b07demosummer2024.auth.AuthService;
 import com.example.b07demosummer2024.fragments.HomeFragment;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -27,17 +28,42 @@ public class MainActivity extends AppCompatActivity {
         myRef.child("movies").setValue("B07 Demo!");
 
         if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new LoginFragment())
-                    .commit();
+            checkAuthAndLoadFragment();
         }
     }
 
-    private void loadFragment(Fragment fragment) {
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.fragment_container, fragment);
-        transaction.addToBackStack(null);
-        transaction.commit();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Check if current fragment is protected and user is signed out
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (currentFragment != null && !(currentFragment instanceof LoginFragment)) {
+            AuthService authService = new AuthService();
+            if (!authService.isSignedIn()) {
+                // User signed out, redirect to login
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new LoginFragment())
+                        .commit();
+            }
+        }
+    }
+
+    /**
+     * Checks authentication status and loads appropriate fragment.
+     * If signed in, loads HomeFragment; otherwise loads LoginFragment.
+     */
+    private void checkAuthAndLoadFragment() {
+        AuthService authService = new AuthService();
+        Fragment fragment;
+        if (authService.isSignedIn()) {
+            fragment = new HomeFragment();
+        } else {
+            fragment = new LoginFragment();
+        }
+        
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 
     @Override
