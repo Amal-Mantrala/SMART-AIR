@@ -13,6 +13,12 @@
     <string name="password_hint">Password</string>
     <string name="sign_in_text">Sign in</string>
     <string name="forgot_password">Forgot password?</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="create_account">Create Account</string>
+    <string name="already_have_an_account_log_in">Already have an account? Log in</string>
+    <string name="don_t_have_an_account_sign_up">Don\'t have an account? Sign up</string>
 
     <string-array name="categories_array">
         <item>Books</item>

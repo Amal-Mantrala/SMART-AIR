@@ -42,6 +42,7 @@ public class LoginFragment extends Fragment implements LoginContract.View {
         passwordInput = view.findViewById(R.id.editTextPassword);
         Button loginButton = view.findViewById(R.id.buttonSignIn);
         TextView forgotPassword = view.findViewById(R.id.textForgotPassword);
+        TextView goToSignup = view.findViewById(R.id.textGoToSignup);
 
         presenter = new LoginPresenter(this, new AuthService());
 
@@ -54,6 +55,13 @@ public class LoginFragment extends Fragment implements LoginContract.View {
             String email = emailInput.getText().toString().trim();
             String password = passwordInput.getText().toString().trim();
             presenter.onLoginClicked(email, password);
+        });
+
+        goToSignup.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new SignupFragment())
+                    .addToBackStack(null)
+                    .commit();
         });
     }
 

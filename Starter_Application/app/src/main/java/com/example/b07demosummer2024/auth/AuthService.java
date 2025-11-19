@@ -49,4 +49,20 @@ public class AuthService implements IAuthService{
     public boolean isSignedIn() {
         return auth.getCurrentUser() != null;
     }
+
+    @Override
+    public void createUser(String email, String password, AuthCallback callback) {
+        auth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        callback.onResult(true, "Account created successfully");
+                    } else {
+                        String msg = task.getException() != null
+                                ? task.getException().getMessage()
+                                : "Unknown error";
+
+                        callback.onResult(false, msg);
+                    }
+                });
+    }
 }
