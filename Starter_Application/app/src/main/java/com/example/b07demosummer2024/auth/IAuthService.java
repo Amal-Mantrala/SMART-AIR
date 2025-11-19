@@ -5,4 +5,5 @@ public interface IAuthService {
         void resetPassword(String email, AuthService.AuthCallback callback);
         void signOut();
         boolean isSignedIn();
+        void createUser(String email, String password, AuthService.AuthCallback callback);
 }
