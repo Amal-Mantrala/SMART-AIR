@@ -9,10 +9,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.fragment.app.FragmentManager;
 
 import com.example.b07demosummer2024.R;
-import com.example.b07demosummer2024.auth.AuthService;
 
 public class HomeFragment extends ProtectedFragment {
     @Nullable
@@ -24,7 +22,6 @@ public class HomeFragment extends ProtectedFragment {
         Button buttonScroller = view.findViewById(R.id.buttonScroller);
         Button buttonSpinner = view.findViewById(R.id.buttonSpinner);
         Button buttonManageItems = view.findViewById(R.id.buttonManageItems);
-        Button buttonSignOut = view.findViewById(R.id.buttonSignOut);
 
         buttonRecyclerView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -50,19 +47,6 @@ public class HomeFragment extends ProtectedFragment {
         buttonManageItems.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) { loadFragment(new ManageItemsFragment());}
-        });
-
-        buttonSignOut.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AuthService authService = new AuthService();
-                authService.signOut();
-                FragmentManager fm = getParentFragmentManager();
-                fm.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-                fm.beginTransaction()
-                        .replace(R.id.fragment_container, new LoginFragment())
-                        .commit();
-            }
         });
 
         return view;
