@@ -31,7 +31,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/spinner"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/buttonManageItems"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -43,6 +43,16 @@
         android:layout_height="wrap_content"
         android:text="@string/manage_items"
         app:layout_constraintTop_toBottomOf="@+id/buttonSpinner"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/buttonSignOut"/>
+
+    <Button
+        android:id="@+id/buttonSignOut"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/sign_out"
+        app:layout_constraintTop_toBottomOf="@+id/buttonManageItems"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>
