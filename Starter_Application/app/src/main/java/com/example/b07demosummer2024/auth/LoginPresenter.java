@@ -13,20 +13,6 @@ public class LoginPresenter implements LoginContract.Presenter {
 
     @Override
     public void onLoginClicked(String email, String password) {
-        // Clear previous errors
-        view.showEmailError(null);
-        view.showPasswordError(null);
-        
-        if (email.isEmpty()) {
-            view.showEmailError("Email is required");
-            return;
-        }
-        
-        if (password.isEmpty()) {
-            view.showPasswordError("Password is required");
-            return;
-        }
-        
         if (!AuthValidator.isEmailValidFormat(email)) {
             view.showEmailError("Please enter a valid email");
             return;
@@ -37,14 +23,11 @@ public class LoginPresenter implements LoginContract.Presenter {
             return;
         }
 
-        // Show loading feedback
-        view.showLoginError("Signing in...");
-
         authService.signIn(email, password, (success, message) -> {
             if (success) {
                 view.navigateToHome();
             } else {
-                view.showLoginError("Login failed: " + message);
+                view.showLoginError(message);
             }
         });
     }

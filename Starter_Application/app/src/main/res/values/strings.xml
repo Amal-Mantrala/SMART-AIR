@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SMART-AIR</string>
+    <string name="app_name">B07 Demo Summer 2024</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="delete_item">Delete Item</string>
@@ -9,7 +9,6 @@
     <string name="scroller">Scroller</string>
     <string name="spinner">Spinner</string>
     <string name="manage_items">Manage Items</string>
-    <string name="sign_out">Sign out</string>
     <string name="email_hint">Email</string>
     <string name="password_hint">Password</string>
     <string name="sign_in_text">Sign in</string>
@@ -20,30 +19,6 @@
     <string name="create_account">Create Account</string>
     <string name="already_have_an_account_log_in">Already have an account? Log in</string>
     <string name="don_t_have_an_account_sign_up">Don\'t have an account? Sign up</string>
-    <string name="choose_role">Choose your role</string>
-    <string name="role_child">Child</string>
-    <string name="role_parent">Parent</string>
-    <string name="role_provider">Provider</string>
-    <string name="child_homepage">Child Homepage</string>
-    <string name="parent_homepage">Parent Homepage</string>
-    <string name="provider_homepage">Provider Homepage</string>
-    <string name="details">Details</string>
-    <string name="user_details">User Details</string>
-    <string name="email_label">Email:</string>
-    <string name="name_label">Name:</string>
-    <string name="name_hint">Enter your name</string>
-    <string name="save">Save</string>
-    <string name="cancel">Cancel</string>
-    <string name="name_saved">Name saved successfully!</string>
-    <string name="tutorial_title">Tutorial</string>
-    <string name="tutorial_placeholder">This is a placeholder tutorial for %1$s. Content coming soon.</string>
-    <string name="tutorial_got_it">Got it</string>
-
-    <string-array name="placeholder_menu">
-        <item>Placeholder 1</item>
-        <item>Placeholder 2</item>
-        <item>Placeholder 3</item>
-    </string-array>
 
     <string-array name="categories_array">
         <item>Books</item>
