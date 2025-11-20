@@ -75,8 +75,10 @@ public class SignupFragment extends Fragment {
         authService.createUser(email, password, (success, message) -> {
             requireActivity().runOnUiThread(() -> {
                 if (success) {
-                    Toast.makeText(getContext(), "Account created. Please log in.", Toast.LENGTH_SHORT).show();
-                    navigateToLogin();
+                    Toast.makeText(getContext(), "Account created!", Toast.LENGTH_SHORT).show();
+                    // Show role selection dialog and navigate accordingly
+                    RoleSelectionFragment dialog = new RoleSelectionFragment();
+                    dialog.show(getParentFragmentManager(), "roleSelection");
                 } else {
                     Toast.makeText(getContext(), "Signup failed: " + message, Toast.LENGTH_LONG).show();
                 }
