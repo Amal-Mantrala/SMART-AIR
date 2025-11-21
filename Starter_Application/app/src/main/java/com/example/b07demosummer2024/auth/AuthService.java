@@ -16,14 +16,20 @@ public class AuthService implements IAuthService{
     public void signIn(String email, String password, AuthCallback callback) {
         auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        callback.onResult(true, "Login successful!");
-                    } else {
-                        String msg = task.getException() != null ?
-                                task.getException().getMessage() :
-                                "Unknown error";
-                        callback.onResult(false, msg);
-                    }
+                    // Ensure callback runs on main thread
+                    android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+                    mainHandler.post(() -> {
+                        if (task.isSuccessful()) {
+                            android.util.Log.d("AuthService", "SignIn successful, calling callback");
+                            callback.onResult(true, "Login successful!");
+                        } else {
+                            String msg = task.getException() != null ?
+                                    task.getException().getMessage() :
+                                    "Unknown error";
+                            android.util.Log.d("AuthService", "SignIn failed: " + msg);
+                            callback.onResult(false, msg);
+                        }
+                    });
                 });
     }
 

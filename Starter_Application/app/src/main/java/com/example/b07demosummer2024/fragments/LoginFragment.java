@@ -55,9 +55,6 @@ public class LoginFragment extends Fragment implements LoginContract.View {
             String email = emailInput.getText().toString().trim();
             String password = passwordInput.getText().toString().trim();
             
-            // Add debug toast to confirm button click is working
-            Toast.makeText(getContext(), "Login button clicked", Toast.LENGTH_SHORT).show();
-            
             presenter.onLoginClicked(email, password);
         });
 
@@ -93,49 +90,47 @@ public class LoginFragment extends Fragment implements LoginContract.View {
 
     @Override
     public void navigateToHome() {
-        // After successful login, fetch user's role and navigate accordingly
+        // After successful login, fetch user's role and name from Firebase
         requireActivity().runOnUiThread(() -> {
             com.google.firebase.auth.FirebaseAuth auth = com.google.firebase.auth.FirebaseAuth.getInstance();
             if (auth.getCurrentUser() == null) {
-                // Fallback
-                getParentFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, new HomeFragment())
-                        .commit();
+                // Authentication failed - return to login
+                Toast.makeText(getContext(), "Authentication failed", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             String uid = auth.getCurrentUser().getUid();
             
-            // Try cached role first for immediate navigation
-            android.content.SharedPreferences prefs = requireContext().getSharedPreferences("user_prefs", android.content.Context.MODE_PRIVATE);
-            String cachedRole = prefs.getString("user_role_" + uid, null);
+            // Always fetch user data from Firestore (no local storage check)
+            com.google.firebase.firestore.FirebaseFirestore db = com.google.firebase.firestore.FirebaseFirestore.getInstance();
             
-            if (cachedRole != null) {
-                navigateToRoleHome(cachedRole);
-                return;
-            }
-            
-            // If no cached role, fetch from Firebase
-            com.google.firebase.database.DatabaseReference ref = com.google.firebase.database.FirebaseDatabase.getInstance("https://b07-demo-summer-2024-default-rtdb.firebaseio.com/")
-                    .getReference("users").child(uid).child("role");
-            ref.get().addOnCompleteListener(task -> {
-                if (!isAdded()) return;
+            db.collection("users").document(uid).get().addOnCompleteListener(task -> {
+                if (!isAdded()) return; // Fragment no longer attached
+                
                 String role = null;
-                if (task.isSuccessful() && task.getResult() != null && task.getResult().getValue() != null) {
-                    role = String.valueOf(task.getResult().getValue());
-                    // Cache the role for next time
-                    prefs.edit().putString("user_role_" + uid, role).apply();
+                String name = null;
+                
+                if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
+                    com.google.firebase.firestore.DocumentSnapshot document = task.getResult();
+                    
+                    // Fetch role and name
+                    role = document.getString("role");
+                    name = document.getString("name");
                 }
 
                 if (role != null) {
+                    // Navigate to the appropriate role-specific homepage
                     navigateToRoleHome(role);
                 } else {
-                    // No role saved yet — show role selection
-                    getParentFragmentManager().beginTransaction()
-                            .replace(R.id.fragment_container, new HomeFragment())
-                            .commit();
-                    new RoleSelectionFragment().show(getParentFragmentManager(), "roleSelection");
+                    // User doesn't have a role yet - show role selection
+                    RoleSelectionFragment roleDialog = RoleSelectionFragment.newInstance(name != null ? name : "");
+                    roleDialog.show(getParentFragmentManager(), "roleSelection");
                 }
+            }).addOnFailureListener(e -> {
+                if (!isAdded()) return;
+                // Handle Firebase fetch error
+                Toast.makeText(getContext(), "Error loading user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                // Stay on current fragment - user can try again
             });
         });
     }
@@ -153,11 +148,16 @@ public class LoginFragment extends Fragment implements LoginContract.View {
                 target = new ProviderHomeFragment();
                 break;
             default:
-                target = new HomeFragment();
+                // If role is unrecognized, show role selection again
+                RoleSelectionFragment roleDialog = RoleSelectionFragment.newInstance("");
+                roleDialog.show(getParentFragmentManager(), "roleSelection");
+                return;
         }
-        getParentFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, target)
-                .commit();
+        requireActivity().runOnUiThread(() -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, target)
+                    .commitNow(); // Use commitNow for immediate execution
+        });
     }
 
     @Override

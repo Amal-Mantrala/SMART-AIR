@@ -22,6 +22,7 @@ import com.example.b07demosummer2024.auth.AuthService;
 
 public class SignupFragment extends Fragment {
 
+    private EditText nameInput;
     private EditText emailInput;
     private EditText passwordInput;
     private EditText confirmPasswordInput;
@@ -40,6 +41,7 @@ public class SignupFragment extends Fragment {
                               @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        nameInput = view.findViewById(R.id.signupName);
         emailInput = view.findViewById(R.id.signupEmail);
         passwordInput = view.findViewById(R.id.signupPassword);
         confirmPasswordInput = view.findViewById(R.id.signupConfirmPassword);
@@ -53,9 +55,15 @@ public class SignupFragment extends Fragment {
     }
 
     private void handleCreateAccount() {
+        String name = nameInput.getText().toString().trim();
         String email = emailInput.getText().toString().trim();
         String password = passwordInput.getText().toString().trim();
         String confirm = confirmPasswordInput.getText().toString().trim();
+
+        if (name.isEmpty()) {
+            nameInput.setError("Please enter your name");
+            return;
+        }
 
         if (!AuthValidator.isEmailValidFormat(email)) {
             emailInput.setError("Please enter a valid email");
@@ -76,8 +84,29 @@ public class SignupFragment extends Fragment {
             requireActivity().runOnUiThread(() -> {
                 if (success) {
                     Toast.makeText(getContext(), "Account created!", Toast.LENGTH_SHORT).show();
-                    // Show role selection dialog and navigate accordingly
-                    RoleSelectionFragment dialog = new RoleSelectionFragment();
+                    
+                    // Immediately save the user's name to Firestore
+                    com.google.firebase.auth.FirebaseAuth auth = com.google.firebase.auth.FirebaseAuth.getInstance();
+                    if (auth.getCurrentUser() != null) {
+                        String uid = auth.getCurrentUser().getUid();
+                        com.google.firebase.firestore.FirebaseFirestore db = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+                        
+                        // Create user document with name
+                        java.util.Map<String, Object> user = new java.util.HashMap<>();
+                        user.put("name", name);
+                        
+                        db.collection("users").document(uid)
+                            .set(user, com.google.firebase.firestore.SetOptions.merge())
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(getContext(), "Profile created successfully!", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(getContext(), "Error saving profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            });
+                    }
+                    
+                    // Show role selection dialog with the user's name
+                    RoleSelectionFragment dialog = RoleSelectionFragment.newInstance(name);
                     dialog.show(getParentFragmentManager(), "roleSelection");
                 } else {
                     Toast.makeText(getContext(), "Signup failed: " + message, Toast.LENGTH_LONG).show();
