@@ -19,26 +19,39 @@ public class PermissionService {
     }
 
     public void hasAccess(String parentId, String providerId, String childId, PermissionCallback callback) {
-        db.collection("providerAccess")
-                .document(parentId)
-                .collection("providers")
-                .document(providerId)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        DocumentSnapshot doc = task.getResult();
-                        if (doc.exists()) {
-                            Boolean isActive = doc.getBoolean("isActive");
-                            List<String> children = (List<String>) doc.get("children");
-                            boolean hasAccess = Boolean.TRUE.equals(isActive) && children != null && children.contains(childId);
-                            callback.onResult(hasAccess);
+        db.collection("users").document(providerId).get().addOnCompleteListener(roleTask -> {
+            if (roleTask.isSuccessful() && roleTask.getResult() != null && roleTask.getResult().exists()) {
+                String role = roleTask.getResult().getString("role");
+                if (!"provider".equals(role)) {
+                    callback.onResult(false);
+                    return;
+                }
+            } else {
+                callback.onResult(false);
+                return;
+            }
+
+            db.collection("providerAccess")
+                    .document(parentId)
+                    .collection("providers")
+                    .document(providerId)
+                    .get()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful() && task.getResult() != null) {
+                            DocumentSnapshot doc = task.getResult();
+                            if (doc.exists()) {
+                                Boolean isActive = doc.getBoolean("isActive");
+                                List<String> children = (List<String>) doc.get("children");
+                                boolean hasAccess = Boolean.TRUE.equals(isActive) && children != null && children.contains(childId);
+                                callback.onResult(hasAccess);
+                            } else {
+                                callback.onResult(false);
+                            }
                         } else {
                             callback.onResult(false);
                         }
-                    } else {
-                        callback.onResult(false);
-                    }
-                });
+                    });
+        });
     }
 
     public interface ChildrenCallback {
@@ -46,29 +59,42 @@ public class PermissionService {
     }
 
     public void getAccessibleChildren(String parentId, String providerId, ChildrenCallback callback) {
-        db.collection("providerAccess")
-                .document(parentId)
-                .collection("providers")
-                .document(providerId)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        DocumentSnapshot doc = task.getResult();
-                        if (doc.exists()) {
-                            Boolean isActive = doc.getBoolean("isActive");
-                            if (Boolean.TRUE.equals(isActive)) {
-                                List<String> children = (List<String>) doc.get("children");
-                                callback.onResult(children != null ? children : new ArrayList<>());
+        db.collection("users").document(providerId).get().addOnCompleteListener(roleTask -> {
+            if (roleTask.isSuccessful() && roleTask.getResult() != null && roleTask.getResult().exists()) {
+                String role = roleTask.getResult().getString("role");
+                if (!"provider".equals(role)) {
+                    callback.onResult(new ArrayList<>());
+                    return;
+                }
+            } else {
+                callback.onResult(new ArrayList<>());
+                return;
+            }
+
+            db.collection("providerAccess")
+                    .document(parentId)
+                    .collection("providers")
+                    .document(providerId)
+                    .get()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful() && task.getResult() != null) {
+                            DocumentSnapshot doc = task.getResult();
+                            if (doc.exists()) {
+                                Boolean isActive = doc.getBoolean("isActive");
+                                if (Boolean.TRUE.equals(isActive)) {
+                                    List<String> children = (List<String>) doc.get("children");
+                                    callback.onResult(children != null ? children : new ArrayList<>());
+                                } else {
+                                    callback.onResult(new ArrayList<>());
+                                }
                             } else {
                                 callback.onResult(new ArrayList<>());
                             }
                         } else {
                             callback.onResult(new ArrayList<>());
                         }
-                    } else {
-                        callback.onResult(new ArrayList<>());
-                    }
-                });
+                    });
+        });
     }
 
     public interface GrantCallback {
@@ -80,31 +106,42 @@ public class PermissionService {
     }
 
     public void grantAccessWithFields(String parentId, String providerId, List<String> childIds, Map<String, List<String>> sharedFieldsPerChild, GrantCallback callback) {
-        Map<String, Object> accessData = new HashMap<>();
-        accessData.put("accessLevel", "read_only");
-        accessData.put("children", childIds);
-        accessData.put("isActive", true);
-        accessData.put("grantedAt", com.google.firebase.Timestamp.now());
-        
-        // Store field-level sharing preferences per child
-        if (sharedFieldsPerChild != null) {
-            accessData.put("sharedFields", sharedFieldsPerChild);
-        } else {
-            // Default: share only name if no fields specified
-            Map<String, List<String>> defaultFields = new HashMap<>();
-            for (String childId : childIds) {
-                defaultFields.put(childId, new ArrayList<>());
+        db.collection("users").document(providerId).get().addOnCompleteListener(roleTask -> {
+            if (roleTask.isSuccessful() && roleTask.getResult() != null && roleTask.getResult().exists()) {
+                String role = roleTask.getResult().getString("role");
+                if (!"provider".equals(role)) {
+                    callback.onResult(false, "Only providers can be granted access");
+                    return;
+                }
+            } else {
+                callback.onResult(false, "Provider role verification failed");
+                return;
             }
-            accessData.put("sharedFields", defaultFields);
-        }
 
-        db.collection("providerAccess")
-                .document(parentId)
-                .collection("providers")
-                .document(providerId)
-                .set(accessData)
-                .addOnSuccessListener(aVoid -> callback.onResult(true, "Access granted"))
-                .addOnFailureListener(e -> callback.onResult(false, e.getMessage()));
+            Map<String, Object> accessData = new HashMap<>();
+            accessData.put("accessLevel", "read_only");
+            accessData.put("children", childIds);
+            accessData.put("isActive", true);
+            accessData.put("grantedAt", com.google.firebase.Timestamp.now());
+            
+            if (sharedFieldsPerChild != null) {
+                accessData.put("sharedFields", sharedFieldsPerChild);
+            } else {
+                Map<String, List<String>> defaultFields = new HashMap<>();
+                for (String childId : childIds) {
+                    defaultFields.put(childId, new ArrayList<>());
+                }
+                accessData.put("sharedFields", defaultFields);
+            }
+
+            db.collection("providerAccess")
+                    .document(parentId)
+                    .collection("providers")
+                    .document(providerId)
+                    .set(accessData)
+                    .addOnSuccessListener(aVoid -> callback.onResult(true, "Access granted"))
+                    .addOnFailureListener(e -> callback.onResult(false, e.getMessage()));
+        });
     }
 
     public interface RevokeCallback {
