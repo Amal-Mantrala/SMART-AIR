@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment;
 import com.example.b07demosummer2024.R;
 import com.example.b07demosummer2024.services.InviteService;
 import com.example.b07demosummer2024.services.PermissionService;
+import com.example.b07demosummer2024.services.ShareableDataFields;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -118,6 +119,7 @@ public class ProviderAccessManagementFragment extends Fragment {
         View providerView = getLayoutInflater().inflate(R.layout.item_provider_access, activeProvidersLayout, false);
         TextView providerNameText = providerView.findViewById(R.id.textProviderName);
         TextView childrenText = providerView.findViewById(R.id.textChildren);
+        Button manageSharingButton = providerView.findViewById(R.id.buttonManageSharing);
         Button revokeButton = providerView.findViewById(R.id.buttonRevoke);
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -144,6 +146,8 @@ public class ProviderAccessManagementFragment extends Fragment {
         } else {
             childrenText.setText("No children shared");
         }
+
+        manageSharingButton.setOnClickListener(v -> showManageSharingDialog(providerId, children));
 
         revokeButton.setOnClickListener(v -> {
             permissionService.revokeAccess(parentId, providerId, (success, message) -> {
@@ -315,15 +319,8 @@ public class ProviderAccessManagementFragment extends Fragment {
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
                             String providerId = task.getResult().getDocuments().get(0).getId();
-                            permissionService.grantAccess(parentId, providerId, selectedChildren, (success, message) -> {
-                                if (isAdded()) {
-                                    Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
-                                    if (success) {
-                                        dialog.dismiss();
-                                        loadActiveProviders();
-                                    }
-                                }
-                            });
+                            // Show field selection dialog after selecting children
+                            showFieldSelectionDialog(providerId, selectedChildren, dialog);
                         } else {
                             if (isAdded()) {
                                 Toast.makeText(requireContext(), "Provider not found", Toast.LENGTH_SHORT).show();
@@ -334,6 +331,127 @@ public class ProviderAccessManagementFragment extends Fragment {
 
         cancelButton.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
+    }
+
+    private void showFieldSelectionDialog(String providerId, List<String> selectedChildren, AlertDialog parentDialog) {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_select_fields, null);
+        LinearLayout fieldsLayout = dialogView.findViewById(R.id.layoutFields);
+        Button saveButton = dialogView.findViewById(R.id.buttonSave);
+        Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
+
+        // Create checkboxes for each shareable field
+        List<CheckBox> fieldCheckBoxes = new ArrayList<>();
+        for (String field : ShareableDataFields.ALL_FIELDS) {
+            CheckBox checkBox = new CheckBox(requireContext());
+            checkBox.setText(ShareableDataFields.getFieldLabel(field));
+            checkBox.setTag(field);
+            checkBox.setHint(ShareableDataFields.getFieldDescription(field));
+            fieldsLayout.addView(checkBox);
+            fieldCheckBoxes.add(checkBox);
+        }
+
+        AlertDialog fieldDialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .setTitle("Select Data Fields to Share")
+                .create();
+
+        saveButton.setOnClickListener(v -> {
+            List<String> selectedFields = new ArrayList<>();
+            for (CheckBox checkBox : fieldCheckBoxes) {
+                if (checkBox.isChecked()) {
+                    selectedFields.add((String) checkBox.getTag());
+                }
+            }
+
+            // Create shared fields map for each child
+            Map<String, List<String>> sharedFieldsPerChild = new HashMap<>();
+            for (String childId : selectedChildren) {
+                sharedFieldsPerChild.put(childId, new ArrayList<>(selectedFields));
+            }
+
+            permissionService.grantAccessWithFields(parentId, providerId, selectedChildren, sharedFieldsPerChild, (success, message) -> {
+                if (isAdded()) {
+                    Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+                    if (success) {
+                        fieldDialog.dismiss();
+                        if (parentDialog != null) {
+                            parentDialog.dismiss();
+                        }
+                        loadActiveProviders();
+                    }
+                }
+            });
+        });
+
+        cancelButton.setOnClickListener(v -> fieldDialog.dismiss());
+        fieldDialog.show();
+    }
+
+    private void showManageSharingDialog(String providerId, List<String> children) {
+        if (children == null || children.isEmpty()) {
+            Toast.makeText(requireContext(), "No children to manage", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // For simplicity, show field selection for all children at once
+        // In a more advanced version, you could show per-child selection
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_select_fields, null);
+        LinearLayout fieldsLayout = dialogView.findViewById(R.id.layoutFields);
+        Button saveButton = dialogView.findViewById(R.id.buttonSave);
+        Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
+
+        // Load current shared fields for the first child (as reference)
+        permissionService.getSharedFields(parentId, providerId, children.get(0), currentFields -> {
+            if (isAdded()) {
+                // Create checkboxes for each shareable field
+                List<CheckBox> fieldCheckBoxes = new ArrayList<>();
+                for (String field : ShareableDataFields.ALL_FIELDS) {
+                    CheckBox checkBox = new CheckBox(requireContext());
+                    checkBox.setText(ShareableDataFields.getFieldLabel(field));
+                    checkBox.setTag(field);
+                    checkBox.setHint(ShareableDataFields.getFieldDescription(field));
+                    // Check if this field is currently shared
+                    if (currentFields.contains(field)) {
+                        checkBox.setChecked(true);
+                    }
+                    fieldsLayout.addView(checkBox);
+                    fieldCheckBoxes.add(checkBox);
+                }
+
+                AlertDialog fieldDialog = new AlertDialog.Builder(requireContext())
+                        .setView(dialogView)
+                        .setTitle("Manage Sharing Preferences")
+                        .create();
+
+                saveButton.setOnClickListener(v -> {
+                    List<String> selectedFields = new ArrayList<>();
+                    for (CheckBox checkBox : fieldCheckBoxes) {
+                        if (checkBox.isChecked()) {
+                            selectedFields.add((String) checkBox.getTag());
+                        }
+                    }
+
+                    // Update shared fields for all children
+                    Map<String, List<String>> sharedFieldsPerChild = new HashMap<>();
+                    for (String childId : children) {
+                        sharedFieldsPerChild.put(childId, new ArrayList<>(selectedFields));
+                    }
+
+                    permissionService.updateSharedFieldsForChildren(parentId, providerId, sharedFieldsPerChild, (success, message) -> {
+                        if (isAdded()) {
+                            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+                            if (success) {
+                                fieldDialog.dismiss();
+                                loadActiveProviders();
+                            }
+                        }
+                    });
+                });
+
+                cancelButton.setOnClickListener(v -> fieldDialog.dismiss());
+                fieldDialog.show();
+            }
+        });
     }
 }
 

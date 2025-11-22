@@ -18,43 +18,23 @@ import androidx.test.core.app.ActivityScenario;
 public class AuthProtectionTest {
 
     @Test
-    public void testHomeFragmentExtendsProtectedFragment() {
-        assertTrue(HomeFragment.class.getSuperclass() == ProtectedFragment.class);
+    public void testChildHomeFragmentExtendsProtectedFragment() {
+        assertTrue(ChildHomeFragment.class.getSuperclass().equals(ProtectedFragment.class));
     }
 
     @Test
-    public void testRecyclerViewFragmentExtendsProtectedFragment() {
-        assertTrue(RecyclerViewFragment.class.getSuperclass() == ProtectedFragment.class);
+    public void testParentHomeFragmentExtendsProtectedFragment() {
+        assertTrue(ParentHomeFragment.class.getSuperclass().equals(ProtectedFragment.class));
     }
 
     @Test
-    public void testScrollerFragmentExtendsProtectedFragment() {
-        assertTrue(ScrollerFragment.class.getSuperclass() == ProtectedFragment.class);
-    }
-
-    @Test
-    public void testSpinnerFragmentExtendsProtectedFragment() {
-        assertTrue(SpinnerFragment.class.getSuperclass() == ProtectedFragment.class);
-    }
-
-    @Test
-    public void testManageItemsFragmentExtendsProtectedFragment() {
-        assertTrue(ManageItemsFragment.class.getSuperclass() == ProtectedFragment.class);
-    }
-
-    @Test
-    public void testAddItemFragmentExtendsProtectedFragment() {
-        assertTrue(AddItemFragment.class.getSuperclass() == ProtectedFragment.class);
-    }
-
-    @Test
-    public void testDeleteItemFragmentExtendsProtectedFragment() {
-        assertTrue(DeleteItemFragment.class.getSuperclass() == ProtectedFragment.class);
+    public void testProviderHomeFragmentExtendsProtectedFragment() {
+        assertTrue(ProviderHomeFragment.class.getSuperclass().equals(ProtectedFragment.class));
     }
 
     @Test
     public void testLoginFragmentDoesNotExtendProtectedFragment() {
-        assertTrue(LoginFragment.class.getSuperclass() != ProtectedFragment.class);
+        assertTrue(!LoginFragment.class.getSuperclass().equals(ProtectedFragment.class));
     }
 
     @Test
