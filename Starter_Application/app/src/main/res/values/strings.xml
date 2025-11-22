@@ -35,9 +35,24 @@
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="name_saved">Name saved successfully!</string>
-    <string name="tutorial_title">Tutorial</string>
-    <string name="tutorial_placeholder">This is a placeholder tutorial for %1$s. Content coming soon.</string>
+    <string name="tutorial_title">Welcome to SMART-AIR</string>
     <string name="tutorial_got_it">Got it</string>
+    <string name="help">Help</string>
+    <string name="information">Information</string>
+    
+    <!-- Greeting Messages -->
+    <string name="child_greeting">Hello %1$s, welcome to your asthma management dashboard!</string>
+    <string name="parent_greeting">Hello %1$s, manage your family\'s asthma care from here.</string>
+    <string name="provider_greeting">Hello %1$s, review your patients\' shared asthma data.</string>
+    
+    <!-- Child Tutorial Content -->
+    <string name="child_tutorial_content">Welcome to SMART-AIR! As a Child user, you can:\n\n📱 <b>Log Your Medicines</b>\n• Record when you take your rescue inhaler (quick-relief for sudden symptoms)\n• Track your controller medicine (daily prevention that reduces airway swelling)\n\n📊 <b>Track Your Symptoms</b>\n• Record how you\'re feeling each day\n• Note any triggers or patterns\n\n🎮 <b>Get Help with Techniques</b>\n• Access gamified breathing helpers\n• Learn proper inhaler techniques\n• Get simple guidance for managing asthma\n\n🔒 <b>Your Privacy</b>\n• You can only see your own data\n• Nothing is shared with providers unless your parent chooses to\n\nRemember: Use your rescue inhaler for sudden symptoms, take your controller medicine daily as prescribed!</string>
+    
+    <!-- Parent Tutorial Content -->
+    <string name="parent_tutorial_content">Welcome to SMART-AIR! As a Parent, you have full control over your family\'s asthma management:\n\n👨‍👩‍👧‍👦 <b>Manage Multiple Children</b>\n• Link one or more children to your account\n• View individual dashboards for each child\n\n📊 <b>Monitor &amp; Track</b>\n• See medicine adherence and symptom patterns\n• Receive alerts for important events\n• Export detailed reports for doctor visits\n\n🔐 <b>Control Privacy &amp; Sharing</b>\n• By default, nothing is shared with providers\n• Use granular toggles to choose what each provider can see\n• Send one-time invite codes to providers (expires in 7 days)\n• Revoke provider access anytime\n• Export PDF/CSV reports for sharing\n\n📱 <b>Real-time Control</b>\n• All privacy changes take effect immediately\n• Everything is reversible\n\n<b>Medicine Types:</b>\n• Rescue inhaler: Quick-relief for sudden symptoms\n• Controller medicine: Daily prevention that reduces airway swelling</string>
+    
+    <!-- Provider Tutorial Content -->
+    <string name="provider_tutorial_content">Welcome to SMART-AIR! As a Healthcare Provider, you have read-only access to patient data:\n\n🩺 <b>View Patient Summaries</b>\n• Access shared reports and dashboards\n• Review medicine adherence patterns\n• Monitor symptom trends\n\n🔒 <b>Privacy-First Access</b>\n• You can only see what parents explicitly share\n• Access is controlled per child with granular permissions\n• Parents can revoke your access anytime\n\n📧 <b>Getting Access</b>\n• Parents send you a one-time invite code/link\n• Codes expire in 7 days for security\n• Alternative: Parents can export PDF/CSV reports\n\n📊 <b>Understanding the Data</b>\n• <b>Rescue inhaler:</b> Quick-relief medicine for sudden symptoms\n• <b>Controller Medicine:</b> Daily prevention medicine that reduces airway swelling\n• Look for patterns in symptoms and medicine usage\n\n⚡ <b>Real-time Updates</b>\n• When parents change sharing settings, access updates immediately\n• All data reflects the most current patient information</string>
 
     <string-array name="placeholder_menu">
         <item>Placeholder 1</item>

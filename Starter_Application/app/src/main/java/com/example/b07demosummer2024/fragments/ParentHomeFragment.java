@@ -21,6 +21,7 @@ import androidx.fragment.app.FragmentManager;
 import com.example.b07demosummer2024.R;
 import com.example.b07demosummer2024.auth.AuthService;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class ParentHomeFragment extends ProtectedFragment {
     @Nullable
@@ -33,6 +34,8 @@ public class ParentHomeFragment extends ProtectedFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Initialize views
+        TextView greetingText = view.findViewById(R.id.textGreeting);
         Spinner spinner = view.findViewById(R.id.dropdownMenu);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 requireContext(),
@@ -44,6 +47,10 @@ public class ParentHomeFragment extends ProtectedFragment {
 
         Button signOut = view.findViewById(R.id.buttonSignOut);
         Button detailsButton = view.findViewById(R.id.buttonDetails);
+        Button informationButton = view.findViewById(R.id.buttonInformation);
+        
+        // Load user name and set greeting
+        loadUserNameAndSetGreeting(greetingText);
         
         signOut.setOnClickListener(v -> {
             // Clear cached role data before signing out
@@ -62,23 +69,49 @@ public class ParentHomeFragment extends ProtectedFragment {
         });
 
         detailsButton.setOnClickListener(v -> showUserDetailsDialog());
+        informationButton.setOnClickListener(v -> showTutorial());
 
-        showTutorialIfNeeded("parent", R.string.parent_homepage);
+        showTutorialIfFirstTime();
     }
 
-    private void showTutorialIfNeeded(String roleKey, int roleNameRes) {
-        SharedPreferences prefs = requireContext().getSharedPreferences("tutorial_prefs", Context.MODE_PRIVATE);
-        String key = "tutorial_seen_" + roleKey;
-        if (!prefs.getBoolean(key, false)) {
-            new AlertDialog.Builder(requireContext())
-                    .setTitle(R.string.tutorial_title)
-                    .setMessage(getString(R.string.tutorial_placeholder, getString(roleNameRes)))
-                    .setPositiveButton(R.string.tutorial_got_it, (d, w) -> {
-                        prefs.edit().putBoolean(key, true).apply();
+    private void loadUserNameAndSetGreeting(TextView greetingText) {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() != null) {
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("users")
+                    .document(auth.getCurrentUser().getUid())
+                    .get()
+                    .addOnSuccessListener(document -> {
+                        if (document.exists() && isAdded()) {
+                            String name = document.getString("name");
+                            if (name != null && !name.isEmpty()) {
+                                String greeting = getString(R.string.parent_greeting, name);
+                                greetingText.setText(greeting);
+                            }
+                        }
                     })
-                    .setCancelable(false)
-                    .show();
+                    .addOnFailureListener(e -> {
+                        // Keep default greeting if Firestore fails
+                    });
         }
+    }
+
+    private void showTutorialIfFirstTime() {
+        SharedPreferences prefs = requireContext().getSharedPreferences("tutorial_prefs", Context.MODE_PRIVATE);
+        String key = "tutorial_seen_parent";
+        if (!prefs.getBoolean(key, false)) {
+            showTutorial();
+            prefs.edit().putBoolean(key, true).apply();
+        }
+    }
+
+    private void showTutorial() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.tutorial_title)
+                .setMessage(R.string.parent_tutorial_content)
+                .setPositiveButton(R.string.tutorial_got_it, null)
+                .setCancelable(true)
+                .show();
     }
 
     private void showUserDetailsDialog() {
@@ -88,16 +121,25 @@ public class ParentHomeFragment extends ProtectedFragment {
         Button saveButton = dialogView.findViewById(R.id.buttonSave);
         Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
 
-        // Get current user email
         FirebaseAuth auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() != null) {
+            // Set email
             emailText.setText(auth.getCurrentUser().getEmail());
+            
+            // Load name from Firestore
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("users")
+                    .document(auth.getCurrentUser().getUid())
+                    .get()
+                    .addOnSuccessListener(document -> {
+                        if (document.exists()) {
+                            String name = document.getString("name");
+                            if (name != null) {
+                                nameEdit.setText(name);
+                            }
+                        }
+                    });
         }
-
-        // Load saved name
-        SharedPreferences prefs = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
-        String savedName = prefs.getString("user_name_" + auth.getCurrentUser().getUid(), "");
-        nameEdit.setText(savedName);
 
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setView(dialogView)
@@ -107,10 +149,28 @@ public class ParentHomeFragment extends ProtectedFragment {
         saveButton.setOnClickListener(v -> {
             String name = nameEdit.getText().toString().trim();
             if (!name.isEmpty()) {
-                // Save name to SharedPreferences
-                prefs.edit().putString("user_name_" + auth.getCurrentUser().getUid(), name).apply();
-                Toast.makeText(requireContext(), R.string.name_saved, Toast.LENGTH_SHORT).show();
-                dialog.dismiss();
+                // Save name to Firestore
+                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                db.collection("users")
+                        .document(auth.getCurrentUser().getUid())
+                        .update("name", name)
+                        .addOnSuccessListener(aVoid -> {
+                            if (isAdded()) {
+                                Toast.makeText(requireContext(), R.string.name_saved, Toast.LENGTH_SHORT).show();
+                                // Refresh the greeting with new name
+                                TextView greetingText = getView().findViewById(R.id.textGreeting);
+                                if (greetingText != null) {
+                                    String greeting = getString(R.string.parent_greeting, name);
+                                    greetingText.setText(greeting);
+                                }
+                                dialog.dismiss();
+                            }
+                        })
+                        .addOnFailureListener(e -> {
+                            if (isAdded()) {
+                                Toast.makeText(requireContext(), "Failed to save name", Toast.LENGTH_SHORT).show();
+                            }
+                        });
             } else {
                 nameEdit.setError("Name cannot be empty");
             }

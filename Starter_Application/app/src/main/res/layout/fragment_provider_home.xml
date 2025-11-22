@@ -2,31 +2,56 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="16dp">
 
     <TextView
         android:id="@+id/textProviderHome"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/provider_homepage"
-        android:textSize="22sp"
+        android:textSize="24sp"
         android:textStyle="bold"
+        android:textColor="@android:color/black"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/dropdownMenu"
-        app:layout_constraintVertical_bias="0"/>
+        android:layout_marginTop="16dp"/>
+
+    <TextView
+        android:id="@+id/textGreeting"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Hello, review your patients' shared asthma data."
+        android:textSize="16sp"
+        android:textColor="@android:color/darker_gray"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@+id/textProviderHome"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"/>
 
     <Spinner
         android:id="@+id/dropdownMenu"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@+id/textProviderHome"
+        android:layout_marginTop="24dp"
+        app:layout_constraintBottom_toTopOf="@+id/buttonInformation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textGreeting"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <Button
+        android:id="@+id/buttonInformation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/information"
+        app:layout_constraintBottom_toTopOf="@+id/buttonDetails"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/buttonSignOut"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"/>
+        android:layout_marginBottom="8dp"/>
 
     <Button
         android:id="@+id/buttonDetails"
@@ -36,8 +61,6 @@
         app:layout_constraintBottom_toTopOf="@+id/buttonSignOut"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
         android:layout_marginBottom="8dp"/>
 
     <Button
@@ -48,6 +71,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="16dp"/>
+        android:layout_marginBottom="16dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

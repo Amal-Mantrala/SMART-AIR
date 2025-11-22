@@ -42,6 +42,7 @@ public class LoginPresenter implements LoginContract.Presenter {
 
         authService.signIn(email, password, (success, message) -> {
             if (success) {
+                view.showLoginError("Login successful!");
                 view.navigateToHome();
             } else {
                 view.showLoginError("Login failed: " + message);

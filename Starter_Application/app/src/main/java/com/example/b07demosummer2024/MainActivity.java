@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import com.example.b07demosummer2024.auth.AuthService;
-import com.example.b07demosummer2024.fragments.HomeFragment;
 import com.example.b07demosummer2024.fragments.ChildHomeFragment;
 import com.example.b07demosummer2024.fragments.ParentHomeFragment;
 import com.example.b07demosummer2024.fragments.ProviderHomeFragment;
@@ -15,6 +14,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.example.b07demosummer2024.fragments.LoginFragment;
+import com.example.b07demosummer2024.fragments.SignupFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -38,13 +38,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-        if (currentFragment != null && !(currentFragment instanceof LoginFragment)) {
+        if (currentFragment != null && !(currentFragment instanceof LoginFragment) && !(currentFragment instanceof SignupFragment)) {
             AuthService authService = new AuthService();
             if (!authService.isSignedIn()) {
-                // Clear any cached role data when user is not signed in
-                android.content.SharedPreferences prefs = getSharedPreferences("user_prefs", android.content.Context.MODE_PRIVATE);
-                prefs.edit().clear().apply();
-                
+                // User is not signed in - redirect to login
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, new LoginFragment())
                         .commit();
@@ -55,58 +52,60 @@ public class MainActivity extends AppCompatActivity {
     private void checkAuthAndLoadFragment() {
         AuthService authService = new AuthService();
         if (!authService.isSignedIn()) {
+            // User is not signed in - show login fragment
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new LoginFragment())
-                    .commit();
+                    .commitNow(); // Use commitNow for immediate execution
             return;
         }
 
-        // User is signed in: fetch their role and navigate accordingly
+        // User is signed in: fetch their role from Firebase and navigate accordingly
         FirebaseAuth auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() == null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new LoginFragment())
-                    .commit();
+                    .commitNow(); // Use commitNow for immediate execution
             return;
         }
 
         String uid = auth.getCurrentUser().getUid();
 
-        // Try cached role first for instant routing
-        android.content.SharedPreferences prefs = getSharedPreferences("user_prefs", android.content.Context.MODE_PRIVATE);
-        String cachedRole = prefs.getString("user_role_" + uid, null);
-        if (cachedRole != null) {
-            navigateToRoleHome(cachedRole);
-        } else {
-            // No cached role - show temporary home while fetching
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new HomeFragment())
-                    .commit();
-        }
+        // Show LoginFragment as placeholder while fetching from Firebase
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, new LoginFragment())
+                .commitNow(); // Use commitNow for immediate execution
 
-        // Always also fetch latest role from remote and correct if needed
-        db.getReference("users").child(uid).child("role").get()
+        // Always fetch latest data from Firestore
+        com.google.firebase.firestore.FirebaseFirestore firestoreDb = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+        firestoreDb.collection("users").document(uid).get()
                 .addOnCompleteListener(task -> {
                     if (!task.isSuccessful()) {
-                        if (cachedRole == null) {
-                            // Show role selector if nothing cached
-                            new RoleSelectionFragment().show(getSupportFragmentManager(), "roleSelection");
-                        }
+                        // Show role selector if fetch failed
+                        RoleSelectionFragment roleDialog = RoleSelectionFragment.newInstance("");
+                        roleDialog.show(getSupportFragmentManager(), "roleSelection");
                         return;
                     }
-                    Object value = task.getResult() != null ? task.getResult().getValue() : null;
-                    if (value == null) {
+                    
+                    com.google.firebase.firestore.DocumentSnapshot document = task.getResult();
+                    if (document == null || !document.exists()) {
+                        // No user data yet — prompt selection
+                        RoleSelectionFragment roleDialog = RoleSelectionFragment.newInstance("");
+                        roleDialog.show(getSupportFragmentManager(), "roleSelection");
+                        return;
+                    }
+                    
+                    String role = document.getString("role");
+                    String name = document.getString("name");
+                    
+                    if (role == null) {
                         // No role yet — prompt selection
-                        new RoleSelectionFragment().show(getSupportFragmentManager(), "roleSelection");
+                        RoleSelectionFragment roleDialog = RoleSelectionFragment.newInstance(name != null ? name : "");
+                        roleDialog.show(getSupportFragmentManager(), "roleSelection");
                         return;
                     }
-                    String role = String.valueOf(value);
-                    // If remote differs from cached, navigate to the correct one
-                    if (!role.equals(cachedRole)) {
-                        // Update cache
-                        prefs.edit().putString("user_role_" + uid, role).apply();
-                        navigateToRoleHome(role);
-                    }
+                    
+                    // Navigate to appropriate role homepage
+                    navigateToRoleHome(role);
                 });
     }
 
@@ -123,7 +122,10 @@ public class MainActivity extends AppCompatActivity {
                 target = new ProviderHomeFragment();
                 break;
             default:
-                target = new HomeFragment();
+                // Unknown role - show role selection
+                RoleSelectionFragment roleDialog = RoleSelectionFragment.newInstance("");
+                roleDialog.show(getSupportFragmentManager(), "roleSelection");
+                return;
         }
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, target)
