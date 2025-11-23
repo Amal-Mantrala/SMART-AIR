@@ -3,7 +3,6 @@ package com.example.b07demosummer2024.services;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentSnapshot;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class DataAccessService {
@@ -47,11 +46,10 @@ public class DataAccessService {
                             if (parentId != null) {
                                 canRead(parentId, providerId, childId, canAccess -> {
                                     if (canAccess) {
-                                        // Get shared fields for this provider-child combination
-                                        permissionService.getSharedFields(parentId, providerId, childId, sharedFields -> {
-                                            Map<String, Object> data = filterDataBySharedFields(doc, sharedFields);
-                                            callback.onResult(data);
-                                        });
+                                        Map<String, Object> data = new HashMap<>();
+                                        data.put("name", doc.get("name"));
+                                        data.put("role", doc.get("role"));
+                                        callback.onResult(data);
                                     } else {
                                         callback.onResult(new HashMap<>());
                                     }
@@ -66,35 +64,6 @@ public class DataAccessService {
                         callback.onResult(new HashMap<>());
                     }
                 });
-    }
-
-    /**
-     * Filters the document data to only include fields that are shared with the provider.
-     * Always includes role (for identification), but only includes other fields if they're in sharedFields.
-     */
-    private Map<String, Object> filterDataBySharedFields(DocumentSnapshot doc, List<String> sharedFields) {
-        Map<String, Object> filteredData = new HashMap<>();
-        Map<String, Object> allData = doc.getData();
-        
-        if (allData == null) {
-            return filteredData;
-        }
-
-        // Always include role for identification
-        if (allData.containsKey("role")) {
-            filteredData.put("role", allData.get("role"));
-        }
-
-        // Include fields that are explicitly shared
-        if (sharedFields != null) {
-            for (String field : sharedFields) {
-                if (allData.containsKey(field)) {
-                    filteredData.put(field, allData.get(field));
-                }
-            }
-        }
-
-        return filteredData;
     }
 }
 

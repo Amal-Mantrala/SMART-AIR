@@ -5,41 +5,31 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
-    <ScrollView
-        android:id="@+id/scrollViewPatientData"
+    <TextView
+        android:id="@+id/textPatientName"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
+        android:text="Patient Name"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/textReadOnlyNotice"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp">
-
-        <TextView
-            android:id="@+id/textPatientName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Patient Name"
-            android:textSize="16sp"
-            android:gravity="start"
-            android:padding="8dp"/>
-
-    </ScrollView>
+        android:layout_marginTop="16dp"/>
 
     <TextView
         android:id="@+id/textReadOnlyNotice"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Read-only view - You can only see information that the parent has shared"
-        android:textSize="12sp"
+        android:text="Read-only view"
+        android:textSize="14sp"
         android:textColor="@android:color/darker_gray"
         android:gravity="center"
-        app:layout_constraintTop_toBottomOf="@+id/scrollViewPatientData"
+        app:layout_constraintTop_toBottomOf="@+id/textPatientName"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginTop="8dp"/>
 
     <Button
         android:id="@+id/buttonBack"
