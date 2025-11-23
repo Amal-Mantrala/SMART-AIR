@@ -24,13 +24,7 @@ public class DataAccessService {
             callback.onResult(false);
             return;
         }
-        verifyProviderRole(providerId, isProvider -> {
-            if (!isProvider) {
-                callback.onResult(false);
-                return;
-            }
-            permissionService.hasAccess(parentId, providerId, childId, callback::onResult);
-        });
+        permissionService.hasAccess(parentId, providerId, childId, callback::onResult);
     }
 
     public void canWrite(String parentId, String providerId, String childId, AccessCallback callback) {
@@ -42,66 +36,42 @@ public class DataAccessService {
     }
 
     public void getReadOnlyData(String childId, String providerId, DataCallback callback) {
-        if (childId == null || providerId == null) {
-            callback.onResult(new HashMap<>());
-            return;
-        }
-        verifyProviderRole(providerId, isProvider -> {
-            if (!isProvider) {
-                callback.onResult(new HashMap<>());
-                return;
-            }
-            db.collection("users")
-                    .document(childId)
-                    .get()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful() && task.getResult() != null) {
-                            DocumentSnapshot doc = task.getResult();
-                            if (doc.exists()) {
-                                String parentId = doc.getString("parentId");
-                                if (parentId != null) {
-                                    canRead(parentId, providerId, childId, canAccess -> {
-                                        if (canAccess) {
-                                            permissionService.getSharedFields(parentId, providerId, childId, sharedFields -> {
-                                                Map<String, Object> data = filterDataBySharedFields(doc, sharedFields);
-                                                callback.onResult(data);
-                                            });
-                                        } else {
-                                            callback.onResult(new HashMap<>());
-                                        }
-                                    });
-                                } else {
-                                    callback.onResult(new HashMap<>());
-                                }
+        db.collection("users")
+                .document(childId)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        DocumentSnapshot doc = task.getResult();
+                        if (doc.exists()) {
+                            String parentId = doc.getString("parentId");
+                            if (parentId != null) {
+                                canRead(parentId, providerId, childId, canAccess -> {
+                                    if (canAccess) {
+                                        // Get shared fields for this provider-child combination
+                                        permissionService.getSharedFields(parentId, providerId, childId, sharedFields -> {
+                                            Map<String, Object> data = filterDataBySharedFields(doc, sharedFields);
+                                            callback.onResult(data);
+                                        });
+                                    } else {
+                                        callback.onResult(new HashMap<>());
+                                    }
+                                });
                             } else {
                                 callback.onResult(new HashMap<>());
                             }
                         } else {
                             callback.onResult(new HashMap<>());
                         }
-                    });
-        });
-    }
-
-    private void verifyProviderRole(String userId, AccessCallback callback) {
-        db.collection("users")
-                .document(userId)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        DocumentSnapshot doc = task.getResult();
-                        if (doc.exists()) {
-                            String role = doc.getString("role");
-                            callback.onResult("provider".equals(role));
-                        } else {
-                            callback.onResult(false);
-                        }
                     } else {
-                        callback.onResult(false);
+                        callback.onResult(new HashMap<>());
                     }
                 });
     }
 
+    /**
+     * Filters the document data to only include fields that are shared with the provider.
+     * Always includes role (for identification), but only includes other fields if they're in sharedFields.
+     */
     private Map<String, Object> filterDataBySharedFields(DocumentSnapshot doc, List<String> sharedFields) {
         Map<String, Object> filteredData = new HashMap<>();
         Map<String, Object> allData = doc.getData();
@@ -110,10 +80,12 @@ public class DataAccessService {
             return filteredData;
         }
 
+        // Always include role for identification
         if (allData.containsKey("role")) {
             filteredData.put("role", allData.get("role"));
         }
 
+        // Include fields that are explicitly shared
         if (sharedFields != null) {
             for (String field : sharedFields) {
                 if (allData.containsKey(field)) {
