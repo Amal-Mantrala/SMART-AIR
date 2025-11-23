@@ -3,6 +3,7 @@ package com.example.b07demosummer2024.fragments;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 
+import androidx.fragment.app.Fragment;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.example.b07demosummer2024.MainActivity;
@@ -18,38 +19,28 @@ import androidx.test.core.app.ActivityScenario;
 public class AuthProtectionTest {
 
     @Test
-    public void testHomeFragmentExtendsProtectedFragment() {
-        assertTrue(HomeFragment.class.getSuperclass() == ProtectedFragment.class);
+    public void testParentHomeFragmentExtendsProtectedFragment() {
+        assertTrue(ParentHomeFragment.class.getSuperclass() == ProtectedFragment.class);
     }
 
     @Test
-    public void testRecyclerViewFragmentExtendsProtectedFragment() {
-        assertTrue(RecyclerViewFragment.class.getSuperclass() == ProtectedFragment.class);
+    public void testProviderHomeFragmentExtendsProtectedFragment() {
+        assertTrue(ProviderHomeFragment.class.getSuperclass() == ProtectedFragment.class);
     }
 
     @Test
-    public void testScrollerFragmentExtendsProtectedFragment() {
-        assertTrue(ScrollerFragment.class.getSuperclass() == ProtectedFragment.class);
+    public void testChildHomeFragmentExtendsProtectedFragment() {
+        assertTrue(ChildHomeFragment.class.getSuperclass() == ProtectedFragment.class);
     }
 
     @Test
-    public void testSpinnerFragmentExtendsProtectedFragment() {
-        assertTrue(SpinnerFragment.class.getSuperclass() == ProtectedFragment.class);
+    public void testManageChildrenFragmentExtendsFragment() {
+        assertTrue(ManageChildrenFragment.class.getSuperclass() == Fragment.class);
     }
 
     @Test
-    public void testManageItemsFragmentExtendsProtectedFragment() {
-        assertTrue(ManageItemsFragment.class.getSuperclass() == ProtectedFragment.class);
-    }
-
-    @Test
-    public void testAddItemFragmentExtendsProtectedFragment() {
-        assertTrue(AddItemFragment.class.getSuperclass() == ProtectedFragment.class);
-    }
-
-    @Test
-    public void testDeleteItemFragmentExtendsProtectedFragment() {
-        assertTrue(DeleteItemFragment.class.getSuperclass() == ProtectedFragment.class);
+    public void testPrivacySettingsFragmentExtendsFragment() {
+        assertTrue(PrivacySettingsFragment.class.getSuperclass() == Fragment.class);
     }
 
     @Test

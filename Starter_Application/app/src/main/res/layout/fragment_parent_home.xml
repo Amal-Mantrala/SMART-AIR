@@ -89,6 +89,16 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Manage Children"
+        app:layout_constraintBottom_toTopOf="@+id/buttonPrivacySharing"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="8dp"/>
+
+    <Button
+        android:id="@+id/buttonPrivacySharing"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Privacy &amp; Sharing"
         app:layout_constraintBottom_toTopOf="@+id/buttonSignOut"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
