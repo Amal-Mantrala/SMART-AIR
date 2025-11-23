@@ -21,7 +21,9 @@ import androidx.fragment.app.FragmentManager;
 import com.example.b07demosummer2024.R;
 import com.example.b07demosummer2024.auth.AuthService;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 public class ChildHomeFragment extends ProtectedFragment {
     @Nullable
@@ -72,7 +74,67 @@ public class ChildHomeFragment extends ProtectedFragment {
         informationButton.setOnClickListener(v -> showTutorial());
 
         showTutorialIfFirstTime();
+        checkForPendingInvitations();
     }
+
+    private void checkForPendingInvitations() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        String currentUserEmail = auth.getCurrentUser().getEmail();
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("invitations")
+                .whereEqualTo("childEmail", currentUserEmail)
+                .whereEqualTo("status", "pending")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && !task.getResult().isEmpty()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            String parentName = document.getString("parentName");
+                            String parentUid = document.getString("parentUid");
+                            showInvitationDialog(parentName, parentUid, document.getId());
+                            break; // Show one invitation at a time
+                        }
+                    }
+                });
+    }
+
+    private void showInvitationDialog(String parentName, String parentUid, String invitationId) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Family Invitation")
+                .setMessage(parentName + " has invited you to join their family account.")
+                .setPositiveButton("Accept", (dialog, which) -> {
+                    acceptInvitation(parentUid, invitationId);
+                })
+                .setNegativeButton("Decline", (dialog, which) -> {
+                    declineInvitation(invitationId);
+                })
+                .setCancelable(false)
+                .show();
+    }
+
+    private void acceptInvitation(String parentUid, String invitationId) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        String childId = auth.getCurrentUser().getUid();
+
+        // Update child document
+        db.collection("users").document(childId).update("parentId", parentUid);
+
+        // Update parent document
+        db.collection("users").document(parentUid).update("children", FieldValue.arrayUnion(childId));
+
+        // Update invitation status
+        db.collection("invitations").document(invitationId).update("status", "accepted");
+
+        Toast.makeText(getContext(), "Invitation accepted!", Toast.LENGTH_SHORT).show();
+    }
+
+    private void declineInvitation(String invitationId) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("invitations").document(invitationId).update("status", "declined");
+        Toast.makeText(getContext(), "Invitation declined.", Toast.LENGTH_SHORT).show();
+    }
+
 
     private void loadUserNameAndSetGreeting(TextView greetingText) {
         FirebaseAuth auth = FirebaseAuth.getInstance();
