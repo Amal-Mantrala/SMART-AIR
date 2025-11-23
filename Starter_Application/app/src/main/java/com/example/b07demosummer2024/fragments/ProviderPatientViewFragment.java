@@ -67,60 +67,46 @@ public class ProviderPatientViewFragment extends Fragment {
             return;
         }
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("users").document(providerId).get().addOnCompleteListener(roleTask -> {
-            if (!isAdded()) return;
-            if (roleTask.isSuccessful() && roleTask.getResult() != null && roleTask.getResult().exists()) {
-                String role = roleTask.getResult().getString("role");
-                if (!"provider".equals(role)) {
-                    Toast.makeText(requireContext(), "Access denied", Toast.LENGTH_SHORT).show();
+        dataAccessService.getReadOnlyData(childId, providerId, data -> {
+            if (isAdded()) {
+                if (data.isEmpty()) {
+                    Toast.makeText(requireContext(), "Access denied or no data available", Toast.LENGTH_SHORT).show();
                     getParentFragmentManager().popBackStack();
                     return;
                 }
-            } else {
-                Toast.makeText(requireContext(), "Access denied", Toast.LENGTH_SHORT).show();
-                getParentFragmentManager().popBackStack();
-                return;
-            }
 
-            dataAccessService.getReadOnlyData(childId, providerId, data -> {
-                if (isAdded()) {
-                    if (data.isEmpty()) {
-                        Toast.makeText(requireContext(), "Access denied or no data available", Toast.LENGTH_SHORT).show();
-                        getParentFragmentManager().popBackStack();
-                        return;
-                    }
+                // Display shared data
+                StringBuilder displayText = new StringBuilder();
+                displayText.append("Patient Information:\n\n");
 
-                    StringBuilder displayText = new StringBuilder();
-                    displayText.append("Patient Information:\n\n");
-
-                    for (String field : com.example.b07demosummer2024.services.ShareableDataFields.ALL_FIELDS) {
-                        if (data.containsKey(field)) {
-                            Object value = data.get(field);
-                            if (value != null) {
-                                displayText.append(com.example.b07demosummer2024.services.ShareableDataFields.getFieldLabel(field))
-                                        .append(": ")
-                                        .append(value.toString())
-                                        .append("\n\n");
-                            }
+                // Use ShareableDataFields to get proper labels
+                for (String field : com.example.b07demosummer2024.services.ShareableDataFields.ALL_FIELDS) {
+                    if (data.containsKey(field)) {
+                        Object value = data.get(field);
+                        if (value != null) {
+                            displayText.append(com.example.b07demosummer2024.services.ShareableDataFields.getFieldLabel(field))
+                                    .append(": ")
+                                    .append(value.toString())
+                                    .append("\n\n");
                         }
                     }
-
-                    int sharedFieldCount = 0;
-                    for (String field : data.keySet()) {
-                        if (!field.equals("role")) {
-                            sharedFieldCount++;
-                        }
-                    }
-
-                    if (sharedFieldCount == 0) {
-                        displayText.append("No additional information is currently shared.\n");
-                        displayText.append("The parent has not selected any data fields to share with you.");
-                    }
-
-                    nameText.setText(displayText.toString());
                 }
-            });
+
+                // If no shared fields (except role), show message
+                int sharedFieldCount = 0;
+                for (String field : data.keySet()) {
+                    if (!field.equals("role")) {
+                        sharedFieldCount++;
+                    }
+                }
+
+                if (sharedFieldCount == 0) {
+                    displayText.append("No additional information is currently shared.\n");
+                    displayText.append("The parent has not selected any data fields to share with you.");
+                }
+
+                nameText.setText(displayText.toString());
+            }
         });
     }
 }
