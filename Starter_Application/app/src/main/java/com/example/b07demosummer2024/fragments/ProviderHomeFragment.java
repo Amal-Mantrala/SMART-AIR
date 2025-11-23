@@ -20,10 +20,13 @@ import androidx.fragment.app.FragmentManager;
 
 import com.example.b07demosummer2024.R;
 import com.example.b07demosummer2024.auth.AuthService;
+import com.example.b07demosummer2024.auth.ProviderSharingService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 public class ProviderHomeFragment extends ProtectedFragment {
+    private ProviderSharingService sharingService;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -33,6 +36,7 @@ public class ProviderHomeFragment extends ProtectedFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        sharingService = new ProviderSharingService();
 
         // Initialize views
         TextView greetingText = view.findViewById(R.id.textGreeting);

@@ -56,6 +56,7 @@ public class ParentHomeFragment extends ProtectedFragment {
         Button newChildButton = view.findViewById(R.id.buttonAddChild);
         Button linkChildButton = view.findViewById(R.id.buttonLinkChild);
         Button manageChildrenButton = view.findViewById(R.id.buttonManageChildren);
+        Button privacySharingButton = view.findViewById(R.id.buttonPrivacySharing);
 
         // Load user name and set greeting
         loadUserNameAndSetGreeting(greetingText);
@@ -71,6 +72,12 @@ public class ParentHomeFragment extends ProtectedFragment {
         manageChildrenButton.setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new ManageChildrenFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
+        privacySharingButton.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new PrivacySettingsFragment())
                     .addToBackStack(null)
                     .commit();
         });
