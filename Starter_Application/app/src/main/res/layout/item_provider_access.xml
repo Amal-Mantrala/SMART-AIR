@@ -31,13 +31,6 @@
             android:layout_marginBottom="8dp"/>
 
         <Button
-            android:id="@+id/buttonManageSharing"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Manage Sharing"
-            android:layout_marginBottom="8dp"/>
-
-        <Button
             android:id="@+id/buttonRevoke"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
