@@ -94,6 +94,7 @@ public class SignupFragment extends Fragment {
                         // Create user document with name
                         java.util.Map<String, Object> user = new java.util.HashMap<>();
                         user.put("name", name);
+                        user.put("email", email);
                         
                         db.collection("users").document(uid)
                             .set(user, com.google.firebase.firestore.SetOptions.merge())

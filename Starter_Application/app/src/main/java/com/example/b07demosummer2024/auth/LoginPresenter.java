@@ -16,7 +16,7 @@ public class LoginPresenter implements LoginContract.Presenter {
         // Clear previous errors
         view.showEmailError(null);
         view.showPasswordError(null);
-        
+
         if (email.isEmpty()) {
             view.showEmailError("Email is required");
             return;
@@ -26,7 +26,10 @@ public class LoginPresenter implements LoginContract.Presenter {
             view.showPasswordError("Password is required");
             return;
         }
-        
+
+        if (!(email.contains("@") && email.contains("."))) {
+            email = email + "@smart-air-child.com";
+        }
         if (!AuthValidator.isEmailValidFormat(email)) {
             view.showEmailError("Please enter a valid email");
             return;
