@@ -20,10 +20,8 @@ import androidx.fragment.app.FragmentManager;
 
 import com.example.b07demosummer2024.R;
 import com.example.b07demosummer2024.auth.AuthService;
-import com.example.b07demosummer2024.services.PermissionService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
-import android.widget.LinearLayout;
 
 public class ProviderHomeFragment extends ProtectedFragment {
     @Nullable
@@ -36,14 +34,23 @@ public class ProviderHomeFragment extends ProtectedFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Initialize views
         TextView greetingText = view.findViewById(R.id.textGreeting);
-        LinearLayout patientsLayout = view.findViewById(R.id.layoutPatients);
+        Spinner spinner = view.findViewById(R.id.dropdownMenu);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                requireContext(),
+                R.array.placeholder_menu,
+                android.R.layout.simple_spinner_item
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+
         Button signOut = view.findViewById(R.id.buttonSignOut);
         Button detailsButton = view.findViewById(R.id.buttonDetails);
         Button informationButton = view.findViewById(R.id.buttonInformation);
         
+        // Load user name and set greeting
         loadUserNameAndSetGreeting(greetingText);
-        loadAccessiblePatients(patientsLayout);
         
         signOut.setOnClickListener(v -> {
             // Clear cached role data before signing out
@@ -172,57 +179,5 @@ public class ProviderHomeFragment extends ProtectedFragment {
         cancelButton.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
-    }
-
-    private void loadAccessiblePatients(LinearLayout patientsLayout) {
-        patientsLayout.removeAllViews();
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        if (auth.getCurrentUser() == null) {
-            return;
-        }
-        String providerId = auth.getCurrentUser().getUid();
-        PermissionService permissionService = new PermissionService();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        
-        db.collection("providerAccess")
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        for (com.google.firebase.firestore.QueryDocumentSnapshot parentDoc : task.getResult()) {
-                            String parentId = parentDoc.getId();
-                            permissionService.getAccessibleChildren(parentId, providerId, childIds -> {
-                                if (isAdded() && childIds != null && !childIds.isEmpty()) {
-                                    for (String childId : childIds) {
-                                        db.collection("users")
-                                                .document(childId)
-                                                .get()
-                                                .addOnSuccessListener(document -> {
-                                                    if (document.exists() && isAdded()) {
-                                                        String name = document.getString("name");
-                                                        addPatientView(patientsLayout, childId, name != null ? name : "Unknown");
-                                                    }
-                                                });
-                                    }
-                                }
-                            });
-                        }
-                    }
-                });
-    }
-
-    private void addPatientView(LinearLayout layout, String childId, String name) {
-        View patientView = getLayoutInflater().inflate(R.layout.item_patient, layout, false);
-        TextView nameText = patientView.findViewById(R.id.textPatientName);
-        Button viewButton = patientView.findViewById(R.id.buttonView);
-        
-        nameText.setText(name);
-        viewButton.setOnClickListener(v -> {
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, ProviderPatientViewFragment.newInstance(childId))
-                    .addToBackStack(null)
-                    .commit();
-        });
-        
-        layout.addView(patientView);
     }
 }

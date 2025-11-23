@@ -48,17 +48,9 @@ public class ParentHomeFragment extends ProtectedFragment {
         Button signOut = view.findViewById(R.id.buttonSignOut);
         Button detailsButton = view.findViewById(R.id.buttonDetails);
         Button informationButton = view.findViewById(R.id.buttonInformation);
-        Button manageProviderAccessButton = view.findViewById(R.id.buttonManageProviderAccess);
         
         // Load user name and set greeting
         loadUserNameAndSetGreeting(greetingText);
-        
-        manageProviderAccessButton.setOnClickListener(v -> {
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new ProviderAccessManagementFragment())
-                    .addToBackStack(null)
-                    .commit();
-        });
         
         signOut.setOnClickListener(v -> {
             // Clear cached role data before signing out
