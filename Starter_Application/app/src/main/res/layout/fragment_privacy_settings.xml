@@ -50,6 +50,16 @@
         android:layout_marginBottom="8dp"/>
 
     <Button
+        android:id="@+id/buttonManageSharing"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Manage Provider Sharing"
+        app:layout_constraintTop_toBottomOf="@+id/buttonProviderInvites"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="8dp"/>
+
+    <Button
         android:id="@+id/buttonBack"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
