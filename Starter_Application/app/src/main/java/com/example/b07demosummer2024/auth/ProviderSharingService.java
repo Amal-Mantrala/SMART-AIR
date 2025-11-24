@@ -49,6 +49,11 @@ public class ProviderSharingService {
         void onError(String error);
     }
 
+    public interface ProviderListCallback {
+        void onResult(List<ProviderAccess> providers);
+        void onError(String error);
+    }
+
     public void getSharedChildrenForProvider(String providerId, SharingCallback callback) {
         db.collection("providerAccess")
                 .whereEqualTo("providerId", providerId)
@@ -251,6 +256,28 @@ public class ProviderSharingService {
                     if (task.isSuccessful() && !task.getResult().isEmpty()) {
                         QueryDocumentSnapshot doc = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);
                         doc.getReference().update("status", "active", "providerId", providerId);
+                    }
+                });
+    }
+
+    public void getActiveProvidersForParent(String parentId, ProviderListCallback callback) {
+        db.collection("providerAccess")
+                .whereEqualTo("parentId", parentId)
+                .whereEqualTo("status", "active")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        List<ProviderAccess> providers = new ArrayList<>();
+                        for (QueryDocumentSnapshot doc : task.getResult()) {
+                            ProviderAccess access = doc.toObject(ProviderAccess.class);
+                            if (access != null) {
+                                access.setAccessId(doc.getId());
+                                providers.add(access);
+                            }
+                        }
+                        callback.onResult(providers);
+                    } else {
+                        callback.onError(task.getException() != null ? task.getException().getMessage() : "Unknown error");
                     }
                 });
     }

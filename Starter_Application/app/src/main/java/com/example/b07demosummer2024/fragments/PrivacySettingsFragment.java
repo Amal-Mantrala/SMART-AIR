@@ -32,11 +32,18 @@ public class PrivacySettingsFragment extends Fragment {
         Button privacyDefaultsButton = view.findViewById(R.id.buttonPrivacyDefaults);
         Button sharingControlsButton = view.findViewById(R.id.buttonSharingControls);
         Button providerInvitesButton = view.findViewById(R.id.buttonProviderInvites);
+        Button manageSharingButton = view.findViewById(R.id.buttonManageSharing);
         Button backButton = view.findViewById(R.id.buttonBack);
 
         privacyDefaultsButton.setOnClickListener(v -> showPrivacyDefaultsDialog());
         sharingControlsButton.setOnClickListener(v -> showSharingControlsDialog());
         providerInvitesButton.setOnClickListener(v -> showProviderInvitesDialog());
+        manageSharingButton.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new ManageProviderSharingFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
         backButton.setOnClickListener(v -> {
             if (getParentFragmentManager() != null) {
                 getParentFragmentManager().popBackStack();

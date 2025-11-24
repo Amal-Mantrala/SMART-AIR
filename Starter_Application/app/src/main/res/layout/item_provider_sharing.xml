@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/textProviderName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Provider Name"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"/>
+
+        <TextView
+            android:id="@+id/textProviderId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Provider ID"
+            android:textSize="12sp"
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginTop="4dp"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewChildren"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:nestedScrollingEnabled="false"/>
+
+        <Button
+            android:id="@+id/buttonRevokeAccess"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Revoke Access"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@android:color/holo_red_dark"/>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
