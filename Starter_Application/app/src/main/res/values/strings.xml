@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">SMART-AIR</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="delete_item">Delete Item</string>
     <string name="add_item">Add Item</string>
@@ -41,29 +40,133 @@
     <string name="information">Information</string>
     
     <!-- Greeting Messages -->
-    <string name="child_greeting">Hello %1$s, welcome to your asthma management dashboard!</string>
-    <string name="parent_greeting">Hello %1$s, manage your family\'s asthma care from here.</string>
-    <string name="provider_greeting">Hello %1$s, review your patients\' shared asthma data.</string>
+    <string name="child_greeting">Hello %1$s, welcome to SMART-AIR, your asthma management app!</string>
+    <string name="parent_greeting">Hello %1$s, welcome to SMART-AIR, manage your family\'s asthma care from here.</string>
+    <string name="provider_greeting">Hello %1$s, welcome to SMART-AIR, review your patients\' shared asthma data.</string>
     
     <!-- Child Tutorial Content -->
-    <string name="child_tutorial_content">Welcome to SMART-AIR! As a Child user, you can:\n\n📱 <b>Log Your Medicines</b>\n• Record when you take your rescue inhaler (quick-relief for sudden symptoms)\n• Track your controller medicine (daily prevention that reduces airway swelling)\n\n📊 <b>Track Your Symptoms</b>\n• Record how you\'re feeling each day\n• Note any triggers or patterns\n\n🎮 <b>Get Help with Techniques</b>\n• Access gamified breathing helpers\n• Learn proper inhaler techniques\n• Get simple guidance for managing asthma\n\n🔒 <b>Your Privacy</b>\n• You can only see your own data\n• Nothing is shared with providers unless your parent chooses to\n\nRemember: Use your rescue inhaler for sudden symptoms, take your controller medicine daily as prescribed!</string>
-    
+    <string name="child_tutorial_content"> <b>Welcome to SMART-AIR!</b> 🌟\nAs a Child, you can track your asthma symptoms and medicine use to stay healthy.\n\n💊 <b>Log Your Medicines</b>\n• Rescue inhaler for sudden symptoms\n• Controller medicine for daily prevention\n\n📊 <b>Track Symptoms</b>\n• Record how you feel daily\n• Note triggers and patterns\n\n🔒 <b>Your Privacy</b>\n• Only you can see your data\n• Parents control what providers see\n\nTap any button to get started!</string>
+
     <!-- Parent Tutorial Content -->
-    <string name="parent_tutorial_content">Welcome to SMART-AIR! As a Parent, you have full control over your family\'s asthma management:\n\n👨‍👩‍👧‍👦 <b>Manage Multiple Children</b>\n• Link one or more children to your account\n• View individual dashboards for each child\n\n📊 <b>Monitor &amp; Track</b>\n• See medicine adherence and symptom patterns\n• Receive alerts for important events\n• Export detailed reports for doctor visits\n\n🔐 <b>Control Privacy &amp; Sharing</b>\n• By default, nothing is shared with providers\n• Use granular toggles to choose what each provider can see\n• Send one-time invite codes to providers (expires in 7 days)\n• Revoke provider access anytime\n• Export PDF/CSV reports for sharing\n\n📱 <b>Real-time Control</b>\n• All privacy changes take effect immediately\n• Everything is reversible\n\n<b>Medicine Types:</b>\n• Rescue inhaler: Quick-relief for sudden symptoms\n• Controller medicine: Daily prevention that reduces airway swelling</string>
-    
+    <string name="parent_tutorial_content"> <b>Welcome to SMART-AIR!</b> 👪\nAs a Parent, you can monitor and manage your children\'s asthma care from one central place.\n\n🔗 <b>Manage Children</b>\n• Link and monitor multiple children\n• View individual health dashboards\n\n📊 <b>Track Progress</b>\n• Monitor medicine adherence\n• Review symptom patterns\n• Export reports for doctors\n\n🔐 <b>Control Sharing</b>\n• Choose what providers can see\n• Send secure invite codes (7-day expiry)\n• Revoke access anytime\n\nYou have complete control over your family\'s data!</string>
+
     <!-- Provider Tutorial Content -->
-    <string name="provider_tutorial_content">Welcome to SMART-AIR! As a Healthcare Provider, you have read-only access to patient data:\n\n🩺 <b>View Patient Summaries</b>\n• Access shared reports and dashboards\n• Review medicine adherence patterns\n• Monitor symptom trends\n\n🔒 <b>Privacy-First Access</b>\n• You can only see what parents explicitly share\n• Access is controlled per child with granular permissions\n• Parents can revoke your access anytime\n\n📧 <b>Getting Access</b>\n• Parents send you a one-time invite code/link\n• Codes expire in 7 days for security\n• Alternative: Parents can export PDF/CSV reports\n\n📊 <b>Understanding the Data</b>\n• <b>Rescue inhaler:</b> Quick-relief medicine for sudden symptoms\n• <b>Controller Medicine:</b> Daily prevention medicine that reduces airway swelling\n• Look for patterns in symptoms and medicine usage\n\n⚡ <b>Real-time Updates</b>\n• When parents change sharing settings, access updates immediately\n• All data reflects the most current patient information</string>
+    <string name="provider_tutorial_content"> <b>Welcome to SMART-AIR!</b> 🩺\nAs a Healthcare Provider, you can review shared patient data to provide better asthma care.\n\n📊 <b>View Patient Data</b>\n• Access shared health reports\n• Monitor medicine adherence\n• Track symptom trends\n\n🔐 <b>Privacy-First</b>\n• Only see what parents share\n• Access can be revoked anytime\n• All data updates in real-time\n\n📧 <b>Getting Access</b>\n• Parents send you invite codes\n• Codes expire in 7 days\n• Accept invites to view patient data\n\nStart by accepting an invite code!</string>
 
-    <string-array name="placeholder_menu">
-        <item>Placeholder 1</item>
-        <item>Placeholder 2</item>
-        <item>Placeholder 3</item>
+    <!-- Provider Invite Functionality -->
+    <string name="accept_invite_code">Accept Invite Code</string>
+    <string name="enter_invite_code">Enter the invite code provided by the parent to access their child\'s shared health information.</string>
+    <string name="invite_code_hint">Enter 8-character invite code</string>
+    <string name="accept_invite">Accept Invite</string>
+    <string name="invite_provider">Invite Provider</string>
+    <string name="generate_invite_code">Generate Invite Code</string>
+    <string name="generate_invite">Generate Invite</string>
+    <string name="copy_code">Copy Code</string>
+    <string name="share_code">Share Code</string>
+    <string name="provider_name_hint">Provider Name (Optional)</string>
+    <string name="select_children_text">Select children to share with this provider:</string>
+    <string name="invite_code_label">Your Invite Code:</string>
+    <string name="invite_code_expires">Share this code with your provider. It expires in 7 days.</string>
+    <string name="invite_description">Generate a one-time invite code to share with your healthcare provider. The code will expire in 7 days.</string>
+
+    <!-- Health Logging Strings -->
+    <string name="log_health_info">Log Your Health Information</string>
+    <string name="log_medicine">💊 Log Medicine</string>
+    <string name="log_symptoms">🩺 Log Symptoms</string>
+    <string name="daily_checkin">📋 Daily Check-in</string>
+    <string name="view_history">📊 View My History</string>
+    <string name="medicine_type">Medicine Type</string>
+    <string name="rescue_inhaler">🚨 Rescue Inhaler</string>
+    <string name="controller_medicine">🛡️ Controller Medicine</string>
+    <string name="medicine_name">Medicine Name</string>
+    <string name="medicine_name_hint">e.g., Albuterol, Fluticasone</string>
+    <string name="dosage_puffs">Dosage/Puffs</string>
+    <string name="dosage_hint">e.g., 2 puffs, 1 tablet</string>
+    <string name="before_after_dose">How do you feel after taking the medicine?</string>
+    <string name="better">Better</string>
+    <string name="same">Same</string>
+    <string name="worse">Worse</string>
+    <string name="symptoms_rescue">Symptoms (that caused you to use rescue inhaler)</string>
+    <string name="wheezing">Wheezing</string>
+    <string name="coughing">Coughing</string>
+    <string name="short_breath">Short of Breath</string>
+    <string name="chest_tightness">Chest Tightness</string>
+    <string name="fatigue">Fatigue</string>
+    <string name="night_symptoms">Night Symptoms</string>
+    <string name="severity_scale">Severity (1-10)</string>
+    <string name="overall_severity">Overall Severity (1-10)</string>
+    <string name="location">Location</string>
+    <string name="activity_level">Activity Level</string>
+    <string name="notes">Notes</string>
+    <string name="notes_hint">Any additional notes...</string>
+    <string name="save_log">Save Log</string>
+    
+    <!-- Symptom Dialog Strings -->
+    <string name="what_symptoms">What symptoms are you experiencing?</string>
+    <string name="possible_triggers">Possible Triggers</string>
+    <string name="dust">Dust</string>
+    <string name="pollen">Pollen</string>
+    <string name="exercise">Exercise</string>
+    <string name="weather">Weather</string>
+    <string name="smoke_fumes">Smoke/Fumes</string>
+    <string name="stress">Stress</string>
+    <string name="rescue_inhaler_used">I used my rescue inhaler</string>
+    <string name="peak_flow_optional">Peak Flow Reading (optional)</string>
+    <string name="peak_flow_example">e.g., 450 L/min</string>
+    
+    <!-- Daily Check-in Dialog Strings -->
+    <string name="log_daily_checkin">Daily Check-in</string>
+    <string name="mood">Mood</string>
+    <string name="energy_level">Energy Level</string>
+    <string name="high">High</string>
+    <string name="medium">Medium</string>
+    <string name="low">Low</string>
+    <string name="breathing_ease">Breathing Ease</string>
+    <string name="sleep_quality_last_night">Sleep Quality (Last Night)</string>
+    <string name="night_waking">Times Woken During Night</string>
+    <string name="excellent">Excellent</string>
+    <string name="good_sleep">Good</string>
+    <string name="fair">Fair</string>
+    <string name="poor_sleep">Poor</string>
+    <string name="rescue_inhaler_uses_today">Rescue Inhaler Uses Today</string>
+    <string name="rescue_uses_hint">Number of times used (0 if none)</string>
+    <string name="notes_checkin">Anything else about your day...</string>
+    <string name="any_symptoms_today">Any symptoms today?</string>
+    <string name="medication_taken">Medication taken today?</string>
+    <string name="general_notes">General notes</string>
+    <string name="general_notes_hint">How was your day? Any observations?</string>
+    <string name="save_checkin">Save Check-in</string>
+    
+    <!-- History Strings -->
+    <string name="my_health_history">My Health History</string>
+    <string name="no_health_data">No health data logged yet.\nStart by logging your medicine, symptoms, or daily check-ins!</string>
+    <string name="medicine_log">Medicine Log</string>
+    <string name="sample_date">Nov 25, 2024 10:30 AM</string>
+    <string name="sample_medicine">Albuterol - 2 puffs for wheezing</string>
+
+
+    <!-- Health Logging Arrays -->
+    <string-array name="location_array">
+        <item>Home</item>
+        <item>School</item>
+        <item>Outdoors</item>
+        <item>Gym/Sports</item>
+        <item>Friend\'s House</item>
+        <item>Car/Transport</item>
+        <item>Other</item>
     </string-array>
 
-    <string-array name="categories_array">
-        <item>Books</item>
-        <item>Movies</item>
-    </string-array>
 
+    <string-array name="mood_array">
+        <item>Happy</item>
+        <item>Sad</item>
+        <item>Anxious</item>
+        <item>Stressed</item>
+        <item>Calm</item>
+        <item>Excited</item>
+        <item>Tired</item>
+        <item>Frustrated</item>
+        <item>Normal</item>
+    </string-array>
 
 </resources>

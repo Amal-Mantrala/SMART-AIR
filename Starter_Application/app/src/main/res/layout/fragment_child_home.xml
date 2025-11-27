@@ -31,17 +31,58 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp"/>
 
-    <Spinner
-        android:id="@+id/dropdownMenu"
+    <LinearLayout
+        android:id="@+id/layoutLoggingButtons"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        app:layout_constraintBottom_toTopOf="@+id/buttonInformation"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
+        android:orientation="vertical"
+        android:layout_marginTop="16dp"
         app:layout_constraintTop_toBottomOf="@+id/textGreeting"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/log_health_info"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginBottom="16dp"
+            android:textColor="@android:color/black" />
+
+        <Button
+            android:id="@+id/buttonLogMedicine"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/log_medicine"
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="#4CAF50" />
+
+        <Button
+            android:id="@+id/buttonLogSymptoms"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/log_symptoms"
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="#FF9800" />
+
+        <Button
+            android:id="@+id/buttonDailyCheckIn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/daily_checkin"
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="#2196F3" />
+
+        <Button
+            android:id="@+id/buttonViewHistory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/view_history"
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="#9C27B0" />
+
+    </LinearLayout>
 
     <Button
         android:id="@+id/buttonInformation"
@@ -51,7 +92,9 @@
         app:layout_constraintBottom_toTopOf="@+id/buttonDetails"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/layoutLoggingButtons"
+        app:layout_constraintVertical_bias="1.0" />
 
     <Button
         android:id="@+id/buttonDetails"
