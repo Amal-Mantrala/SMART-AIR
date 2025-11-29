@@ -33,6 +33,7 @@ import com.example.b07demosummer2024.services.ProviderInviteService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -62,6 +63,7 @@ public class ParentHomeFragment extends ProtectedFragment {
         Button manageChildrenButton = view.findViewById(R.id.buttonManageChildren);
         Button privacySharingButton = view.findViewById(R.id.buttonPrivacySharing);
         Button inviteProviderButton = view.findViewById(R.id.buttonInviteProvider);
+        Button viewAlertsButton = view.findViewById(R.id.buttonViewAlerts);
 
         // Load user name and set greeting
         loadUserNameAndSetGreeting(greetingText);
@@ -87,9 +89,129 @@ public class ParentHomeFragment extends ProtectedFragment {
                     .commit();
         });
         inviteProviderButton.setOnClickListener(v -> showInviteProviderDialog());
-
+        viewAlertsButton.setOnClickListener(v -> showAlertsDialog());
 
         showTutorialIfFirstTime();
+        checkForAlerts(viewAlertsButton);
+    }
+
+    private void checkForAlerts(Button alertButton) {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) return;
+
+        String parentId = auth.getCurrentUser().getUid();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        
+        db.collection("parentAlerts")
+                .whereEqualTo("parentId", parentId)
+                .whereEqualTo("read", false)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && isAdded()) {
+                        int unreadCount = task.getResult().size();
+                        if (unreadCount > 0) {
+                            alertButton.setText(getString(R.string.parent_alerts) + " (" + unreadCount + ")");
+                        } else {
+                            alertButton.setText(getString(R.string.parent_alerts));
+                        }
+                    }
+                });
+    }
+
+    private void showAlertsDialog() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            Toast.makeText(requireContext(), "Not signed in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String parentId = auth.getCurrentUser().getUid();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("parentAlerts")
+                .whereEqualTo("parentId", parentId)
+                .limit(20)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (!isAdded()) return;
+                    
+                    if (task.isSuccessful()) {
+                        List<Map<String, Object>> alerts = new ArrayList<>();
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            Map<String, Object> alert = document.getData();
+                            alert.put("alertId", document.getId());
+                            alerts.add(alert);
+                        }
+
+                        if (alerts.isEmpty()) {
+                            Toast.makeText(requireContext(), getString(R.string.no_alerts), Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        alerts.sort((a, b) -> {
+                            Long timestampA = (Long) a.get("timestamp");
+                            Long timestampB = (Long) b.get("timestamp");
+                            if (timestampA == null && timestampB == null) return 0;
+                            if (timestampA == null) return 1;
+                            if (timestampB == null) return -1;
+                            return timestampB.compareTo(timestampA);
+                        });
+
+                        StringBuilder alertText = new StringBuilder();
+                        for (Map<String, Object> alert : alerts) {
+                            String childName = (String) alert.get("childName");
+                            String message = (String) alert.get("message");
+                            Long timestamp = (Long) alert.get("timestamp");
+                            
+                            if (childName == null) childName = "Your child";
+                            if (message == null) message = "Alert";
+                            
+                            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MMM dd, yyyy HH:mm", java.util.Locale.getDefault());
+                            String timeStr = timestamp != null ? sdf.format(new java.util.Date(timestamp)) : "Unknown time";
+                            
+                            alertText.append(childName).append(": ").append(message).append("\n");
+                            alertText.append("Time: ").append(timeStr).append("\n\n");
+                        }
+
+                        AlertDialog alertDialog = new AlertDialog.Builder(requireContext())
+                                .setTitle(getString(R.string.parent_alerts))
+                                .setMessage(alertText.toString())
+                                .setPositiveButton("Mark as Read", null)
+                                .setNegativeButton("Close", null)
+                                .create();
+                        
+                        alertDialog.setOnShowListener(dialog -> {
+                            Button markAsReadButton = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                            markAsReadButton.setOnClickListener(v -> {
+                                for (Map<String, Object> alert : alerts) {
+                                    String alertId = (String) alert.get("alertId");
+                                    if (alertId != null) {
+                                        db.collection("parentAlerts")
+                                                .document(alertId)
+                                                .update("read", true);
+                                    }
+                                }
+                                
+                                if (isAdded() && getView() != null) {
+                                    Button alertButton = getView().findViewById(R.id.buttonViewAlerts);
+                                    if (alertButton != null) {
+                                        alertButton.setText(getString(R.string.parent_alerts));
+                                        checkForAlerts(alertButton);
+                                    }
+                                }
+                                
+                                Toast.makeText(requireContext(), "Alerts marked as read", Toast.LENGTH_SHORT).show();
+                                alertDialog.dismiss();
+                            });
+                        });
+                        
+                        alertDialog.show();
+                    } else {
+                        Exception e = task.getException();
+                        String errorMsg = e != null ? e.getMessage() : "Unknown error";
+                        Toast.makeText(requireContext(), "Error loading alerts: " + errorMsg, Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     private void showLinkChildDialog() {

@@ -114,6 +114,33 @@
     <string name="peak_flow_optional">Peak Flow Reading (optional)</string>
     <string name="peak_flow_example">e.g., 450 L/min</string>
     
+    <!-- Triage Strings -->
+    <string name="having_trouble_breathing">🚨 Having trouble breathing?</string>
+    <string name="triage_safety_note">⚠️ This is guidance, not a diagnosis. If in doubt, call emergency.</string>
+    <string name="triage_red_flags">Check for warning signs:</string>
+    <string name="cannot_speak_sentences">Cannot speak full sentences</string>
+    <string name="chest_retractions">Chest pulling in/retractions</string>
+    <string name="blue_gray_lips">Blue/gray lips or nails</string>
+    <string name="recent_rescue_attempts">Recent rescue attempts (last 3 hours)</string>
+    <string name="rescue_attempts_hint">Number of times</string>
+    <string name="current_pef">Current Peak Flow (optional)</string>
+    <string name="pef_hint">Enter PEF reading</string>
+    <string name="call_emergency_now">Call Emergency Now</string>
+    <string name="start_home_steps">Start Home Steps</string>
+    <string name="triage_decision_emergency">Based on your symptoms, you should call emergency services immediately.</string>
+    <string name="triage_decision_home">You can try home steps. Monitor your symptoms closely.</string>
+    <string name="home_steps_title">Home Steps (Action Plan)</string>
+    <string name="home_steps_content">1. Use rescue inhaler as directed\n2. Sit upright and try to relax\n3. Monitor symptoms closely\n4. Re-check in 10 minutes\n5. If symptoms worsen, call emergency</string>
+    <string name="recheck">Re-check</string>
+    <string name="timer_remaining">Time remaining: %1$d minutes</string>
+    <string name="not_improving">Not improving</string>
+    <string name="escalation_message">Symptoms not improving. Consider calling emergency.</string>
+    <string name="triage_saved">Triage session saved</string>
+    <string name="triage_error">Error saving triage session</string>
+    <string name="parent_alerts">Parent Alerts</string>
+    <string name="triage_alert_title">Triage Alert</string>
+    <string name="no_alerts">No alerts</string>
+    
     <!-- Daily Check-in Dialog Strings -->
     <string name="log_daily_checkin">Daily Check-in</string>
     <string name="mood">Mood</string>
