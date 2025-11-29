@@ -3,6 +3,7 @@ package com.example.b07demosummer2024.fragments;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +26,7 @@ import androidx.fragment.app.FragmentManager;
 
 import com.example.b07demosummer2024.R;
 import com.example.b07demosummer2024.auth.AuthService;
+import com.example.b07demosummer2024.logic.ZoneCalculator;
 import com.example.b07demosummer2024.models.MedicineLog;
 import com.example.b07demosummer2024.models.SymptomLog;
 import com.example.b07demosummer2024.models.DailyWellnessLog;
@@ -34,11 +36,23 @@ import com.example.b07demosummer2024.services.TriageService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 public class ChildHomeFragment extends ProtectedFragment {
+
+    private TextView zoneText;
+    private int pbValue = 0;
+
+    private ListenerRegistration userListener;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -60,6 +74,11 @@ public class ChildHomeFragment extends ProtectedFragment {
         Button dailyCheckInButton = view.findViewById(R.id.buttonDailyCheckIn);
         Button viewHistoryButton = view.findViewById(R.id.buttonViewHistory);
         Button triageButton = view.findViewById(R.id.buttonTriage);
+        Button pefButton = view.findViewById(R.id.buttonEnterPef);
+        zoneText = view.findViewById(R.id.textZoneDisplay);
+
+        // Load Zone and PB
+        startUserListener();
         
         // Load user name and set greeting
         loadUserNameAndSetGreeting(greetingText);
@@ -87,6 +106,7 @@ public class ChildHomeFragment extends ProtectedFragment {
         dailyCheckInButton.setOnClickListener(v -> showDailyCheckInDialog());
         viewHistoryButton.setOnClickListener(v -> showHealthHistoryDialog());
         triageButton.setOnClickListener(v -> showTriageDialog());
+        pefButton.setOnClickListener(v -> showPefDialog());
 
         showTutorialIfFirstTime();
         checkForPendingInvitations();
@@ -837,5 +857,171 @@ public class ChildHomeFragment extends ProtectedFragment {
                 }
             }
         });
+    }
+
+    private void showPefDialog() {
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View dialogView = inflater.inflate(R.layout.dialog_pef_entry, null);
+
+        EditText pefInput = dialogView.findViewById(R.id.editTextPef);
+        RadioGroup medGroup = dialogView.findViewById(R.id.radioGroupMedType);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Add PEF")
+                .setView(dialogView)
+                .setPositiveButton("Save", (dialog, which) -> {
+                    String pefText = pefInput.getText().toString().trim();
+
+                    if (pefText.isEmpty()) {
+                        Toast.makeText(getContext(), "Please enter a PEF value", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    int selectedId = medGroup.getCheckedRadioButtonId();
+                    if (selectedId == -1) {
+                        Toast.makeText(getContext(), "Please select pre-med or post-med", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    String medType = (selectedId == R.id.radioPreMed) ? "pre" : "post";
+
+                    int pefValue;
+                    try {
+                        pefValue = Integer.parseInt(pefText);
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(getContext(), "PEF must be a number", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if (pefValue <=0 || pefValue > 800) {
+                        Toast.makeText(getContext(), "PEF must be a number between 0 and 800", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+
+
+                    FirebaseFirestore db = FirebaseFirestore.getInstance();
+                    String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+                    String timestamp = String.valueOf(System.currentTimeMillis());
+                    String date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+                    String time = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
+                    String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+
+                    db.collection("users")
+                            .document(uid)
+                            .collection("pefLogs")
+                            .document(timestamp)
+                            .set(new HashMap<String, Object>() {{
+                                put("pef", pefValue);
+                                put("medType", medType);
+                                put("date", date);
+                                put("time", time);
+                            }})
+                            .addOnSuccessListener(a ->
+                                    Toast.makeText(getContext(),
+                                            "PEF saved (" + medType + "-med)",
+                                            Toast.LENGTH_SHORT).show())
+                            .addOnFailureListener(e ->
+                                    Toast.makeText(getContext(),
+                                            "Error saving PEF",
+                                            Toast.LENGTH_SHORT).show());
+
+                    db.collection("users")
+                            .document(uid)
+                            .get()
+                            .addOnSuccessListener(snapshot -> {
+
+                                Long existingPb = snapshot.getLong("pb");
+                                long newPb = (existingPb == null) ? pefValue :
+                                        Math.max(existingPb, pefValue);
+
+                                // First update PB
+                                db.collection("users")
+                                        .document(uid)
+                                        .update("pb", newPb)
+                                        .addOnSuccessListener(unused -> {
+
+                                            // Compute correct zone using updated PB
+                                            String zone = ZoneCalculator.computeZone(pefValue, (int) newPb);
+
+                                            // Save zone and last zone date
+                                            db.collection("users")
+                                                    .document(uid)
+                                                    .update("zone", zone, "lastZoneDate", today);
+
+                                            // Update UI
+                                            zoneText.setText("Zone: " + zone);
+                                            updateZoneUI(zone);
+                                        });
+                            });
+
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void updateZoneUI(String zone) {
+        switch (zone) {
+            case "Green":
+                zoneText.setTextColor(Color.parseColor("#2ecc71")); // green
+                break;
+            case "Yellow":
+                zoneText.setTextColor(Color.parseColor("#f1c40f")); // yellow
+                break;
+            case "Red":
+                zoneText.setTextColor(Color.parseColor("#e74c3c")); // red
+                break;
+        }
+    }
+
+    private void startUserListener() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) return;
+
+        String uid = auth.getCurrentUser().getUid();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        userListener = db.collection("users")
+                .document(uid)
+                .addSnapshotListener((snapshot, e) -> {
+                    if (snapshot != null && snapshot.exists()) {
+
+                        String zone = snapshot.getString("zone");
+                        String lastZoneDate = snapshot.getString("lastZoneDate");
+
+                        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                .format(new Date());
+
+                        if (lastZoneDate == null || !lastZoneDate.equals(today)) {
+                            // New day — reset zone
+                            zoneText.setText("Zone: --");
+                            updateZoneUI("none");
+
+                            // reset value in Firestore too
+                            db.collection("users")
+                                    .document(uid)
+                                    .update("zone", null,
+                                            "lastZoneDate", today);
+                        } else {
+                            // Same day — show stored zone
+                            if (zone != null) {
+                                zoneText.setText("Zone: " + zone);
+                                updateZoneUI(zone);
+                            } else {
+                                zoneText.setText("Zone: --");
+                                updateZoneUI("none");
+                            }
+                        }
+                    }
+                });
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (userListener != null) {
+            userListener.remove();
+        }
     }
 }

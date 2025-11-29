@@ -6,13 +6,17 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,6 +46,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ParentHomeFragment extends ProtectedFragment {
+
+    private List<String> childIds = new ArrayList<>();
+    private List<String> childNames = new ArrayList<>();
+    private ArrayAdapter<String> spinnerAdapter;
+    private String selectedChildUid;
+    TextView zoneText;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -64,6 +74,35 @@ public class ParentHomeFragment extends ProtectedFragment {
         Button privacySharingButton = view.findViewById(R.id.buttonPrivacySharing);
         Button inviteProviderButton = view.findViewById(R.id.buttonInviteProvider);
         Button viewAlertsButton = view.findViewById(R.id.buttonViewAlerts);
+        Button setPB = view.findViewById(R.id.buttonSetPB);
+        Spinner childSpinner = view.findViewById(R.id.dropdownMenu);
+        zoneText = view.findViewById(R.id.textZoneValue);
+
+        spinnerAdapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                childNames
+        );
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        childSpinner.setAdapter(spinnerAdapter);
+
+        loadChildrenForParent();
+
+        childSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+                if (pos < childIds.size()) {
+                    selectedChildUid = childIds.get(pos);
+                    loadChildZone(selectedChildUid);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                zoneText.setText("Zone: --");
+                selectedChildUid = null;
+            }
+        });
 
         // Load user name and set greeting
         loadUserNameAndSetGreeting(greetingText);
@@ -72,6 +111,7 @@ public class ParentHomeFragment extends ProtectedFragment {
             signOutAndReturnToLogin();
         });
 
+        setPB.setOnClickListener( v -> showSetPBDialog());
         detailsButton.setOnClickListener(v -> showUserDetailsDialog());
         informationButton.setOnClickListener(v -> showTutorial());
         newChildButton.setOnClickListener(v -> showAddChildDialog());
@@ -665,5 +705,145 @@ public class ParentHomeFragment extends ProtectedFragment {
         shareIntent.putExtra(Intent.EXTRA_SUBJECT, "SMART-AIR Provider Invite");
         shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
         startActivity(Intent.createChooser(shareIntent, "Share Invite Code"));
+    }
+
+    private void loadChildrenForParent() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        String parentUid = auth.getCurrentUser().getUid();
+
+        db.collection("users")
+                .document(parentUid)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    if (!snapshot.exists()) return;
+
+                    List<String> children = (List<String>) snapshot.get("children");
+                    if (children == null || children.isEmpty()) {
+                        childNames.clear();
+                        childIds.clear();
+                        spinnerAdapter.notifyDataSetChanged();
+                        zoneText.setText("Zone: --");
+                        return;
+                    }
+
+                    childIds.clear();
+                    childNames.clear();
+
+                    for (String childUid : children) {
+                        loadSingleChildInfo(childUid);
+                    }
+
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), "Failed loading children.", Toast.LENGTH_SHORT).show()
+                );
+    };
+
+    private void loadSingleChildInfo(String childUid) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users")
+                .document(childUid)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (!doc.exists()) return;
+
+                    String name = doc.getString("name");
+                    if (name == null) name = "Child";
+
+                    childIds.add(childUid);
+                    childNames.add(name);
+                    spinnerAdapter.notifyDataSetChanged();
+                });
+    }
+    private void loadChildZone(String childUid) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users")
+                .document(childUid)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (!doc.exists()) {
+                        zoneText.setText("Zone: --");
+                        return;
+                    }
+
+                    String zone = doc.getString("zone");
+                    if (zone == null || zone.equals("none")) {
+                        zoneText.setText("Zone: --");
+                        zoneText.setTextColor(Color.parseColor("#000000"));
+                    } else {
+                        zoneText.setText("Zone: " + zone);
+                        updateZoneUI(zone);
+                    }
+                });
+    }
+    private void updateZoneUI(String zone) {
+        switch (zone) {
+            case "Green":
+                zoneText.setTextColor(Color.parseColor("#2ecc71")); // green
+                break;
+            case "Yellow":
+                zoneText.setTextColor(Color.parseColor("#f1c40f")); // yellow
+                break;
+            case "Red":
+                zoneText.setTextColor(Color.parseColor("#e74c3c")); // red
+                break;
+            case "none" :
+                zoneText.setTextColor(Color.parseColor("#000000"));
+        }
+    }
+
+    private void showSetPBDialog() {
+        if (selectedChildUid == null) {
+            Toast.makeText(getContext(), "Please select a child first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_set_pb, null);
+        EditText pbInput = dialogView.findViewById(R.id.editPBValue);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Set Personal Best (PB)")
+                .setView(dialogView)
+                .setPositiveButton("Save", (dialog, which) -> {
+                    String text = pbInput.getText().toString().trim();
+
+                    if (text.isEmpty()) {
+                        Toast.makeText(getContext(), "PB cannot be empty", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    int pbValue;
+                    try {
+                        pbValue = Integer.parseInt(text);
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(getContext(), "PB must be a number", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if (pbValue <=0 || pbValue > 800) {
+                        Toast.makeText(getContext(), "PB must be a number between 0 and 800", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    savePBToFirestore(selectedChildUid, pbValue);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void savePBToFirestore(String childUid, int pbValue) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("users")
+                .document(childUid)
+                .update("pb", pbValue)
+                .addOnSuccessListener(a -> {
+                    Toast.makeText(getContext(), "PB updated!", Toast.LENGTH_SHORT).show();
+                    // Refresh zone display
+                    loadChildZone(childUid);
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), "Failed to update PB", Toast.LENGTH_SHORT).show());
     }
 }

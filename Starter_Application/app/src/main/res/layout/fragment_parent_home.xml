@@ -31,15 +31,50 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp"/>
 
+    <Spinner
+        android:id="@+id/dropdownMenu"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        app:layout_constraintBottom_toTopOf="@+id/buttonInformation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textGreeting"
+        app:layout_constraintVertical_bias="0.05" />
+
+
+    <TextView
+        android:id="@+id/textZoneValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:text="Zone: --"
+        android:textSize="22sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dropdownMenu" />
+
+
     <Button
         android:id="@+id/buttonInformation"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/information"
-        app:layout_constraintBottom_toTopOf="@+id/buttonDetails"
+        app:layout_constraintBottom_toTopOf="@+id/buttonSetPB"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginBottom="8dp"/>
+
+    <Button
+        android:id="@+id/buttonSetPB"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Set PB"
+        app:layout_constraintBottom_toTopOf="@+id/buttonDetails"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="8dp"
+        />
 
     <Button
         android:id="@+id/buttonDetails"
