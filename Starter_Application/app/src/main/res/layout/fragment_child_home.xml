@@ -108,44 +108,42 @@
         android:id="@+id/buttonInformation"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@string/information"
-        app:layout_constraintBottom_toTopOf="@+id/buttonEnterPef"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp"
+        android:layout_marginHorizontal="0dp"
         android:layout_marginBottom="8dp"
-        app:layout_constraintTop_toBottomOf="@+id/layoutLoggingButtons"
-        app:layout_constraintVertical_bias="1.0" />
+        android:text="@string/information"
+        app:layout_constraintTop_toBottomOf="@+id/textZoneDisplay"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <Button
         android:id="@+id/buttonEnterPef"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_marginVertical="8dp"
         android:text="Enter PEF"
-        app:layout_constraintBottom_toTopOf="@+id/buttonDetails"
+        app:layout_constraintTop_toBottomOf="@+id/buttonInformation"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintEnd_toEndOf="parent" />
-
 
     <Button
         android:id="@+id/buttonDetails"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginVertical="8dp"
         android:text="@string/details"
-        app:layout_constraintBottom_toTopOf="@+id/buttonSignOut"
+        app:layout_constraintTop_toBottomOf="@+id/buttonEnterPef"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="8dp"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <Button
         android:id="@+id/buttonSignOut"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginVertical="8dp"
         android:text="@string/sign_out"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonDetails"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
