@@ -28,7 +28,9 @@ import com.example.b07demosummer2024.auth.AuthService;
 import com.example.b07demosummer2024.models.MedicineLog;
 import com.example.b07demosummer2024.models.SymptomLog;
 import com.example.b07demosummer2024.models.DailyWellnessLog;
+import com.example.b07demosummer2024.models.TriageIncident;
 import com.example.b07demosummer2024.services.ChildHealthService;
+import com.example.b07demosummer2024.services.TriageService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -57,6 +59,7 @@ public class ChildHomeFragment extends ProtectedFragment {
         Button logSymptomsButton = view.findViewById(R.id.buttonLogSymptoms);
         Button dailyCheckInButton = view.findViewById(R.id.buttonDailyCheckIn);
         Button viewHistoryButton = view.findViewById(R.id.buttonViewHistory);
+        Button triageButton = view.findViewById(R.id.buttonTriage);
         
         // Load user name and set greeting
         loadUserNameAndSetGreeting(greetingText);
@@ -83,6 +86,7 @@ public class ChildHomeFragment extends ProtectedFragment {
         logSymptomsButton.setOnClickListener(v -> showLogSymptomsDialog());
         dailyCheckInButton.setOnClickListener(v -> showDailyCheckInDialog());
         viewHistoryButton.setOnClickListener(v -> showHealthHistoryDialog());
+        triageButton.setOnClickListener(v -> showTriageDialog());
 
         showTutorialIfFirstTime();
         checkForPendingInvitations();
@@ -585,5 +589,253 @@ public class ChildHomeFragment extends ProtectedFragment {
                 .replace(R.id.fragment_container, HealthHistoryFragment.newInstance(childId))
                 .addToBackStack(null)
                 .commit();
+    }
+
+    private void showTriageDialog() {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_triage, null);
+        
+        CheckBox checkCannotSpeak = dialogView.findViewById(R.id.checkCannotSpeak);
+        CheckBox checkChestRetractions = dialogView.findViewById(R.id.checkChestRetractions);
+        CheckBox checkBlueGrayLips = dialogView.findViewById(R.id.checkBlueGrayLips);
+        EditText editRescueAttempts = dialogView.findViewById(R.id.editRescueAttempts);
+        EditText editPEF = dialogView.findViewById(R.id.editPEF);
+        
+        LinearLayout layoutDecisionCard = dialogView.findViewById(R.id.layoutDecisionCard);
+        TextView textDecision = dialogView.findViewById(R.id.textDecision);
+        Button buttonEmergency = dialogView.findViewById(R.id.buttonEmergency);
+        Button buttonHomeSteps = dialogView.findViewById(R.id.buttonHomeSteps);
+        LinearLayout layoutHomeSteps = dialogView.findViewById(R.id.layoutHomeSteps);
+        TextView textTimer = dialogView.findViewById(R.id.textTimer);
+        Button buttonRecheck = dialogView.findViewById(R.id.buttonRecheck);
+        Button buttonNotImproving = dialogView.findViewById(R.id.buttonNotImproving);
+        
+        Button buttonCheck = dialogView.findViewById(R.id.buttonCheck);
+        Button buttonCancel = dialogView.findViewById(R.id.buttonCancel);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .setCancelable(true)
+                .create();
+
+        String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        TriageService triageService = new TriageService();
+        triageService.getRecentRescueAttempts(childId, new TriageService.RescueAttemptsCallback() {
+            @Override
+            public void onSuccess(int count) {
+                if (isAdded() && count > 0) {
+                    editRescueAttempts.setText(String.valueOf(count));
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+            }
+        });
+
+        final boolean[] storedRedFlags = {false, false, false};
+        final int[] storedRescueAttempts = {0};
+        final String[] storedPEF = {""};
+        
+        android.os.Handler timerHandler = new android.os.Handler();
+        Runnable timerRunnable = new Runnable() {
+            int minutesRemaining = 10;
+
+            @Override
+            public void run() {
+                if (minutesRemaining > 0 && isAdded()) {
+                    textTimer.setText(getString(R.string.timer_remaining, minutesRemaining));
+                    textTimer.setVisibility(View.VISIBLE);
+                    minutesRemaining--;
+                    timerHandler.postDelayed(this, 60000);
+                } else {
+                    if (isAdded()) {
+                        textTimer.setText("Time's up! Auto-escalating...");
+                        autoEscalate(childId, storedRedFlags[0], storedRedFlags[1], storedRedFlags[2], 
+                                    storedRescueAttempts[0], storedPEF[0], triageService, dialog);
+                    }
+                }
+            }
+        };
+
+        buttonCheck.setOnClickListener(v -> {
+            final boolean cannotSpeak = checkCannotSpeak.isChecked();
+            final boolean chestRetractions = checkChestRetractions.isChecked();
+            final boolean blueGrayLips = checkBlueGrayLips.isChecked();
+            boolean hasRedFlags = cannotSpeak || chestRetractions || blueGrayLips;
+            
+            storedRedFlags[0] = cannotSpeak;
+            storedRedFlags[1] = chestRetractions;
+            storedRedFlags[2] = blueGrayLips;
+            
+            String rescueAttemptsStr = editRescueAttempts.getText().toString().trim();
+            int rescueAttemptsValue = 0;
+            if (!rescueAttemptsStr.isEmpty()) {
+                try {
+                    rescueAttemptsValue = Integer.parseInt(rescueAttemptsStr);
+                } catch (NumberFormatException e) {
+                    rescueAttemptsValue = 0;
+                }
+            }
+            final int rescueAttempts = rescueAttemptsValue;
+            storedRescueAttempts[0] = rescueAttempts;
+            
+            final String pef = editPEF.getText().toString().trim();
+            storedPEF[0] = pef;
+            
+            layoutDecisionCard.setVisibility(View.VISIBLE);
+            buttonCheck.setVisibility(View.GONE);
+            
+            if (hasRedFlags) {
+                textDecision.setText(getString(R.string.triage_decision_emergency));
+                buttonEmergency.setVisibility(View.VISIBLE);
+                buttonHomeSteps.setVisibility(View.GONE);
+                layoutHomeSteps.setVisibility(View.GONE);
+                
+                buttonEmergency.setOnClickListener(emergencyV -> {
+                    saveTriageIncident(childId, cannotSpeak, chestRetractions, blueGrayLips, 
+                                     rescueAttempts, pef, "emergency", "called_emergency");
+                    dialog.dismiss();
+                });
+            } else {
+                textDecision.setText(getString(R.string.triage_decision_home));
+                buttonEmergency.setVisibility(View.GONE);
+                buttonHomeSteps.setVisibility(View.VISIBLE);
+                layoutHomeSteps.setVisibility(View.VISIBLE);
+                
+                timerHandler.post(timerRunnable);
+                
+                buttonHomeSteps.setOnClickListener(homeV -> {
+                    saveTriageIncident(childId, cannotSpeak, chestRetractions, blueGrayLips, 
+                                     rescueAttempts, pef, "home_steps", "started_home_steps");
+                });
+                
+                buttonRecheck.setOnClickListener(recheckV -> {
+                    boolean newCannotSpeak = checkCannotSpeak.isChecked();
+                    boolean newChestRetractions = checkChestRetractions.isChecked();
+                    boolean newBlueGrayLips = checkBlueGrayLips.isChecked();
+                    boolean hasNewRedFlags = newCannotSpeak || newChestRetractions || newBlueGrayLips;
+                    
+                    String updatedRescueAttemptsStr = editRescueAttempts.getText().toString().trim();
+                    int updatedRescueAttempts = 0;
+                    if (!updatedRescueAttemptsStr.isEmpty()) {
+                        try {
+                            updatedRescueAttempts = Integer.parseInt(updatedRescueAttemptsStr);
+                        } catch (NumberFormatException e) {
+                            updatedRescueAttempts = 0;
+                        }
+                    }
+                    String updatedPEF = editPEF.getText().toString().trim();
+                    
+                    if (hasNewRedFlags) {
+                        timerHandler.removeCallbacks(timerRunnable);
+                        autoEscalate(childId, newCannotSpeak, newChestRetractions, newBlueGrayLips,
+                                    updatedRescueAttempts, updatedPEF, triageService, dialog);
+                        return;
+                    }
+                    
+                    timerHandler.removeCallbacks(timerRunnable);
+                    dialog.dismiss();
+                    showTriageDialog();
+                });
+                
+                buttonNotImproving.setOnClickListener(notImprovingV -> {
+                    timerHandler.removeCallbacks(timerRunnable);
+                    autoEscalate(childId, cannotSpeak, chestRetractions, blueGrayLips,
+                                rescueAttempts, pef, triageService, dialog);
+                });
+            }
+        });
+
+        buttonCancel.setOnClickListener(v -> {
+            timerHandler.removeCallbacks(timerRunnable);
+            dialog.dismiss();
+        });
+
+        dialog.setOnDismissListener(dialogInterface -> {
+            timerHandler.removeCallbacks(timerRunnable);
+        });
+
+        dialog.show();
+    }
+
+    private void autoEscalate(String childId, boolean cannotSpeak, boolean chestRetractions, 
+                             boolean blueGrayLips, int rescueAttempts, String pef,
+                             TriageService triageService, AlertDialog dialog) {
+        triageService.alertParentEscalation(childId, "Symptoms not improving or new red flags appeared", 
+            new TriageService.ParentAlertCallback() {
+                @Override
+                public void onSuccess() {
+                    if (isAdded()) {
+                        Toast.makeText(requireContext(), getString(R.string.escalation_message), Toast.LENGTH_LONG).show();
+                    }
+                }
+
+                @Override
+                public void onError(String error) {
+                    if (isAdded()) {
+                        Toast.makeText(requireContext(), getString(R.string.escalation_message), Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+        
+        TriageIncident incident = new TriageIncident();
+        incident.setChildId(childId);
+        incident.setCannotSpeakFullSentences(cannotSpeak);
+        incident.setChestRetractions(chestRetractions);
+        incident.setBlueGrayLipsNails(blueGrayLips);
+        incident.setRecentRescueAttempts(rescueAttempts);
+        incident.setPeakFlowReading(pef.isEmpty() ? null : pef);
+        incident.setDecision("home_steps");
+        incident.setEscalated(true);
+        incident.setEscalationTimestamp(System.currentTimeMillis());
+        incident.setEscalationReason("Auto-escalated: Timer expired or new red flags appeared");
+        incident.setUserResponse("auto_escalated_to_emergency");
+        
+        triageService.saveTriageIncident(incident, new TriageService.SaveCallback() {
+            @Override
+            public void onSuccess(String documentId) {
+                if (isAdded()) {
+                    Toast.makeText(requireContext(), getString(R.string.triage_saved), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+            }
+        });
+        
+        dialog.dismiss();
+    }
+
+    private void saveTriageIncident(String childId, boolean cannotSpeak, boolean chestRetractions, 
+                                   boolean blueGrayLips, int rescueAttempts, String pef, 
+                                   String decision, String userResponse) {
+        TriageIncident incident = new TriageIncident();
+        incident.setChildId(childId);
+        incident.setCannotSpeakFullSentences(cannotSpeak);
+        incident.setChestRetractions(chestRetractions);
+        incident.setBlueGrayLipsNails(blueGrayLips);
+        incident.setRecentRescueAttempts(rescueAttempts);
+        incident.setPeakFlowReading(pef.isEmpty() ? null : pef);
+        incident.setDecision(decision);
+        incident.setEscalated(false);
+        incident.setUserResponse(userResponse);
+
+        TriageService triageService = new TriageService();
+        triageService.saveTriageIncident(incident, new TriageService.SaveCallback() {
+            @Override
+            public void onSuccess(String documentId) {
+                if (isAdded()) {
+                    Toast.makeText(requireContext(), getString(R.string.triage_saved), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                if (isAdded()) {
+                    Toast.makeText(requireContext(), getString(R.string.triage_error), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 }

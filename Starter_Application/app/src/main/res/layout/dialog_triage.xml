@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Safety Note -->
+        <TextView
+            android:id="@+id/textSafetyNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/triage_safety_note"
+            android:textColor="#FF6B00"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:padding="12dp"
+            android:background="#FFF3E0"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Red Flags Section -->
+        <TextView
+            android:id="@+id/textRedFlagsTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/triage_red_flags"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp" />
+
+        <CheckBox
+            android:id="@+id/checkCannotSpeak"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/cannot_speak_sentences"
+            android:layout_marginBottom="8dp" />
+
+        <CheckBox
+            android:id="@+id/checkChestRetractions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/chest_retractions"
+            android:layout_marginBottom="8dp" />
+
+        <CheckBox
+            android:id="@+id/checkBlueGrayLips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/blue_gray_lips"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Recent Rescue Attempts -->
+        <TextView
+            android:id="@+id/textRecentRescue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/recent_rescue_attempts"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/editRescueAttempts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/rescue_attempts_hint"
+            android:inputType="number"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Current PEF -->
+        <TextView
+            android:id="@+id/textCurrentPEF"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/current_pef"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/editPEF"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/pef_hint"
+            android:inputType="number"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Decision Card (initially hidden) -->
+        <LinearLayout
+            android:id="@+id/layoutDecisionCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#F5F5F5"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/textDecision"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/buttonEmergency"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/call_emergency_now"
+                android:backgroundTint="#F44336"
+                android:layout_marginBottom="8dp"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/buttonHomeSteps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/start_home_steps"
+                android:backgroundTint="#4CAF50"
+                android:layout_marginBottom="8dp"
+                android:visibility="gone" />
+
+            <!-- Home Steps Content -->
+            <LinearLayout
+                android:id="@+id/layoutHomeSteps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginTop="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/home_steps_title"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/home_steps_content"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Timer -->
+                <TextView
+                    android:id="@+id/textTimer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#2196F3"
+                    android:layout_marginBottom="8dp"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/buttonRecheck"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/recheck"
+                    android:backgroundTint="#FF9800"
+                    android:layout_marginBottom="8dp"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/buttonNotImproving"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/not_improving"
+                    android:backgroundTint="#F44336"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/buttonCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/cancel"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/buttonCheck"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Check Symptoms"
+                android:backgroundTint="#2196F3" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

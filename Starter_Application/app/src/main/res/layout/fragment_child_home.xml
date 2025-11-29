@@ -79,8 +79,18 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/view_history"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="8dp"
             android:backgroundTint="#9C27B0" />
+
+        <Button
+            android:id="@+id/buttonTriage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/having_trouble_breathing"
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="#F44336"
+            android:textStyle="bold"
+            android:textSize="16sp" />
 
     </LinearLayout>
 
