@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <VideoView
+        android:id="@+id/video_view_technique"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/text_technique_step"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Step instruction goes here."
+        android:textSize="18sp"
+        android:minHeight="100dp"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="24dp"/>
+
+    <Button
+        android:id="@+id/button_technique_next"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Next"
+        android:layout_gravity="end"/>
+
+</LinearLayout>

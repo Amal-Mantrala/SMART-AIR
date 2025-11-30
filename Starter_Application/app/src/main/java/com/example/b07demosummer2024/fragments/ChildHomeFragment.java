@@ -75,6 +75,7 @@ public class ChildHomeFragment extends ProtectedFragment {
         Button viewHistoryButton = view.findViewById(R.id.buttonViewHistory);
         Button triageButton = view.findViewById(R.id.buttonTriage);
         Button pefButton = view.findViewById(R.id.buttonEnterPef);
+        Button techniqueHelperButton = view.findViewById(R.id.buttonTechniqueHelper);
         zoneText = view.findViewById(R.id.textZoneDisplay);
 
         // Load Zone and PB
@@ -107,7 +108,9 @@ public class ChildHomeFragment extends ProtectedFragment {
         viewHistoryButton.setOnClickListener(v -> showHealthHistoryDialog());
         triageButton.setOnClickListener(v -> showTriageDialog());
         pefButton.setOnClickListener(v -> showPefDialog());
-
+        techniqueHelperButton.setOnClickListener(v -> {
+            new TechniqueHelperFragment().show(getParentFragmentManager(), "TechniqueHelper");
+        });
         showTutorialIfFirstTime();
     }
 
