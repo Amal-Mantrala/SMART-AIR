@@ -39,7 +39,10 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
@@ -706,12 +709,30 @@ public class ParentHomeFragment extends ProtectedFragment {
                     }
 
                     String zone = doc.getString("zone");
-                    if (zone == null || zone.equals("none")) {
+                    String lastZoneDate = doc.getString("lastZoneDate");
+
+                    String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                            .format(new Date());
+
+                    if (lastZoneDate == null || !lastZoneDate.equals(today)) {
+                        // New day — reset zone
                         zoneText.setText("Zone: --");
-                        zoneText.setTextColor(Color.parseColor("#000000"));
+                        updateZoneUI("none");
+
+                        // reset value in Firestore too
+                        db.collection("users")
+                                .document(childUid)
+                                .update("zone", null,
+                                        "lastZoneDate", today);
                     } else {
-                        zoneText.setText("Zone: " + zone);
-                        updateZoneUI(zone);
+                        // Same day — show stored zone
+                        if (zone != null) {
+                            zoneText.setText("Zone: " + zone);
+                            updateZoneUI(zone);
+                        } else {
+                            zoneText.setText("Zone: --");
+                            updateZoneUI("none");
+                        }
                     }
                 });
     }
