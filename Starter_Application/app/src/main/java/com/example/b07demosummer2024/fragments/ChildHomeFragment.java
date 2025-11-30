@@ -76,6 +76,7 @@ public class ChildHomeFragment extends ProtectedFragment {
         Button triageButton = view.findViewById(R.id.buttonTriage);
         Button pefButton = view.findViewById(R.id.buttonEnterPef);
         Button techniqueHelperButton = view.findViewById(R.id.buttonTechniqueHelper);
+        Button myInventoryButton = view.findViewById(R.id.buttonMyInventory);
         zoneText = view.findViewById(R.id.textZoneDisplay);
 
         // Load Zone and PB
@@ -111,6 +112,13 @@ public class ChildHomeFragment extends ProtectedFragment {
         techniqueHelperButton.setOnClickListener(v -> {
             new TechniqueHelperFragment().show(getParentFragmentManager(), "TechniqueHelper");
         });
+        myInventoryButton.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new ChildInventoryFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
+
         showTutorialIfFirstTime();
     }
 
