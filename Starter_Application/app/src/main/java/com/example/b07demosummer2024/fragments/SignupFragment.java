@@ -81,6 +81,11 @@ public class SignupFragment extends Fragment {
         }
 
         authService.createUser(email, password, (success, message) -> {
+            // This is the safety check. If the fragment is no longer active, stop.
+            if (!isAdded()) {
+                return;
+            }
+            
             requireActivity().runOnUiThread(() -> {
                 if (success) {
                     Toast.makeText(getContext(), "Account created!", Toast.LENGTH_SHORT).show();
@@ -99,16 +104,22 @@ public class SignupFragment extends Fragment {
                         db.collection("users").document(uid)
                             .set(user, com.google.firebase.firestore.SetOptions.merge())
                             .addOnSuccessListener(aVoid -> {
-                                Toast.makeText(getContext(), "Profile created successfully!", Toast.LENGTH_SHORT).show();
+                                if (isAdded()) { 
+                                    Toast.makeText(getContext(), "Profile created successfully!", Toast.LENGTH_SHORT).show();
+                                }
                             })
                             .addOnFailureListener(e -> {
-                                Toast.makeText(getContext(), "Error saving profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                if (isAdded()) {
+                                    Toast.makeText(getContext(), "Error saving profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
                             });
                     }
                     
                     // Show role selection dialog with the user's name
                     RoleSelectionFragment dialog = RoleSelectionFragment.newInstance(name);
-                    dialog.show(getParentFragmentManager(), "roleSelection");
+                    if (getParentFragmentManager() != null) {
+                        dialog.show(getParentFragmentManager(), "roleSelection");
+                    }
                 } else {
                     Toast.makeText(getContext(), "Signup failed: " + message, Toast.LENGTH_LONG).show();
                 }
@@ -117,6 +128,7 @@ public class SignupFragment extends Fragment {
     }
 
     private void navigateToLogin() {
+        if (!isAdded()) return; // Add safety check here
         requireActivity().runOnUiThread(() -> {
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new LoginFragment())
@@ -125,5 +137,3 @@ public class SignupFragment extends Fragment {
         });
     }
 }
-
-

@@ -69,7 +69,6 @@ public class ParentHomeFragment extends ProtectedFragment {
         Button detailsButton = view.findViewById(R.id.buttonDetails);
         Button informationButton = view.findViewById(R.id.buttonInformation);
         Button newChildButton = view.findViewById(R.id.buttonAddChild);
-        Button linkChildButton = view.findViewById(R.id.buttonLinkChild);
         Button manageChildrenButton = view.findViewById(R.id.buttonManageChildren);
         Button privacySharingButton = view.findViewById(R.id.buttonPrivacySharing);
         Button inviteProviderButton = view.findViewById(R.id.buttonInviteProvider);
@@ -115,7 +114,6 @@ public class ParentHomeFragment extends ProtectedFragment {
         detailsButton.setOnClickListener(v -> showUserDetailsDialog());
         informationButton.setOnClickListener(v -> showTutorial());
         newChildButton.setOnClickListener(v -> showAddChildDialog());
-        linkChildButton.setOnClickListener(v -> showLinkChildDialog());
         manageChildrenButton.setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new ManageChildrenFragment())
@@ -252,66 +250,6 @@ public class ParentHomeFragment extends ProtectedFragment {
                         Toast.makeText(requireContext(), "Error loading alerts: " + errorMsg, Toast.LENGTH_LONG).show();
                     }
                 });
-    }
-
-    private void showLinkChildDialog() {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_link_child, null);
-        EditText childEmailEdit = dialogView.findViewById(R.id.editChildEmail);
-        Button sendButton = dialogView.findViewById(R.id.buttonSendInvitation);
-        Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
-
-        AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                .setView(dialogView)
-                .setCancelable(true)
-                .create();
-
-        sendButton.setOnClickListener(v -> {
-            String childEmail = childEmailEdit.getText().toString().trim();
-            if (childEmail.isEmpty()) {
-                childEmailEdit.setError("Email cannot be empty");
-                return;
-            }
-
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection("users").whereEqualTo("email", childEmail).get().addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    QuerySnapshot snapshot = task.getResult();
-                    if (snapshot.isEmpty()) {
-                        childEmailEdit.setError("No user found with this email");
-                        return;
-                    }
-                    String role = snapshot.getDocuments().get(0).getString("role");
-                    if (!"child".equals(role)) {
-                        childEmailEdit.setError("This user is not a child");
-                        return;
-                    }
-
-                    FirebaseAuth auth = FirebaseAuth.getInstance();
-                    String parentId = auth.getCurrentUser().getUid();
-                    String parentName = auth.getCurrentUser().getDisplayName(); // Or fetch from your DB
-
-                    Map<String, Object> invitation = new HashMap<>();
-                    invitation.put("parentUid", parentId);
-                    invitation.put("parentName", parentName);
-                    invitation.put("childEmail", childEmail);
-                    invitation.put("status", "pending");
-
-                    db.collection("invitations").add(invitation).addOnSuccessListener(documentReference -> {
-                        if (isAdded()) {
-                            Toast.makeText(getContext(), "Invitation sent!", Toast.LENGTH_SHORT).show();
-                            dialog.dismiss();
-                        }
-                    }).addOnFailureListener(e -> {
-                        if (isAdded()) {
-                            Toast.makeText(getContext(), "Failed to send invitation.", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-            });
-        });
-
-        cancelButton.setOnClickListener(v -> dialog.dismiss());
-        dialog.show();
     }
 
     private void showAddChildDialog() {

@@ -92,20 +92,11 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:text="Add Child"
-        app:layout_constraintBottom_toTopOf="@+id/buttonLinkChild"
+        app:layout_constraintBottom_toTopOf="@+id/buttonManageChildren"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <Button
-        android:id="@+id/buttonLinkChild"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Link Child"
-        app:layout_constraintBottom_toTopOf="@+id/buttonManageChildren"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="8dp"/>
 
     <Button
         android:id="@+id/buttonManageChildren"
