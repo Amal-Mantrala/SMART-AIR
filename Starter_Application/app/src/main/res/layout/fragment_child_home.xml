@@ -95,6 +95,14 @@
                 android:backgroundTint="#00BCD4" />
 
             <Button
+                android:id="@+id/buttonMyInventory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="My Inhalers"
+                android:layout_marginBottom="8dp"
+                android:backgroundTint="#673AB7" />
+
+            <Button
                 android:id="@+id/buttonTriage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

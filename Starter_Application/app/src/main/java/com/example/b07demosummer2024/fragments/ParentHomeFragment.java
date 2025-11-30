@@ -75,6 +75,7 @@ public class ParentHomeFragment extends ProtectedFragment {
         Button viewAlertsButton = view.findViewById(R.id.buttonViewAlerts);
         Button setPB = view.findViewById(R.id.buttonSetPB);
         Spinner childSpinner = view.findViewById(R.id.dropdownMenu);
+        Button inventoryButton = view.findViewById(R.id.buttonInventory);
         zoneText = view.findViewById(R.id.textZoneValue);
 
         spinnerAdapter = new ArrayAdapter<>(
@@ -128,7 +129,12 @@ public class ParentHomeFragment extends ProtectedFragment {
         });
         inviteProviderButton.setOnClickListener(v -> showInviteProviderDialog());
         viewAlertsButton.setOnClickListener(v -> showAlertsDialog());
-
+        inventoryButton.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new InventoryFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
         showTutorialIfFirstTime();
         checkForAlerts(viewAlertsButton);
     }

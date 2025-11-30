@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@android:drawable/dialog_holo_light_frame"
+    android:layout_marginBottom="8dp">
+
+    <TextView
+        android:id="@+id/textMedicineName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Medicine Name"
+        android:textSize="18sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/textDosesLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Doses Left: 150/200"
+        android:textSize="16sp"/>
+
+    <TextView
+        android:id="@+id/textExpiryDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Expires: 12/2025"/>
+
+    <TextView
+        android:id="@+id/textAlert"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Alert: Low on doses!"
+        android:textColor="@android:color/holo_red_dark"
+        android:textStyle="bold"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/textlastUpdatedBy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Last updated by: Parent"
+        android:textSize="12sp"
+        android:textStyle="italic"
+        android:layout_marginTop="4dp" />
+
+</LinearLayout>
