@@ -38,7 +38,6 @@ public class RoleSelectionFragment extends DialogFragment {
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         String[] roles = new String[]{
-                getString(R.string.role_child),
                 getString(R.string.role_parent),
                 getString(R.string.role_provider)
         };
@@ -49,9 +48,6 @@ public class RoleSelectionFragment extends DialogFragment {
                     Fragment target;
                     String roleToSave;
                     if (which == 0) {
-                        target = new ChildHomeFragment();
-                        roleToSave = "child";
-                    } else if (which == 1) {
                         target = new ParentHomeFragment();
                         roleToSave = "parent";
                     } else {

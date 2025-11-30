@@ -2,7 +2,7 @@ package com.example.b07demosummer2024.auth;
 
 import com.google.firebase.auth.FirebaseAuth;
 
-public class AuthService implements IAuthService{
+public class AuthService implements IAuthService {
     private final FirebaseAuth auth;
 
     public AuthService() {
@@ -13,6 +13,7 @@ public class AuthService implements IAuthService{
         void onResult(boolean success, String message);
     }
 
+    @Override
     public void signIn(String email, String password, AuthCallback callback) {
         auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
@@ -46,7 +47,7 @@ public class AuthService implements IAuthService{
                     }
                 });
     }
-
+    @Override
     public void signOut() {
         auth.signOut();
     }
