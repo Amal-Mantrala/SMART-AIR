@@ -6,6 +6,7 @@ public class SymptomLog extends BaseHealthLog {
     private List<String> symptoms; // wheezing, coughing, shortness of breath, etc.
     private int overallSeverity; // 1-10 scale
     private List<String> triggers; // dust, pollen, exercise, weather, etc.
+    private List<String> tags;
     private String location; // where symptoms occurred
     private boolean rescueInhalerUsed;
     private String peakFlowReading; // if available
@@ -42,6 +43,9 @@ public class SymptomLog extends BaseHealthLog {
 
     public List<String> getTriggers() { return triggers; }
     public void setTriggers(List<String> triggers) { this.triggers = triggers; }
+
+    public List<String> getTags() { return tags; }
+    public void setTags(List<String> tags) { this.tags = tags; }
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }

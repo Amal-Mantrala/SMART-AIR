@@ -368,9 +368,20 @@ public class ChildHomeFragment extends ProtectedFragment {
         Spinner activitySpinner = dialogView.findViewById(R.id.spinnerActivity);
         CheckBox checkRescueUsed = dialogView.findViewById(R.id.checkRescueUsed);
         EditText peakFlowEdit = dialogView.findViewById(R.id.editPeakFlow);
+        EditText tagsEdit = dialogView.findViewById(R.id.editTags);
         EditText notesEdit = dialogView.findViewById(R.id.editNotes);
         Button saveButton = dialogView.findViewById(R.id.buttonSave);
         Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
+
+        ArrayAdapter<CharSequence> locationAdapter = ArrayAdapter.createFromResource(
+                requireContext(), R.array.location_array, android.R.layout.simple_spinner_item);
+        locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        locationSpinner.setAdapter(locationAdapter);
+
+        ArrayAdapter<CharSequence> activityAdapter = ArrayAdapter.createFromResource(
+                requireContext(), R.array.activity_array, android.R.layout.simple_spinner_item);
+        activityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        activitySpinner.setAdapter(activityAdapter);
 
         // Setup severity seekbar to show 1-10
         severityText.setText(String.valueOf(severitySeekBar.getProgress() + 1));
@@ -410,13 +421,28 @@ public class ChildHomeFragment extends ProtectedFragment {
             if (checkSmoke.isChecked()) triggers.add("Smoke/Fumes");
             if (checkStress.isChecked()) triggers.add("Stress");
 
+            List<String> tags = new ArrayList<>();
+            String tagsInput = tagsEdit.getText().toString().trim();
+            if (!tagsInput.isEmpty()) {
+                String[] tagArray = tagsInput.split(",");
+                for (String tag : tagArray) {
+                    String trimmedTag = tag.trim();
+                    if (!trimmedTag.isEmpty()) {
+                        tags.add(trimmedTag);
+                    }
+                }
+            }
+
             SymptomLog symptomLog = new SymptomLog();
             symptomLog.setChildId(FirebaseAuth.getInstance().getCurrentUser().getUid());
             symptomLog.setSymptoms(symptoms);
             symptomLog.setOverallSeverity(severitySeekBar.getProgress() + 1);
             symptomLog.setTriggers(triggers);
-            symptomLog.setLocation(locationSpinner.getSelectedItem().toString());
-            symptomLog.setActivityLevel(activitySpinner.getSelectedItem().toString());
+            symptomLog.setTags(tags);
+            Object locationItem = locationSpinner.getSelectedItem();
+            symptomLog.setLocation(locationItem != null ? locationItem.toString() : "");
+            Object activityItem = activitySpinner.getSelectedItem();
+            symptomLog.setActivityLevel(activityItem != null ? activityItem.toString() : "");
             symptomLog.setRescueInhalerUsed(checkRescueUsed.isChecked());
             symptomLog.setPeakFlowReading(peakFlowEdit.getText().toString().trim());
             symptomLog.setNotes(notesEdit.getText().toString().trim());
