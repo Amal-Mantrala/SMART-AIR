@@ -22,6 +22,7 @@ import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.example.b07demosummer2024.R;
@@ -31,9 +32,14 @@ import com.example.b07demosummer2024.models.MedicineLog;
 import com.example.b07demosummer2024.models.SymptomLog;
 import com.example.b07demosummer2024.models.DailyWellnessLog;
 import com.example.b07demosummer2024.models.TriageIncident;
+import com.example.b07demosummer2024.models.Streak;
+import com.example.b07demosummer2024.models.Badge;
+import com.example.b07demosummer2024.models.MotivationSettings;
 import com.example.b07demosummer2024.services.ChildHealthService;
 import com.example.b07demosummer2024.services.TriageService;
+import com.example.b07demosummer2024.services.MotivationService;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
@@ -49,6 +55,7 @@ import java.util.Locale;
 public class ChildHomeFragment extends ProtectedFragment {
 
     private TextView zoneText;
+    private MotivationService motivationService;
     private int pbValue = 0;
 
     private ListenerRegistration userListener;
@@ -73,11 +80,20 @@ public class ChildHomeFragment extends ProtectedFragment {
         Button logSymptomsButton = view.findViewById(R.id.buttonLogSymptoms);
         Button dailyCheckInButton = view.findViewById(R.id.buttonDailyCheckIn);
         Button viewHistoryButton = view.findViewById(R.id.buttonViewHistory);
+        Button motivationButton = view.findViewById(R.id.buttonMotivation);
         Button triageButton = view.findViewById(R.id.buttonTriage);
         Button pefButton = view.findViewById(R.id.buttonEnterPef);
         Button techniqueHelperButton = view.findViewById(R.id.buttonTechniqueHelper);
         Button myInventoryButton = view.findViewById(R.id.buttonMyInventory);
         zoneText = view.findViewById(R.id.textZoneDisplay);
+
+        // Initialize motivation service safely
+        try {
+            motivationService = new MotivationService();
+        } catch (Exception e) {
+            // Fallback - disable motivation features if service fails
+            motivationService = null;
+        }
 
         // Load Zone and PB
         startUserListener();
@@ -107,6 +123,24 @@ public class ChildHomeFragment extends ProtectedFragment {
         logSymptomsButton.setOnClickListener(v -> showLogSymptomsDialog());
         dailyCheckInButton.setOnClickListener(v -> showDailyCheckInDialog());
         viewHistoryButton.setOnClickListener(v -> showHealthHistoryDialog());
+        motivationButton.setOnClickListener(v -> {
+            if (motivationService != null) {
+                showMotivationDialog();
+            } else {
+                Toast.makeText(requireContext(), "Motivation system temporarily unavailable", Toast.LENGTH_SHORT).show();
+            }
+        });
+        
+        // Long press on motivation button to create test data
+        motivationButton.setOnLongClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+            builder.setTitle("Test Motivation System");
+            builder.setMessage("This will create sample medicine logs for the past 5 days to test streaks and badges. Continue?");
+            builder.setPositiveButton("Yes", (dialog, which) -> createTestMotivationData());
+            builder.setNegativeButton("No", null);
+            builder.show();
+            return true;
+        });
         triageButton.setOnClickListener(v -> showTriageDialog());
         pefButton.setOnClickListener(v -> showPefDialog());
         techniqueHelperButton.setOnClickListener(v -> {
@@ -150,6 +184,9 @@ public class ChildHomeFragment extends ProtectedFragment {
         if (!prefs.getBoolean(key, false)) {
             showTutorial();
             prefs.edit().putBoolean(key, true).apply();
+            
+            // Initialize motivation system for first-time users
+            initializeMotivationForNewUser();
         }
     }
 
@@ -332,6 +369,9 @@ public class ChildHomeFragment extends ProtectedFragment {
                     if (isAdded()) {
                         Toast.makeText(requireContext(), "Medicine log saved successfully!", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
+                        
+                        // Note: Motivation streaks are now calculated automatically from logs
+                        // when viewing the motivation dialog
                     }
                 }
 
@@ -999,6 +1039,505 @@ public class ChildHomeFragment extends ProtectedFragment {
         super.onDestroyView();
         if (userListener != null) {
             userListener.remove();
+        }
+    }
+
+    // Motivation System Methods
+    private void showMotivationDialog() {
+        try {
+            View dialogView = getLayoutInflater().inflate(R.layout.dialog_motivation_progress, null);
+            
+            TextView controllerStreakCount = dialogView.findViewById(R.id.textControllerStreakCount);
+            TextView controllerBest = dialogView.findViewById(R.id.textControllerBest);
+            TextView techniqueStreakCount = dialogView.findViewById(R.id.textTechniqueStreakCount);
+            TextView techniqueBest = dialogView.findViewById(R.id.textTechniqueBest);
+            LinearLayout badgesLayout = dialogView.findViewById(R.id.layoutBadges);
+            Button settingsButton = dialogView.findViewById(R.id.buttonMotivationSettings);
+            Button closeButton = dialogView.findViewById(R.id.buttonClose);
+
+            AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                    .setView(dialogView)
+                    .setCancelable(true)
+                    .create();
+
+            // Set loading values first
+            controllerStreakCount.setText("Calculating...");
+            controllerBest.setText("Calculating...");
+            techniqueStreakCount.setText("Calculating...");
+            techniqueBest.setText("Calculating...");
+
+            // Calculate and load data from actual health logs if service is available
+            if (motivationService != null && FirebaseAuth.getInstance().getCurrentUser() != null) {
+                String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                
+                // Calculate streaks and badges from actual health logs
+                motivationService.calculateStreaksFromLogs(childId);
+                motivationService.calculateBadgesFromLogs(childId);
+                
+                // Load data immediately first, then refresh after calculations
+                loadStreaksData(controllerStreakCount, controllerBest, techniqueStreakCount, techniqueBest);
+                loadBadgesData(badgesLayout);
+                
+                // Refresh data after calculations complete
+                new android.os.Handler().postDelayed(() -> {
+                    if (isAdded()) {
+                        loadStreaksData(controllerStreakCount, controllerBest, techniqueStreakCount, techniqueBest);
+                        loadBadgesData(badgesLayout);
+                    }
+                }, 2000); // 2 second delay to allow calculations to complete
+            } else {
+                // Set default values if service is not available
+                controllerStreakCount.setText("0 days");
+                controllerBest.setText("Best: 0");
+                techniqueStreakCount.setText("0 days");
+                techniqueBest.setText("Best: 0");
+            }
+
+            settingsButton.setOnClickListener(v -> {
+                dialog.dismiss();
+                if (motivationService != null) {
+                    showMotivationSettingsDialog();
+                } else {
+                    Toast.makeText(requireContext(), "Settings temporarily unavailable", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            closeButton.setOnClickListener(v -> dialog.dismiss());
+            dialog.show();
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), "Unable to open motivation dialog", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void loadStreaksData(TextView controllerCount, TextView controllerBest, 
+                                TextView techniqueCount, TextView techniqueBest) {
+        try {
+            if (motivationService == null || FirebaseAuth.getInstance().getCurrentUser() == null) {
+                return;
+            }
+            
+            String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            
+            motivationService.getChildStreaks(childId, new MotivationService.StreakCallback() {
+                @Override
+                public void onStreaksLoaded(List<Streak> streaks) {
+                    if (isAdded()) {
+                        // Set default values first
+                        controllerCount.setText("0 days");
+                        controllerBest.setText("Best: 0");
+                        techniqueCount.setText("0 days");
+                        techniqueBest.setText("Best: 0");
+                        
+                        // Update with actual data if available
+                        if (streaks != null) {
+                            for (Streak streak : streaks) {
+                                if (streak != null) {
+                                    if ("controller_planned".equals(streak.getStreakType())) {
+                                        controllerCount.setText(streak.getCurrentCount() + " days");
+                                        controllerBest.setText("Best: " + streak.getBestCount());
+                                    } else if ("technique_completed".equals(streak.getStreakType())) {
+                                        techniqueCount.setText(streak.getCurrentCount() + " days");
+                                        techniqueBest.setText("Best: " + streak.getBestCount());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                @Override
+                public void onError(String error) {
+                    if (isAdded()) {
+                        // Set default values on error
+                        controllerCount.setText("0 days");
+                        controllerBest.setText("Best: 0");
+                        techniqueCount.setText("0 days");
+                        techniqueBest.setText("Best: 0");
+                    }
+                }
+            });
+        } catch (Exception e) {
+            // Silent error - keep default values
+        }
+    }
+
+    private void loadBadgesData(LinearLayout badgesLayout) {
+        try {
+            if (motivationService == null || FirebaseAuth.getInstance().getCurrentUser() == null) {
+                return;
+            }
+            
+            String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            
+            motivationService.getChildBadges(childId, new MotivationService.BadgeCallback() {
+                @Override
+                public void onBadgesLoaded(List<Badge> badges) {
+                    if (isAdded() && badgesLayout != null) {
+                        badgesLayout.removeAllViews();
+                        if (badges != null) {
+                            for (Badge badge : badges) {
+                                if (badge != null) {
+                                    try {
+                                        View badgeView = createBadgeView(badge);
+                                        if (badgeView != null) {
+                                            badgesLayout.addView(badgeView);
+                                        }
+                                    } catch (Exception e) {
+                                        // Skip this badge if there's an error
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                @Override
+                public void onError(String error) {
+                    // Silent error - don't interrupt user experience
+                }
+            });
+        } catch (Exception e) {
+            // Silent error - keep empty badges layout
+        }
+    }
+
+    private View createBadgeView(Badge badge) {
+        try {
+            View badgeView = getLayoutInflater().inflate(android.R.layout.simple_list_item_2, null);
+            TextView titleText = badgeView.findViewById(android.R.id.text1);
+            TextView descriptionText = badgeView.findViewById(android.R.id.text2);
+            
+            if (titleText != null && descriptionText != null) {
+                String title = badge.getTitle() != null ? badge.getTitle() : "Badge";
+                String description = badge.getDescription() != null ? badge.getDescription() : "Achievement";
+                
+                titleText.setText((badge.isUnlocked() ? "🏆 " : "🔒 ") + title);
+                
+                if (badge.isUnlocked()) {
+                    descriptionText.setText("Earned! " + description);
+                    try {
+                        titleText.setTextColor(getResources().getColor(R.color.badge_earned));
+                    } catch (Exception e) {
+                        // Fallback color
+                        titleText.setTextColor(0xFFD700);
+                    }
+                } else {
+                    int progress = Math.min(badge.getProgress(), badge.getTargetValue());
+                    descriptionText.setText("Progress: " + progress + "/" + badge.getTargetValue() + " - " + description);
+                    try {
+                        titleText.setTextColor(getResources().getColor(R.color.badge_locked));
+                    } catch (Exception e) {
+                        // Fallback color
+                        titleText.setTextColor(0xCCCCCC);
+                    }
+                }
+            }
+            
+            return badgeView;
+        } catch (Exception e) {
+            // Return null if badge creation fails
+            return null;
+        }
+    }
+
+    private void showMotivationSettingsDialog() {
+        try {
+            if (motivationService == null) {
+                Toast.makeText(requireContext(), "Settings unavailable", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            View dialogView = getLayoutInflater().inflate(R.layout.dialog_motivation_settings, null);
+            
+            EditText controllerThreshold = dialogView.findViewById(R.id.editControllerStreakThreshold);
+            EditText techniqueThreshold = dialogView.findViewById(R.id.editTechniqueStreakThreshold);
+            EditText perfectWeekDays = dialogView.findViewById(R.id.editPerfectWeekDays);
+            EditText techniqueSessions = dialogView.findViewById(R.id.editTechniqueSessions);
+            EditText lowRescueLimit = dialogView.findViewById(R.id.editLowRescueLimit);
+            EditText lowRescuePeriod = dialogView.findViewById(R.id.editLowRescuePeriod);
+            CheckBox streakNotifications = dialogView.findViewById(R.id.checkStreakNotifications);
+            CheckBox badgeNotifications = dialogView.findViewById(R.id.checkBadgeNotifications);
+            CheckBox weeklyProgress = dialogView.findViewById(R.id.checkWeeklyProgress);
+            Button saveButton = dialogView.findViewById(R.id.buttonSave);
+            Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
+
+            AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                    .setView(dialogView)
+                    .setCancelable(true)
+                    .create();
+
+            // Set default values
+            setDefaultSettingsValues(controllerThreshold, techniqueThreshold, perfectWeekDays, 
+                                   techniqueSessions, lowRescueLimit, lowRescuePeriod,
+                                   streakNotifications, badgeNotifications, weeklyProgress);
+
+            // Load current settings if possible
+            if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+                String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                loadCurrentSettings(childId, controllerThreshold, techniqueThreshold, perfectWeekDays,
+                                  techniqueSessions, lowRescueLimit, lowRescuePeriod,
+                                  streakNotifications, badgeNotifications, weeklyProgress);
+            }
+
+            saveButton.setOnClickListener(v -> saveSettings(dialog, controllerThreshold, techniqueThreshold, 
+                                                           perfectWeekDays, techniqueSessions, lowRescueLimit, 
+                                                           lowRescuePeriod, streakNotifications, badgeNotifications, weeklyProgress));
+
+            cancelButton.setOnClickListener(v -> dialog.dismiss());
+            dialog.show();
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), "Unable to open settings", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void updateStreaksBasedOnActivity(String activityType, boolean successful) {
+        try {
+            if (motivationService == null || FirebaseAuth.getInstance().getCurrentUser() == null) {
+                return;
+            }
+            
+            String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            
+            if ("controller_medicine".equals(activityType)) {
+                motivationService.updateControllerStreak(childId, successful, new MotivationService.MotivationCallback() {
+                    @Override
+                    public void onSuccess(String message) {
+                        if (isAdded() && message.contains("🎉")) {
+                            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+                        }
+                        checkForBadgeUpdates(childId);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        // Silent error
+                    }
+                });
+            } else if ("breathing_technique".equals(activityType)) {
+                motivationService.updateTechniqueStreak(childId, successful, new MotivationService.MotivationCallback() {
+                    @Override
+                    public void onSuccess(String message) {
+                        if (isAdded() && message.contains("🎉")) {
+                            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+                        }
+                        checkForBadgeUpdates(childId);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        // Silent error
+                    }
+                });
+            }
+        } catch (Exception e) {
+            // Silent error - don't interrupt user flow
+        }
+    }
+
+    private void checkForBadgeUpdates(String childId) {
+        try {
+            if (motivationService != null) {
+                motivationService.checkBadgeProgress(childId, new MotivationService.MotivationCallback() {
+                    @Override
+                    public void onSuccess(String message) {
+                        if (isAdded() && message.contains("Badge earned")) {
+                            Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        // Silent error
+                    }
+                });
+            }
+        } catch (Exception e) {
+            // Silent error
+        }
+    }
+
+    private void initializeMotivationForNewUser() {
+        try {
+            if (motivationService != null && FirebaseAuth.getInstance().getCurrentUser() != null) {
+                String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                motivationService.initializeMotivationForChild(childId, new MotivationService.MotivationCallback() {
+                    @Override
+                    public void onSuccess(String message) {
+                        // Silent success
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        // Silent error
+                    }
+                });
+            }
+        } catch (Exception e) {
+            // Silent error
+        }
+    }
+
+    private void setDefaultSettingsValues(EditText controllerThreshold, EditText techniqueThreshold, EditText perfectWeekDays,
+                                        EditText techniqueSessions, EditText lowRescueLimit, EditText lowRescuePeriod,
+                                        CheckBox streakNotifications, CheckBox badgeNotifications, CheckBox weeklyProgress) {
+        try {
+            controllerThreshold.setText("7");
+            techniqueThreshold.setText("7");
+            perfectWeekDays.setText("7");
+            techniqueSessions.setText("10");
+            lowRescueLimit.setText("4");
+            lowRescuePeriod.setText("30");
+            streakNotifications.setChecked(true);
+            badgeNotifications.setChecked(true);
+            weeklyProgress.setChecked(true);
+        } catch (Exception e) {
+            // Ignore errors in setting defaults
+        }
+    }
+
+    private void loadCurrentSettings(String childId, EditText controllerThreshold, EditText techniqueThreshold, EditText perfectWeekDays,
+                                   EditText techniqueSessions, EditText lowRescueLimit, EditText lowRescuePeriod,
+                                   CheckBox streakNotifications, CheckBox badgeNotifications, CheckBox weeklyProgress) {
+        try {
+            motivationService.getMotivationSettings(childId, new MotivationService.SettingsCallback() {
+                @Override
+                public void onSettingsLoaded(MotivationSettings settings) {
+                    if (isAdded() && settings != null) {
+                        try {
+                            controllerThreshold.setText(String.valueOf(settings.getControllerStreakThreshold()));
+                            techniqueThreshold.setText(String.valueOf(settings.getTechniqueStreakThreshold()));
+                            perfectWeekDays.setText(String.valueOf(settings.getPerfectControllerWeekDays()));
+                            techniqueSessions.setText(String.valueOf(settings.getTechniqueMasterSessions()));
+                            lowRescueLimit.setText(String.valueOf(settings.getLowRescueMonthLimit()));
+                            lowRescuePeriod.setText(String.valueOf(settings.getLowRescueMonthDays()));
+                            streakNotifications.setChecked(settings.isStreakNotificationsEnabled());
+                            badgeNotifications.setChecked(settings.isBadgeNotificationsEnabled());
+                            weeklyProgress.setChecked(settings.isWeeklyProgressEnabled());
+                        } catch (Exception e) {
+                            // Keep default values if there's an error
+                        }
+                    }
+                }
+
+                @Override
+                public void onError(String error) {
+                    // Keep default values on error
+                }
+            });
+        } catch (Exception e) {
+            // Keep default values if loading fails
+        }
+    }
+
+    private void saveSettings(AlertDialog dialog, EditText controllerThreshold, EditText techniqueThreshold, EditText perfectWeekDays,
+                            EditText techniqueSessions, EditText lowRescueLimit, EditText lowRescuePeriod,
+                            CheckBox streakNotifications, CheckBox badgeNotifications, CheckBox weeklyProgress) {
+        try {
+            if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+                Toast.makeText(requireContext(), "Please sign in first", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            MotivationSettings settings = new MotivationSettings(childId);
+            
+            // Parse values with defaults
+            settings.setControllerStreakThreshold(parseIntWithDefault(controllerThreshold.getText().toString(), 7));
+            settings.setTechniqueStreakThreshold(parseIntWithDefault(techniqueThreshold.getText().toString(), 7));
+            settings.setPerfectControllerWeekDays(parseIntWithDefault(perfectWeekDays.getText().toString(), 7));
+            settings.setTechniqueMasterSessions(parseIntWithDefault(techniqueSessions.getText().toString(), 10));
+            settings.setLowRescueMonthLimit(parseIntWithDefault(lowRescueLimit.getText().toString(), 4));
+            settings.setLowRescueMonthDays(parseIntWithDefault(lowRescuePeriod.getText().toString(), 30));
+            settings.setStreakNotificationsEnabled(streakNotifications.isChecked());
+            settings.setBadgeNotificationsEnabled(badgeNotifications.isChecked());
+            settings.setWeeklyProgressEnabled(weeklyProgress.isChecked());
+
+            motivationService.saveMotivationSettings(settings, new MotivationService.MotivationCallback() {
+                @Override
+                public void onSuccess(String message) {
+                    if (isAdded()) {
+                        Toast.makeText(requireContext(), "Settings saved!", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    }
+                }
+
+                @Override
+                public void onError(String error) {
+                    if (isAdded()) {
+                        Toast.makeText(requireContext(), "Error saving settings", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), "Please check your input values", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private int parseIntWithDefault(String value, int defaultValue) {
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    // Test method to create sample motivation data - you can call this from a button
+    private void createTestMotivationData() {
+        if (motivationService == null || FirebaseAuth.getInstance().getCurrentUser() == null) {
+            Toast.makeText(requireContext(), "Service not available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        
+        // Initialize motivation system for child
+        motivationService.initializeMotivationForChild(childId, new MotivationService.MotivationCallback() {
+            @Override
+            public void onSuccess(String message) {
+                // Create some test medicine logs for the past few days
+                createTestMedicineLogs(childId);
+                Toast.makeText(requireContext(), "Test data created! Try View Progress now.", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(requireContext(), "Error creating test data: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void createTestMedicineLogs(String childId) {
+        // Create medicine logs for the past 5 days to test streaks
+        long currentTime = System.currentTimeMillis();
+        long oneDayMs = 24 * 60 * 60 * 1000;
+
+        for (int i = 0; i < 5; i++) {
+            long timestamp = currentTime - (i * oneDayMs);
+            
+            // Create controller medicine log
+            MedicineLog controllerLog = new MedicineLog();
+            controllerLog.setChildId(childId);
+            controllerLog.setMedicineType("Controller");
+            controllerLog.setMedicineName("Test Controller Medicine");
+            controllerLog.setDosage("1 puff");
+            controllerLog.setTimestamp(timestamp);
+            controllerLog.setNotes("Test data");
+
+            // Save to Firestore
+            FirebaseFirestore.getInstance().collection("medicineLogs").add(controllerLog);
+
+            // Create rescue medicine log for some days (to test badge)
+            if (i < 2) { // Only for first 2 days
+                MedicineLog rescueLog = new MedicineLog();
+                rescueLog.setChildId(childId);
+                rescueLog.setMedicineType("Rescue");
+                rescueLog.setMedicineName("Test Rescue Medicine");
+                rescueLog.setDosage("2 puffs");
+                rescueLog.setTimestamp(timestamp + 3600000); // 1 hour later
+                rescueLog.setNotes("Test rescue data");
+
+                FirebaseFirestore.getInstance().collection("medicineLogs").add(rescueLog);
+            }
         }
     }
 }

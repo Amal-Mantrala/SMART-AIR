@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/motivation_settings"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Streak Thresholds Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/streak_thresholds"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Controller Streak Threshold -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/controller_streak_threshold"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/editControllerStreakThreshold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/days"
+            android:inputType="number"
+            android:text="7"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Technique Streak Threshold -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/technique_streak_threshold"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/editTechniqueStreakThreshold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/days"
+            android:inputType="number"
+            android:text="5"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Badge Thresholds Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/badge_thresholds"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Perfect Controller Week -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/perfect_controller_week_days"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/editPerfectWeekDays"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/days"
+            android:inputType="number"
+            android:text="7"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Technique Master Sessions -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/technique_master_sessions"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/editTechniqueSessions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/sessions"
+            android:inputType="number"
+            android:text="10"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Low Rescue Month Limit -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/low_rescue_month_limit"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/editLowRescueLimit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/max_rescue_days"
+            android:inputType="number"
+            android:text="4"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Low Rescue Tracking Period -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/low_rescue_tracking_period"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/editLowRescuePeriod"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/days"
+            android:inputType="number"
+            android:text="30"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Notification Settings -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/notification_settings"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <CheckBox
+            android:id="@+id/checkStreakNotifications"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/streak_notifications"
+            android:checked="true"
+            android:layout_marginBottom="8dp" />
+
+        <CheckBox
+            android:id="@+id/checkBadgeNotifications"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/badge_notifications"
+            android:checked="true"
+            android:layout_marginBottom="8dp" />
+
+        <CheckBox
+            android:id="@+id/checkWeeklyProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/weekly_progress_notifications"
+            android:checked="true"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/buttonCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/cancel"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/buttonSave"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/save_settings" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

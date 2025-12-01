@@ -8,7 +8,7 @@
     <string name="scroller">Scroller</string>
     <string name="spinner">Spinner</string>
     <string name="manage_items">Manage Items</string>
-    <string name="sign_out">Sign out</string>
+    <string name="sign_out">Sign Out</string>
     <string name="email_hint">Email</string>
     <string name="password_hint">Password</string>
     <string name="sign_in_text">Sign in</string>
@@ -72,8 +72,8 @@
     <!-- Health Logging Strings -->
     <string name="log_health_info">Log Your Health Information</string>
     <string name="log_medicine">💊 Log Medicine</string>
-    <string name="log_symptoms">🩺 Log Symptoms</string>
-    <string name="daily_checkin">📋 Daily Check-in</string>
+    <string name="log_symptoms">📋 Log Symptoms</string>
+    <string name="daily_checkin">📝 Daily Check-In</string>
     <string name="view_history">📊 View My History</string>
     <string name="medicine_type">Medicine Type</string>
     <string name="rescue_inhaler">🚨 Rescue Inhaler</string>
@@ -117,7 +117,7 @@
     <string name="peak_flow_example">e.g., 450 L/min</string>
     
     <!-- Triage Strings -->
-    <string name="having_trouble_breathing">🚨 Having trouble breathing?</string>
+    <string name="having_trouble_breathing">🚨 Having Trouble Breathing?</string>
     <string name="triage_safety_note">⚠️ This is guidance, not a diagnosis. If in doubt, call emergency.</string>
     <string name="triage_red_flags">Check for warning signs:</string>
     <string name="cannot_speak_sentences">Cannot speak full sentences</string>
@@ -202,5 +202,33 @@
         <item>Frustrated</item>
         <item>Normal</item>
     </string-array>
+
+    <!-- Motivation/Streaks/Badges Strings -->
+    <string name="motivation_progress">Your Progress</string>
+    <string name="current_streaks">Current Streaks</string>
+    <string name="controller_streak">Controller Medicine Streak</string>
+    <string name="technique_streak">Breathing Technique Streak</string>
+    <string name="badges_earned">Badges</string>
+    <string name="motivation_settings">Motivation Settings</string>
+    <string name="streak_thresholds">Streak Thresholds</string>
+    <string name="badge_thresholds">Badge Thresholds</string>
+    <string name="controller_streak_threshold">Controller Streak Goal</string>
+    <string name="technique_streak_threshold">Technique Streak Goal</string>
+    <string name="perfect_controller_week_days">Perfect Controller Week (days)</string>
+    <string name="technique_master_sessions">Technique Master Sessions</string>
+    <string name="low_rescue_month_limit">Low Rescue Month Limit</string>
+    <string name="low_rescue_tracking_period">Rescue Tracking Period</string>
+    <string name="max_rescue_days">Max rescue days allowed</string>
+    <string name="sessions">sessions</string>
+    <string name="days">days</string>
+    <string name="notification_settings">Notification Settings</string>
+    <string name="streak_notifications">Streak Notifications</string>
+    <string name="badge_notifications">Badge Notifications</string>
+    <string name="weekly_progress_notifications">Weekly Progress Updates</string>
+    <string name="save_settings">Save Settings</string>
+    <string name="close">Close</string>
+    <string name="badge_unlocked">Badge Unlocked!</string>
+    <string name="streak_milestone">Streak Milestone!</string>
+    <string name="view_progress">🎯 View Progress</string>
 
 </resources>

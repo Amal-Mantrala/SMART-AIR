@@ -2,4 +2,12 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Motivation System Colors -->
+    <color name="streak_active">#4CAF50</color>
+    <color name="streak_inactive">#9E9E9E</color>
+    <color name="badge_earned">#FFD700</color>
+    <color name="badge_locked">#CCCCCC</color>
+    <color name="progress_background">#E0E0E0</color>
+    <color name="text_secondary">#757575</color>
 </resources>
