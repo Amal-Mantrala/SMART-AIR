@@ -82,6 +82,7 @@ public class ParentHomeFragment extends ProtectedFragment {
         Button setPB = view.findViewById(R.id.buttonSetPB);
         Spinner childSpinner = view.findViewById(R.id.dropdownMenu);
         Button inventoryButton = view.findViewById(R.id.buttonInventory);
+        Button viewHistoryButton = view.findViewById(R.id.buttonViewHistory);
         zoneText = view.findViewById(R.id.textZoneValue);
 
         spinnerAdapter = new ArrayAdapter<>(
@@ -91,6 +92,18 @@ public class ParentHomeFragment extends ProtectedFragment {
         );
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         childSpinner.setAdapter(spinnerAdapter);
+
+        viewHistoryButton.setOnClickListener(v -> {
+            if (selectedChildUid == null) {
+                Toast.makeText(getContext(), "Please select a child first", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, ParentHealthHistoryFragment.newInstance(selectedChildUid))
+                    .addToBackStack(null)
+                    .commit();
+        });
 
         loadChildrenForParent();
 
