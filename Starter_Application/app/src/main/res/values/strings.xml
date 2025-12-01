@@ -230,5 +230,6 @@
     <string name="badge_unlocked">Badge Unlocked!</string>
     <string name="streak_milestone">Streak Milestone!</string>
     <string name="view_progress">🎯 View Progress</string>
+    <string name="select_date_range">Select Date Range</string>
 
 </resources>

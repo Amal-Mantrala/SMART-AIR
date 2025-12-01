@@ -108,6 +108,13 @@
                 android:layout_marginBottom="8dp"/>
 
             <Button
+                android:id="@+id/buttonViewHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="View History"
+                android:layout_marginBottom="8dp"/>
+
+            <Button
                 android:id="@+id/buttonPrivacySharing"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

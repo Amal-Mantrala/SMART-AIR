@@ -1,6 +1,9 @@
 package com.example.b07demosummer2024.fragments;
 
 import android.app.DatePickerDialog;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.pdf.PdfDocument;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,44 +25,45 @@ import com.example.b07demosummer2024.models.DailyWellnessLog;
 import com.example.b07demosummer2024.models.MedicineLog;
 import com.example.b07demosummer2024.models.SymptomLog;
 import com.example.b07demosummer2024.services.ChildHealthService;
-import com.google.firebase.auth.FirebaseAuth;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class HealthHistoryFragment extends ProtectedFragment {
+public class ParentHealthHistoryFragment extends ProtectedFragment {
 
     private static final String ARG_CHILD_ID = "child_id";
-
-    private RecyclerView recyclerView;
-    private TextView emptyView;
-    private HealthHistoryAdapter adapter;
 
     private Spinner spinnerSymptoms;
     private Spinner spinnerTriggers;
     private Button buttonDateRange;
     private Button buttonApplyFilters;
 
+    private RecyclerView recyclerView;
+    private TextView emptyView;
+    private HealthHistoryAdapter adapter;
+
     private String childId;
 
-    // full unfiltered data
+    // Full unfiltered data
     private List<MedicineLog> fullMedicine = new ArrayList<>();
     private List<SymptomLog> fullSymptoms = new ArrayList<>();
     private List<DailyWellnessLog> fullWellness = new ArrayList<>();
 
-    // filter state
+    // Date range
     private Long startDate = null;
     private Long endDate = null;
 
-    public static HealthHistoryFragment newInstance(String childId) {
-        HealthHistoryFragment fragment = new HealthHistoryFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_CHILD_ID, childId);
-        fragment.setArguments(args);
-        return fragment;
+    public static ParentHealthHistoryFragment newInstance(String childId) {
+        ParentHealthHistoryFragment frag = new ParentHealthHistoryFragment();
+        Bundle b = new Bundle();
+        b.putString(ARG_CHILD_ID, childId);
+        frag.setArguments(b);
+        return frag;
     }
 
     @Override
@@ -69,13 +73,6 @@ public class HealthHistoryFragment extends ProtectedFragment {
         if (getArguments() != null) {
             childId = getArguments().getString(ARG_CHILD_ID);
         }
-
-        if (childId == null) {
-            FirebaseAuth auth = FirebaseAuth.getInstance();
-            if (auth.getCurrentUser() != null) {
-                childId = auth.getCurrentUser().getUid();
-            }
-        }
     }
 
     @Nullable
@@ -83,7 +80,7 @@ public class HealthHistoryFragment extends ProtectedFragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_health_history, container, false);
+        return inflater.inflate(R.layout.fragment_parent_health_history, container, false);
     }
 
     @Override
@@ -91,113 +88,115 @@ public class HealthHistoryFragment extends ProtectedFragment {
                               @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        recyclerView = view.findViewById(R.id.recyclerViewHistory);
-        emptyView = view.findViewById(R.id.textEmptyView);
-
         spinnerSymptoms = view.findViewById(R.id.spinnerSymptomsFilter);
         spinnerTriggers = view.findViewById(R.id.spinnerTriggersFilter);
         buttonDateRange = view.findViewById(R.id.buttonSelectDateRange);
         buttonApplyFilters = view.findViewById(R.id.buttonApplyFilters);
+        Button export = view.findViewById(R.id.buttonExportPdf);
 
-        // Back button
-        view.findViewById(R.id.buttonBack).setOnClickListener(v -> requireActivity().onBackPressed());
+        recyclerView = view.findViewById(R.id.recyclerViewParentHistory);
+        emptyView = view.findViewById(R.id.textEmptyViewParent);
 
         adapter = new HealthHistoryAdapter();
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(adapter);
 
+        loadData();
+
         buttonDateRange.setOnClickListener(v -> openDatePicker());
         buttonApplyFilters.setOnClickListener(v -> applyFilters());
-
-        loadHealthHistory();
+        Button back = view.findViewById(R.id.buttonBackParent);
+        back.setOnClickListener(v -> requireActivity().onBackPressed());
+        export.setOnClickListener(v -> exportPdf());
     }
 
-    private void loadHealthHistory() {
+    private void loadData() {
+        ChildHealthService service = new ChildHealthService();
 
-        ChildHealthService healthService = new ChildHealthService();
-
-        healthService.getAllHealthData(childId, 30, new ChildHealthService.AllHealthDataCallback() {
+        service.getAllHealthData(childId, 180, new ChildHealthService.AllHealthDataCallback() {
             @Override
-            public void onSuccess(List<MedicineLog> medicineData,
-                                  List<SymptomLog> symptomData,
-                                  List<DailyWellnessLog> wellnessData) {
+            public void onSuccess(List<MedicineLog> meds,
+                                  List<SymptomLog> symptoms,
+                                  List<DailyWellnessLog> wellness) {
 
-                fullMedicine = medicineData != null ? medicineData : new ArrayList<>();
-                fullSymptoms = symptomData != null ? symptomData : new ArrayList<>();
-                fullWellness = wellnessData != null ? wellnessData : new ArrayList<>();
+                fullMedicine = meds != null ? meds : new ArrayList<>();
+                fullSymptoms = symptoms != null ? symptoms : new ArrayList<>();
+                fullWellness = wellness != null ? wellness : new ArrayList<>();
 
                 populateFilters();
-                adapter.updateData(fullMedicine, fullSymptoms, fullWellness);
+                applyFilters();
             }
 
             @Override
             public void onError(String error) {
-                Toast.makeText(requireContext(), "Error loading health history: " + error, Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(),
+                        "Error loading data: " + error,
+                        Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     private void populateFilters() {
-        Set<String> symptomsSet = new HashSet<>();
+        // Collect unique symptoms
+        Set<String> allSymptoms = new HashSet<>();
         for (SymptomLog log : fullSymptoms) {
-            if (log.getSymptoms() != null) symptomsSet.addAll(log.getSymptoms());
+            if (log.getSymptoms() != null) allSymptoms.addAll(log.getSymptoms());
         }
 
-        List<String> symptomsList = new ArrayList<>();
-        symptomsList.add("All");
-        symptomsList.addAll(symptomsSet);
+        List<String> symptomOptions = new ArrayList<>();
+        symptomOptions.add("All");
+        symptomOptions.addAll(allSymptoms);
 
-        spinnerSymptoms.setAdapter(new ArrayAdapter<>(
-                requireContext(),
-                android.R.layout.simple_spinner_dropdown_item,
-                symptomsList
-        ));
+        spinnerSymptoms.setAdapter(
+                new ArrayAdapter<>(requireContext(),
+                        android.R.layout.simple_spinner_dropdown_item,
+                        symptomOptions));
 
-        // TRIGGERS
-        Set<String> triggerSet = new HashSet<>();
+        // Collect unique triggers
+        Set<String> allTriggers = new HashSet<>();
         for (SymptomLog log : fullSymptoms) {
-            if (log.getTriggers() != null) triggerSet.addAll(log.getTriggers());
+            if (log.getTriggers() != null) allTriggers.addAll(log.getTriggers());
         }
 
-        List<String> triggerList = new ArrayList<>();
-        triggerList.add("All");
-        triggerList.addAll(triggerSet);
+        List<String> triggerOptions = new ArrayList<>();
+        triggerOptions.add("All");
+        triggerOptions.addAll(allTriggers);
 
-        spinnerTriggers.setAdapter(new ArrayAdapter<>(
-                requireContext(),
-                android.R.layout.simple_spinner_dropdown_item,
-                triggerList
-        ));
+        spinnerTriggers.setAdapter(
+                new ArrayAdapter<>(requireContext(),
+                        android.R.layout.simple_spinner_dropdown_item,
+                        triggerOptions));
     }
 
     private void openDatePicker() {
-        Calendar c = Calendar.getInstance();
+        final Calendar c = Calendar.getInstance();
 
-        DatePickerDialog startPicker = new DatePickerDialog(requireContext(),
+        DatePickerDialog startPicker = new DatePickerDialog(
+                requireContext(),
                 (view, y, m, d) -> {
                     Calendar start = Calendar.getInstance();
                     start.set(y, m, d, 0, 0);
                     startDate = start.getTimeInMillis();
 
-                    DatePickerDialog endPicker = new DatePickerDialog(requireContext(),
+                    DatePickerDialog endPicker = new DatePickerDialog(
+                            requireContext(),
                             (view2, y2, m2, d2) -> {
                                 Calendar end = Calendar.getInstance();
                                 end.set(y2, m2, d2, 23, 59);
                                 endDate = end.getTimeInMillis();
                             },
                             y, m, d);
-
                     endPicker.show();
                 },
                 c.get(Calendar.YEAR),
                 c.get(Calendar.MONTH),
-                c.get(Calendar.DAY_OF_MONTH));
+                c.get(Calendar.DAY_OF_MONTH)
+        );
 
         startPicker.show();
     }
 
     private void applyFilters() {
-
         String selectedSymptom = spinnerSymptoms.getSelectedItem().toString();
         String selectedTrigger = spinnerTriggers.getSelectedItem().toString();
 
@@ -205,23 +204,19 @@ public class HealthHistoryFragment extends ProtectedFragment {
         List<SymptomLog> syms = new ArrayList<>(fullSymptoms);
         List<DailyWellnessLog> wells = new ArrayList<>(fullWellness);
 
-        // symptom filter
+        // filter symptoms
         if (!selectedSymptom.equals("All")) {
             syms.removeIf(s -> s.getSymptoms() == null ||
                     !s.getSymptoms().contains(selectedSymptom));
-            meds.clear();
-            wells.clear();
         }
 
-        // trigger filter
+        // filter triggers
         if (!selectedTrigger.equals("All")) {
             syms.removeIf(s -> s.getTriggers() == null ||
                     !s.getTriggers().contains(selectedTrigger));
-            meds.clear();
-            wells.clear();
         }
 
-        // date filter
+        // filter date range
         if (startDate != null && endDate != null) {
             meds.removeIf(m -> m.getTimestamp() < startDate || m.getTimestamp() > endDate);
             syms.removeIf(s -> s.getTimestamp() < startDate || s.getTimestamp() > endDate);
@@ -231,11 +226,56 @@ public class HealthHistoryFragment extends ProtectedFragment {
         adapter.updateData(meds, syms, wells);
 
         if (meds.isEmpty() && syms.isEmpty() && wells.isEmpty()) {
-            emptyView.setVisibility(View.VISIBLE);
             recyclerView.setVisibility(View.GONE);
+            emptyView.setVisibility(View.VISIBLE);
         } else {
-            emptyView.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
+            emptyView.setVisibility(View.GONE);
         }
     }
+
+    private void exportPdf() {
+        try {
+            List<HealthHistoryAdapter.HealthHistoryItem> items = adapter.getItems();
+
+            if (items == null || items.isEmpty()) {
+                Toast.makeText(requireContext(), "Nothing to export", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            PdfDocument pdf = new PdfDocument();
+            Paint paint = new Paint();
+            int y = 60;
+
+            PdfDocument.PageInfo info =
+                    new PdfDocument.PageInfo.Builder(595, 842, 1).create();
+            PdfDocument.Page page = pdf.startPage(info);
+            Canvas canvas = page.getCanvas();
+
+            for (HealthHistoryAdapter.HealthHistoryItem item : items) {
+                canvas.drawText(item.title, 40, y, paint); y += 20;
+                canvas.drawText(item.getFormattedDate(), 40, y, paint); y += 20;
+                canvas.drawText(item.details, 40, y, paint); y += 40;
+            }
+
+            pdf.finishPage(page);
+
+            File file = new File(requireContext().getExternalFilesDir(null),
+                    "health_history.pdf");
+
+            FileOutputStream out = new FileOutputStream(file);
+            pdf.writeTo(out);
+            pdf.close();
+
+            Toast.makeText(requireContext(),
+                    "PDF saved: " + file.getAbsolutePath(),
+                    Toast.LENGTH_LONG).show();
+
+        } catch (Exception e) {
+            Toast.makeText(requireContext(),
+                    "Export failed: " + e.getMessage(),
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
 }
