@@ -87,10 +87,19 @@
                 android:backgroundTint="#9C27B0" />
 
             <Button
+                android:id="@+id/buttonMotivation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/view_progress"
+                android:layout_marginBottom="8dp"
+                android:backgroundTint="#FFD700"
+                android:textColor="@android:color/black" />
+
+            <Button
                 android:id="@+id/buttonTechniqueHelper"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Technique Helper"
+                android:text="🧘‍♀️ Technique Helper"
                 android:layout_marginBottom="8dp"
                 android:backgroundTint="#00BCD4" />
 
@@ -98,7 +107,7 @@
                 android:id="@+id/buttonMyInventory"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="My Inhalers"
+                android:text="💨 My Inhalers"
                 android:layout_marginBottom="8dp"
                 android:backgroundTint="#673AB7" />
 
@@ -110,7 +119,9 @@
                 android:layout_marginBottom="16dp"
                 android:backgroundTint="#F44336"
                 android:textStyle="bold"
-                android:textSize="16sp" />
+                android:textSize="18sp"
+                android:textColor="@android:color/white"
+                android:padding="16dp" />
 
             <TextView
                 android:id="@+id/textZoneDisplay"

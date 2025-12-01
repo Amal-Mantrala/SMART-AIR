@@ -153,6 +153,12 @@ public class HealthHistoryFragment extends ProtectedFragment {
         
         private String formatMedicineDetails(MedicineLog medicine) {
             StringBuilder details = new StringBuilder();
+            
+            // Add medicine type first (Controller/Rescue)
+            if (medicine.getMedicineType() != null) {
+                details.append(medicine.getMedicineType()).append(" - ");
+            }
+            
             if (medicine.getMedicineName() != null) {
                 details.append(medicine.getMedicineName());
             }
