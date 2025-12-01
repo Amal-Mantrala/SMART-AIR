@@ -325,9 +325,17 @@ public class ParentHomeFragment extends ProtectedFragment {
                 String childEmail = childUsername + "@smart-air-child.com";
 
                 AuthService authService = new AuthService();
-                authService.createUser(childEmail, childPassword, (success, message) -> {
+                // Create the child user without switching the currently signed-in user.
+                authService.createUserSilently(childEmail, childPassword, (success, message, createdUid) -> {
                     if (success) {
-                        String childId = auth.getCurrentUser().getUid(); // This is now the child's UID
+                        // Use the uid returned by the silent create (don't rely on default auth currentUser)
+                        String childId = createdUid;
+                        if (childId == null) {
+                            if (isAdded()) {
+                                Toast.makeText(requireContext(), "Failed to retrieve new child id", Toast.LENGTH_SHORT).show();
+                            }
+                            return;
+                        }
                         Map<String, Object> childData = new HashMap<>();
                         childData.put("name", childName);
                         childData.put("username", childUsername);
@@ -338,11 +346,12 @@ public class ParentHomeFragment extends ProtectedFragment {
                                 .addOnSuccessListener(aVoid -> {
                                     db.collection("users").document(parentId)
                                             .update("children", FieldValue.arrayUnion(childId))
-                                            .addOnSuccessListener(aVoid2 -> {
+                                                .addOnSuccessListener(aVoid2 -> {
                                                 if (isAdded()) {
-                                                    Toast.makeText(requireContext(), "Child account created. For security, please log in again.", Toast.LENGTH_LONG).show();
+                                                    Toast.makeText(requireContext(), "Child account created successfully.", Toast.LENGTH_LONG).show();
                                                     dialog.dismiss();
-                                                    signOutAndReturnToLogin();
+                                                    // Keep parent signed in — do not automatically switch to the child account.
+                                                    // No signOutAndReturnToLogin() here.
                                                 }
                                             })
                                             .addOnFailureListener(e2 -> {
