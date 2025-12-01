@@ -173,6 +173,9 @@ public class HealthHistoryFragment extends ProtectedFragment {
             if (symptom.getOverallSeverity() > 0) {
                 details.append(" (Severity: ").append(symptom.getOverallSeverity()).append("/10)");
             }
+            if (symptom.getTags() != null && !symptom.getTags().isEmpty()) {
+                details.append("\nTags: ").append(String.join(", ", symptom.getTags()));
+            }
             if (symptom.getNotes() != null && !symptom.getNotes().isEmpty()) {
                 details.append("\n").append(symptom.getNotes());
             }

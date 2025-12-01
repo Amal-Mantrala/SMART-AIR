@@ -110,6 +110,8 @@
     <string name="weather">Weather</string>
     <string name="smoke_fumes">Smoke/Fumes</string>
     <string name="stress">Stress</string>
+    <string name="tags">Tags</string>
+    <string name="tags_hint">e.g., morning, school, pets</string>
     <string name="rescue_inhaler_used">I used my rescue inhaler</string>
     <string name="peak_flow_optional">Peak Flow Reading (optional)</string>
     <string name="peak_flow_example">e.g., 450 L/min</string>
@@ -183,6 +185,11 @@
         <item>Other</item>
     </string-array>
 
+    <string-array name="activity_array">
+        <item>Resting</item>
+        <item>Light Activity</item>
+        <item>Intense Exercise</item>
+    </string-array>
 
     <string-array name="mood_array">
         <item>Happy</item>
