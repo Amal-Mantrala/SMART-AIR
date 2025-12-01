@@ -8,7 +8,9 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ChildHealthService {
     private FirebaseFirestore db;
@@ -87,7 +89,91 @@ public class ChildHealthService {
 
     // Medicine Log Operations
     public void saveMedicineLog(MedicineLog medicineLog, SaveCallback callback) {
-        saveHealthLog(medicineLog, "medicineLog", callback);
+        saveHealthLog(medicineLog, "medicineLog", new SaveCallback() {
+            @Override
+            public void onSuccess(String documentId) {
+                if ("rescue".equals(medicineLog.getMedicineType())) {
+                    checkRescueInhalerUsage(medicineLog.getChildId());
+                }
+                callback.onSuccess(documentId);
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    private void checkRescueInhalerUsage(String childId) {
+        long fiveMinutesAgo = System.currentTimeMillis() - (5L * 60L * 1000L);
+        
+        db.collection("medicineLog")
+                .whereEqualTo("childId", childId)
+                .whereEqualTo("medicineType", "rescue")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        int count = 0;
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            Long timestamp = document.getLong("timestamp");
+                            if (timestamp != null && timestamp >= fiveMinutesAgo) {
+                                count++;
+                            }
+                        }
+                        if (count >= 2) {
+                            alertParentForRescueUsage(childId, count);
+                        }
+                    }
+                });
+    }
+
+    private void alertParentForRescueUsage(String childId, int count) {
+        db.collection("users")
+                .document(childId)
+                .get()
+                .addOnSuccessListener(childDoc -> {
+                    if (childDoc.exists()) {
+                        String parentId = childDoc.getString("parentId");
+                        if (parentId != null && !parentId.isEmpty()) {
+                            String name = childDoc.getString("name");
+                            final String childName = (name == null || name.isEmpty()) ? "Your child" : name;
+
+                            long oneHourAgo = System.currentTimeMillis() - (60L * 60L * 1000L);
+                            
+                            db.collection("parentAlerts")
+                                    .whereEqualTo("parentId", parentId)
+                                    .whereEqualTo("childId", childId)
+                                    .whereEqualTo("type", "rescue_overuse")
+                                    .get()
+                                    .addOnCompleteListener(checkTask -> {
+                                        if (checkTask.isSuccessful()) {
+                                            boolean hasRecentAlert = false;
+                                            for (QueryDocumentSnapshot doc : checkTask.getResult()) {
+                                                Long ts = doc.getLong("timestamp");
+                                                if (ts != null && ts >= oneHourAgo) {
+                                                    hasRecentAlert = true;
+                                                    break;
+                                                }
+                                            }
+                                            
+                                            if (!hasRecentAlert) {
+                                                Map<String, Object> alert = new HashMap<>();
+                                                alert.put("parentId", parentId);
+                                                alert.put("childId", childId);
+                                                alert.put("childName", childName);
+                                                alert.put("message", childName + " used rescue inhaler " + count + " times in the last 5 minutes");
+                                                alert.put("timestamp", System.currentTimeMillis());
+                                                alert.put("type", "rescue_overuse");
+                                                alert.put("read", false);
+
+                                                db.collection("parentAlerts").add(alert);
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                });
     }
 
     public void getMedicineHistory(String childId, int limitDays, HealthDataCallback callback) {
