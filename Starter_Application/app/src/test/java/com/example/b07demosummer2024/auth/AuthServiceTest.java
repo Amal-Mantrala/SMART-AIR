@@ -23,4 +23,14 @@ public class AuthServiceTest {
             assertNotNull("isSignedIn method should exist", null);
         }
     }
+
+    @Test
+    public void testCreateUserSilentlyMethodExists() {
+        try {
+            java.lang.reflect.Method method = AuthService.class.getMethod("createUserSilently", String.class, String.class, AuthService.CreateUserSilentCallback.class);
+            assertNotNull(method);
+        } catch (NoSuchMethodException e) {
+            assertNotNull("createUserSilently method should exist", null);
+        }
+    }
 }
