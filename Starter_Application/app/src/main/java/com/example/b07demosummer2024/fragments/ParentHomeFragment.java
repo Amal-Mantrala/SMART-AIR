@@ -31,9 +31,10 @@ import com.example.b07demosummer2024.adapters.ChildSelectionAdapter;
 import com.example.b07demosummer2024.auth.AuthService;
 import com.example.b07demosummer2024.models.ChildSelection;
 import com.example.b07demosummer2024.models.ProviderInvite;
+import com.example.b07demosummer2024.models.TriageIncident;
 import com.example.b07demosummer2024.services.ProviderInviteService;
+import com.example.b07demosummer2024.services.TriageService;
 import com.example.b07demosummer2024.models.User;
-import com.example.b07demosummer2024.services.ProviderInviteService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -76,6 +77,7 @@ public class ParentHomeFragment extends ProtectedFragment {
         Button privacySharingButton = view.findViewById(R.id.buttonPrivacySharing);
         Button inviteProviderButton = view.findViewById(R.id.buttonInviteProvider);
         Button viewAlertsButton = view.findViewById(R.id.buttonViewAlerts);
+        Button viewTriageLogsButton = view.findViewById(R.id.buttonViewTriageLogs);
         Button setPB = view.findViewById(R.id.buttonSetPB);
         Spinner childSpinner = view.findViewById(R.id.dropdownMenu);
         Button inventoryButton = view.findViewById(R.id.buttonInventory);
@@ -132,6 +134,7 @@ public class ParentHomeFragment extends ProtectedFragment {
         });
         inviteProviderButton.setOnClickListener(v -> showInviteProviderDialog());
         viewAlertsButton.setOnClickListener(v -> showAlertsDialog());
+        viewTriageLogsButton.setOnClickListener(v -> showTriageLogsDialog());
         inventoryButton.setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new InventoryFragment())
@@ -805,10 +808,295 @@ public class ParentHomeFragment extends ProtectedFragment {
                 .update("pb", pbValue)
                 .addOnSuccessListener(a -> {
                     Toast.makeText(getContext(), "PB updated!", Toast.LENGTH_SHORT).show();
-                    // Refresh zone display
                     loadChildZone(childUid);
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(getContext(), "Failed to update PB", Toast.LENGTH_SHORT).show());
+    }
+
+    private void showTriageLogsDialog() {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_triage_list, null);
+        Spinner childSpinner = dialogView.findViewById(R.id.spinnerChild);
+        RecyclerView recyclerView = dialogView.findViewById(R.id.recyclerViewTriage);
+        TextView emptyView = dialogView.findViewById(R.id.textEmpty);
+        Button closeButton = dialogView.findViewById(R.id.buttonClose);
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        TriageListAdapter adapter = new TriageListAdapter();
+        recyclerView.setAdapter(adapter);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .setCancelable(true)
+                .create();
+
+        closeButton.setOnClickListener(v -> dialog.dismiss());
+
+        List<String> dialogChildIds = new ArrayList<>();
+        List<String> dialogChildNames = new ArrayList<>();
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                dialogChildNames
+        );
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        childSpinner.setAdapter(spinnerAdapter);
+
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        String parentUid = auth.getCurrentUser().getUid();
+
+        db.collection("users")
+                .document(parentUid)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    if (!isAdded()) return;
+                    
+                    if (snapshot.exists()) {
+                        List<String> children = (List<String>) snapshot.get("children");
+                        if (children != null && !children.isEmpty()) {
+                            dialogChildIds.clear();
+                            dialogChildNames.clear();
+                            
+                            Map<String, String> childNameMap = new HashMap<>();
+                            int[] completed = {0};
+                            int total = children.size();
+                            
+                            for (String childUid : children) {
+                                db.collection("users")
+                                        .document(childUid)
+                                        .get()
+                                        .addOnSuccessListener(doc -> {
+                                            if (!isAdded()) return;
+                                            
+                                            String name = doc.exists() ? doc.getString("name") : null;
+                                            if (name == null) name = "Child";
+                                            
+                                            childNameMap.put(childUid, name);
+                                            completed[0]++;
+                                            
+                                            if (completed[0] == total) {
+                                                for (String childUid2 : children) {
+                                                    dialogChildIds.add(childUid2);
+                                                    dialogChildNames.add(childNameMap.get(childUid2));
+                                                }
+                                                
+                                                spinnerAdapter.notifyDataSetChanged();
+                                                
+                                                if (!dialogChildIds.isEmpty()) {
+                                                    String firstChildId = dialogChildIds.get(0);
+                                                    loadTriageForChild(firstChildId, recyclerView, emptyView, adapter, dialog);
+                                                }
+                                            }
+                                        });
+                            }
+                        } else {
+                            emptyView.setVisibility(View.VISIBLE);
+                            recyclerView.setVisibility(View.GONE);
+                            emptyView.setText("No children found");
+                        }
+                    }
+                });
+
+        childSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position < dialogChildIds.size()) {
+                    String selectedChildId = dialogChildIds.get(position);
+                    loadTriageForChild(selectedChildId, recyclerView, emptyView, adapter, dialog);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void loadTriageForChild(String childId, RecyclerView recyclerView, TextView emptyView, 
+                                    TriageListAdapter adapter, AlertDialog dialog) {
+        recyclerView.setVisibility(View.GONE);
+        emptyView.setVisibility(View.GONE);
+
+        TriageService triageService = new TriageService();
+        triageService.getTriageHistory(childId, 30, new TriageService.TriageHistoryCallback() {
+            @Override
+            public void onSuccess(List<TriageIncident> incidents) {
+                if (!isAdded()) return;
+                
+                if (incidents.isEmpty()) {
+                    recyclerView.setVisibility(View.GONE);
+                    emptyView.setVisibility(View.VISIBLE);
+                    emptyView.setText("No triage incidents found");
+                } else {
+                    recyclerView.setVisibility(View.VISIBLE);
+                    emptyView.setVisibility(View.GONE);
+                    adapter.updateIncidents(incidents, incident -> {
+                        dialog.dismiss();
+                        showTriageIncidentDetails(incident);
+                    });
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                if (isAdded()) {
+                    recyclerView.setVisibility(View.GONE);
+                    emptyView.setVisibility(View.VISIBLE);
+                    emptyView.setText("Error loading triage logs");
+                }
+            }
+        });
+    }
+
+    private void showTriageIncidentDetails(TriageIncident incident) {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_triage_details, null);
+        
+        TextView dateText = dialogView.findViewById(R.id.textDate);
+        TextView redFlagsText = dialogView.findViewById(R.id.textRedFlags);
+        TextView rescueAttemptsText = dialogView.findViewById(R.id.textRescueAttempts);
+        TextView peakFlowText = dialogView.findViewById(R.id.textPeakFlow);
+        TextView decisionText = dialogView.findViewById(R.id.textDecision);
+        TextView userResponseText = dialogView.findViewById(R.id.textUserResponse);
+        TextView escalationText = dialogView.findViewById(R.id.textEscalation);
+        Button closeButton = dialogView.findViewById(R.id.buttonClose);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+        dateText.setText(sdf.format(new Date(incident.getTimestamp())));
+
+        List<String> redFlags = new ArrayList<>();
+        if (incident.isCannotSpeakFullSentences()) redFlags.add("Cannot speak full sentences");
+        if (incident.isChestRetractions()) redFlags.add("Chest retractions");
+        if (incident.isBlueGrayLipsNails()) redFlags.add("Blue/gray lips or nails");
+        
+        if (redFlags.isEmpty()) {
+            redFlagsText.setText("None");
+        } else {
+            redFlagsText.setText(String.join(", ", redFlags));
+        }
+
+        rescueAttemptsText.setText(String.valueOf(incident.getRecentRescueAttempts()));
+
+        if (incident.getPeakFlowReading() != null && !incident.getPeakFlowReading().isEmpty()) {
+            peakFlowText.setText(incident.getPeakFlowReading());
+        } else {
+            peakFlowText.setText("Not recorded");
+        }
+
+        String decision = incident.getDecision();
+        if (decision != null) {
+            if (decision.equals("emergency")) {
+                decisionText.setText("Emergency");
+                decisionText.setTextColor(Color.parseColor("#F44336"));
+            } else {
+                decisionText.setText("Home Steps");
+                decisionText.setTextColor(Color.parseColor("#4CAF50"));
+            }
+        }
+
+        if (incident.getUserResponse() != null && !incident.getUserResponse().isEmpty()) {
+            userResponseText.setText(incident.getUserResponse());
+        } else {
+            userResponseText.setText("Not available");
+        }
+
+        if (incident.isEscalated()) {
+            escalationText.setVisibility(View.VISIBLE);
+            String escalationInfo = "Escalated";
+            if (incident.getEscalationReason() != null && !incident.getEscalationReason().isEmpty()) {
+                escalationInfo += ": " + incident.getEscalationReason();
+            }
+            escalationText.setText(escalationInfo);
+        } else {
+            escalationText.setVisibility(View.GONE);
+        }
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .setCancelable(true)
+                .create();
+
+        closeButton.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
+    }
+
+    private static class TriageListAdapter extends RecyclerView.Adapter<TriageListAdapter.ViewHolder> {
+        private List<TriageIncident> incidents = new ArrayList<>();
+        private OnIncidentClickListener listener;
+
+        interface OnIncidentClickListener {
+            void onClick(TriageIncident incident);
+        }
+
+        void updateIncidents(List<TriageIncident> newIncidents, OnIncidentClickListener clickListener) {
+            this.incidents = newIncidents;
+            this.listener = clickListener;
+            incidents.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_triage_incident, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            TriageIncident incident = incidents.get(position);
+            holder.bind(incident);
+            holder.itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onClick(incident);
+                }
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return incidents.size();
+        }
+
+        static class ViewHolder extends RecyclerView.ViewHolder {
+            TextView dateText;
+            TextView decisionText;
+            TextView summaryText;
+
+            ViewHolder(@NonNull View itemView) {
+                super(itemView);
+                dateText = itemView.findViewById(R.id.textDate);
+                decisionText = itemView.findViewById(R.id.textDecision);
+                summaryText = itemView.findViewById(R.id.textSummary);
+            }
+
+            void bind(TriageIncident incident) {
+                SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+                dateText.setText(sdf.format(new Date(incident.getTimestamp())));
+
+                String decision = incident.getDecision();
+                if (decision != null && decision.equals("emergency")) {
+                    decisionText.setText("Emergency");
+                    decisionText.setTextColor(Color.parseColor("#F44336"));
+                } else {
+                    decisionText.setText("Home Steps");
+                    decisionText.setTextColor(Color.parseColor("#4CAF50"));
+                }
+
+                List<String> flags = new ArrayList<>();
+                if (incident.isCannotSpeakFullSentences()) flags.add("Cannot speak");
+                if (incident.isChestRetractions()) flags.add("Chest retractions");
+                if (incident.isBlueGrayLipsNails()) flags.add("Blue/gray lips");
+                
+                if (flags.isEmpty()) {
+                    summaryText.setText("No red flags");
+                } else {
+                    summaryText.setText(String.join(", ", flags));
+                }
+            }
+        }
     }
 }
