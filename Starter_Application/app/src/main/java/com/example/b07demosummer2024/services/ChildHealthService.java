@@ -106,7 +106,7 @@ public class ChildHealthService {
     }
 
     private void checkRescueInhalerUsage(String childId) {
-        long fiveMinutesAgo = System.currentTimeMillis() - (5L * 60L * 1000L);
+        long threeHoursAgo = System.currentTimeMillis() - (3L * 60L * 60L * 1000L);
         
         db.collection("medicineLog")
                 .whereEqualTo("childId", childId)
@@ -117,11 +117,11 @@ public class ChildHealthService {
                         int count = 0;
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             Long timestamp = document.getLong("timestamp");
-                            if (timestamp != null && timestamp >= fiveMinutesAgo) {
+                            if (timestamp != null && timestamp >= threeHoursAgo) {
                                 count++;
                             }
                         }
-                        if (count >= 2) {
+                        if (count >= 3) {
                             alertParentForRescueUsage(childId, count);
                         }
                     }
@@ -162,7 +162,7 @@ public class ChildHealthService {
                                                 alert.put("parentId", parentId);
                                                 alert.put("childId", childId);
                                                 alert.put("childName", childName);
-                                                alert.put("message", childName + " used rescue inhaler " + count + " times in the last 5 minutes");
+                                                alert.put("message", childName + " used rescue inhaler " + count + " times in the last 3 hours");
                                                 alert.put("timestamp", System.currentTimeMillis());
                                                 alert.put("type", "rescue_overuse");
                                                 alert.put("read", false);
