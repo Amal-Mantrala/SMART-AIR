@@ -3,6 +3,11 @@ package com.example.b07demosummer2024.services;
 import com.example.b07demosummer2024.models.ProviderInvite;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.example.b07demosummer2024.models.SharingSettings;
+import com.example.b07demosummer2024.models.ChildSharingSettings;
+import java.util.Map;
+import java.util.HashMap;
 
 import java.security.SecureRandom;
 import java.util.List;
@@ -134,7 +139,45 @@ public class ProviderInviteService {
             db.collection("providerAccess").add(access);
         }
         
-        callback.onResult(true);
+        // Now write sharingSettings/{parentId}/providers/{providerId} so the provider has explicit
+        // sharing configuration. Default to sharing the 'name' field for invited children.
+        List<String> childIds = invite.getSharedChildrenIds();
+        if (childIds == null || childIds.isEmpty()) {
+            callback.onResult(true);
+            return;
+        }
+
+        SharingSettings settings = new SharingSettings();
+        settings.setParentId(invite.getParentId());
+        settings.setProviderId(providerId);
+        Map<String, ChildSharingSettings> childSettingsMap = new HashMap<>();
+
+        for (String childId : childIds) {
+            ChildSharingSettings cs = new ChildSharingSettings();
+            cs.setChildId(childId);
+            Map<String, Boolean> shared = new HashMap<>();
+            // Default granular fields - start conservative (all false). Parent can enable as desired.
+            shared.put("rescueLogs", false);
+            shared.put("controllerSummary", false);
+            shared.put("symptoms", false);
+            shared.put("triggers", false);
+            shared.put("peakFlow", false);
+            shared.put("triageIncidents", false);
+            shared.put("summaryCharts", false);
+            cs.setSharedFields(shared);
+            childSettingsMap.put(childId, cs);
+        }
+
+        settings.setChildSettings(childSettingsMap);
+        settings.setLastUpdated(System.currentTimeMillis());
+
+        db.collection("sharingSettings")
+                .document(invite.getParentId())
+                .collection("providers")
+                .document(providerId)
+                .set(settings)
+                .addOnSuccessListener(aVoid -> callback.onResult(true))
+                .addOnFailureListener(e -> callback.onError(e.getMessage()));
     }
 
     public void revokeInvite(String inviteId, BooleanCallback callback) {
