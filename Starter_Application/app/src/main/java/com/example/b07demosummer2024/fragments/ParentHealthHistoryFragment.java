@@ -26,6 +26,7 @@ import com.example.b07demosummer2024.models.MedicineLog;
 import com.example.b07demosummer2024.models.SymptomLog;
 import com.example.b07demosummer2024.models.ZoneLog;
 import com.example.b07demosummer2024.models.TriageIncident;
+import com.example.b07demosummer2024.services.AdherenceService;
 import com.example.b07demosummer2024.services.ChildHealthService;
 import com.example.b07demosummer2024.services.TriageService;
 
@@ -258,6 +259,21 @@ public class ParentHealthHistoryFragment extends ProtectedFragment {
             return;
         }
 
+        AdherenceService adherenceService = new AdherenceService();
+        adherenceService.getCurrentPeriodAdherence(childId, new AdherenceService.CurrentAdherenceCallback() {
+            @Override
+            public void onSuccess(double adherence, int plannedDays, int loggedDays) {
+                createHealthHistoryPdf(items, adherence, plannedDays, loggedDays);
+            }
+
+            @Override
+            public void onError(String error) {
+                createHealthHistoryPdf(items, 0.0, 0, 0);
+            }
+        });
+    }
+
+    private void createHealthHistoryPdf(List<HealthHistoryAdapter.HealthHistoryItem> items, double adherence, int plannedDays, int loggedDays) {
         try {
             PdfDocument pdf = new PdfDocument();
             Paint paint = new Paint();
@@ -277,6 +293,12 @@ public class ParentHealthHistoryFragment extends ProtectedFragment {
 
             canvas.drawText("Health History", margin, y, titlePaint);
             y += 30;
+
+            if (plannedDays > 0) {
+                String adherenceText = "Controller Adherence: " + String.format(Locale.getDefault(), "%.1f", adherence) + "% (" + loggedDays + "/" + plannedDays + " days)";
+                canvas.drawText(adherenceText, margin, y, paint);
+                y += 25;
+            }
 
             SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
 
@@ -381,7 +403,6 @@ public class ParentHealthHistoryFragment extends ProtectedFragment {
         }
 
         int totalDays = (int) daysDiff + 1;
-        int completedDays = 0;
         int totalRescueUses = 0;
         Set<String> problemDaySet = new HashSet<>();
         final Map<String, Integer> zoneCounts = new HashMap<>();
@@ -391,9 +412,6 @@ public class ParentHealthHistoryFragment extends ProtectedFragment {
         final List<Map.Entry<Long, String>> zoneTimeSeries = new ArrayList<>();
 
         for (DailyWellnessLog w : filteredWellness) {
-            if (w.isMorningController() && w.isEveningController()) {
-                completedDays++;
-            }
             totalRescueUses += w.getRescueInhalerUses();
             if (w.getRescueInhalerUses() > 0) {
                 long dayKey = w.getTimestamp() / (24 * 60 * 60 * 1000);
@@ -417,29 +435,60 @@ public class ParentHealthHistoryFragment extends ProtectedFragment {
         zoneTimeSeries.sort((a, b) -> Long.compare(a.getKey(), b.getKey()));
 
         final int problemDays = problemDaySet.size();
-        final double adherence = totalDays > 0 ? (completedDays * 100.0) / totalDays : 0;
         final double avgRescue = totalDays > 0 ? (double) totalRescueUses / totalDays : 0;
         final int finalTotalRescueUses = totalRescueUses;
 
-        TriageService triageService = new TriageService();
-        int daysForTriage = totalDays;
-        triageService.getTriageHistory(childId, daysForTriage, new TriageService.TriageHistoryCallback() {
+        AdherenceService adherenceService = new AdherenceService();
+        adherenceService.getCurrentPeriodAdherence(childId, new AdherenceService.CurrentAdherenceCallback() {
             @Override
-            public void onSuccess(List<TriageIncident> incidents) {
-                List<TriageIncident> filteredTriage = new ArrayList<>();
-                for (TriageIncident incident : incidents) {
-                    if (incident.getTimestamp() >= startDate && incident.getTimestamp() <= endDate) {
-                        if (incident.hasRedFlags() || "emergency".equals(incident.getDecision())) {
-                            filteredTriage.add(incident);
+            public void onSuccess(double adherence, int plannedDays, int loggedDays) {
+                TriageService triageService = new TriageService();
+                int daysForTriage = totalDays;
+                triageService.getTriageHistory(childId, daysForTriage, new TriageService.TriageHistoryCallback() {
+                    @Override
+                    public void onSuccess(List<TriageIncident> incidents) {
+                        List<TriageIncident> filteredTriage = new ArrayList<>();
+                        for (TriageIncident incident : incidents) {
+                            if (incident.getTimestamp() >= startDate && incident.getTimestamp() <= endDate) {
+                                if (incident.hasRedFlags() || "emergency".equals(incident.getDecision())) {
+                                    filteredTriage.add(incident);
+                                }
+                            }
                         }
+                        createProviderReportPdf(filteredWellness, filteredSymptoms, adherence, avgRescue, finalTotalRescueUses, problemDays, zoneCounts, zoneTimeSeries, filteredTriage);
                     }
-                }
-                createProviderReportPdf(filteredWellness, filteredSymptoms, adherence, avgRescue, finalTotalRescueUses, problemDays, zoneCounts, zoneTimeSeries, filteredTriage);
+
+                    @Override
+                    public void onError(String error) {
+                        createProviderReportPdf(filteredWellness, filteredSymptoms, adherence, avgRescue, finalTotalRescueUses, problemDays, zoneCounts, zoneTimeSeries, new ArrayList<>());
+                    }
+                });
             }
 
             @Override
             public void onError(String error) {
-                createProviderReportPdf(filteredWellness, filteredSymptoms, adherence, avgRescue, finalTotalRescueUses, problemDays, zoneCounts, zoneTimeSeries, new ArrayList<>());
+                double defaultAdherence = 0.0;
+                TriageService triageService = new TriageService();
+                int daysForTriage = totalDays;
+                triageService.getTriageHistory(childId, daysForTriage, new TriageService.TriageHistoryCallback() {
+                    @Override
+                    public void onSuccess(List<TriageIncident> incidents) {
+                        List<TriageIncident> filteredTriage = new ArrayList<>();
+                        for (TriageIncident incident : incidents) {
+                            if (incident.getTimestamp() >= startDate && incident.getTimestamp() <= endDate) {
+                                if (incident.hasRedFlags() || "emergency".equals(incident.getDecision())) {
+                                    filteredTriage.add(incident);
+                                }
+                            }
+                        }
+                        createProviderReportPdf(filteredWellness, filteredSymptoms, defaultAdherence, avgRescue, finalTotalRescueUses, problemDays, zoneCounts, zoneTimeSeries, filteredTriage);
+                    }
+
+                    @Override
+                    public void onError(String error2) {
+                        createProviderReportPdf(filteredWellness, filteredSymptoms, defaultAdherence, avgRescue, finalTotalRescueUses, problemDays, zoneCounts, zoneTimeSeries, new ArrayList<>());
+                    }
+                });
             }
         });
     }

@@ -26,6 +26,7 @@ import com.example.b07demosummer2024.models.SharingSettings;
 import com.example.b07demosummer2024.models.SymptomLog;
 import com.example.b07demosummer2024.models.User;
 import com.example.b07demosummer2024.models.ZoneLog;
+import com.example.b07demosummer2024.services.AdherenceService;
 import com.example.b07demosummer2024.services.ChildHealthService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -35,6 +36,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -206,6 +208,11 @@ public class HealthHistoryFragment extends ProtectedFragment {
 
                 populateFilters();
                 adapter.updateData(fullMedicine, fullSymptoms, fullWellness, fullZone);
+                
+                Boolean controllerSummary = providerSettings != null ? providerSettings.get("controllerSummary") : null;
+                if (controllerSummary != null && controllerSummary) {
+                    loadAdherence();
+                }
             }
 
             @Override
@@ -352,5 +359,22 @@ public class HealthHistoryFragment extends ProtectedFragment {
             emptyView.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
         }
+    }
+    
+    private void loadAdherence() {
+        AdherenceService adherenceService = new AdherenceService();
+        adherenceService.getCurrentPeriodAdherence(childId, new AdherenceService.CurrentAdherenceCallback() {
+            @Override
+            public void onSuccess(double adherence, int plannedDays, int loggedDays) {
+                String adherenceText = String.format(Locale.getDefault(), "Controller Adherence: %.1f%% (%d/%d days)", adherence, loggedDays, plannedDays);
+                HealthHistoryAdapter.HealthHistoryItem adherenceItem = new HealthHistoryAdapter.HealthHistoryItem("Adherence Summary", System.currentTimeMillis(), adherenceText, "none");
+                adapter.addAdherenceItem(adherenceItem);
+            }
+
+            @Override
+            public void onError(String error) {
+                android.util.Log.e("HealthHistoryFragment", "Adherence error: " + error);
+            }
+        });
     }
 }

@@ -6,10 +6,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import com.example.b07demosummer2024.R;
+import com.example.b07demosummer2024.services.AdherenceService;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.HashMap;
@@ -86,26 +88,28 @@ public class WeekScheduleDialogFragment extends DialogFragment {
         }
 
         saveButton.setOnClickListener(v -> {
-            Map<String, Object> scheduleMap = new HashMap<>();
-            scheduleMap.put("1", checkSun.isChecked());
-            scheduleMap.put("2", checkMon.isChecked());
-            scheduleMap.put("3", checkTue.isChecked());
-            scheduleMap.put("4", checkWed.isChecked());
-            scheduleMap.put("5", checkThu.isChecked());
-            scheduleMap.put("6", checkFri.isChecked());
-            scheduleMap.put("7", checkSat.isChecked());
+            Map<String, Boolean> newSchedule = new HashMap<>();
+            newSchedule.put("1", checkSun.isChecked());
+            newSchedule.put("2", checkMon.isChecked());
+            newSchedule.put("3", checkTue.isChecked());
+            newSchedule.put("4", checkWed.isChecked());
+            newSchedule.put("5", checkThu.isChecked());
+            newSchedule.put("6", checkFri.isChecked());
+            newSchedule.put("7", checkSat.isChecked());
 
             if (childId != null) {
-                FirebaseFirestore db = FirebaseFirestore.getInstance();
-                Map<String, Object> update = new HashMap<>();
-                update.put("weeklySchedule", scheduleMap);
-                db.collection("users").document(childId).set(update, com.google.firebase.firestore.SetOptions.merge())
-                    .addOnSuccessListener(aVoid -> {
+                AdherenceService adherenceService = new AdherenceService();
+                adherenceService.handleScheduleChange(childId, newSchedule, new AdherenceService.ScheduleChangeCallback() {
+                    @Override
+                    public void onSuccess() {
                         dismiss();
-                    })
-                    .addOnFailureListener(e -> {
-                        // keep dialog open on failure
-                    });
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Toast.makeText(requireContext(), "Error saving schedule: " + error, Toast.LENGTH_SHORT).show();
+                    }
+                });
             } else {
                 dismiss();
             }
