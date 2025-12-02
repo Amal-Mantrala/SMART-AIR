@@ -26,6 +26,7 @@ import com.example.b07demosummer2024.models.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -109,6 +110,7 @@ public class InventoryFragment extends Fragment implements InventoryAdapter.OnIt
         Spinner childSpinner = dialogView.findViewById(R.id.spinnerChildSelection);
         EditText medicineNameEdit = dialogView.findViewById(R.id.editMedicineName);
         EditText totalDosesEdit = dialogView.findViewById(R.id.editTotalDoses);
+        DatePicker purchaseDatePicker = dialogView.findViewById(R.id.datePickerPurchase);
         DatePicker expiryDatePicker = dialogView.findViewById(R.id.datePickerExpiry);
         RadioGroup typeGroup = dialogView.findViewById(R.id.radioGroupInventoryMedicineType);
         Button saveButton = dialogView.findViewById(R.id.buttonSave);
@@ -155,6 +157,9 @@ public class InventoryFragment extends Fragment implements InventoryAdapter.OnIt
             int totalDoses = Integer.parseInt(totalDosesStr);
 
             Calendar calendar = Calendar.getInstance();
+            calendar.set(purchaseDatePicker.getYear(), purchaseDatePicker.getMonth(), purchaseDatePicker.getDayOfMonth());
+            long purchaseDate = calendar.getTimeInMillis();
+
             calendar.set(expiryDatePicker.getYear(), expiryDatePicker.getMonth(), expiryDatePicker.getDayOfMonth());
             long expiryDate = calendar.getTimeInMillis();
 
@@ -169,7 +174,7 @@ public class InventoryFragment extends Fragment implements InventoryAdapter.OnIt
             canister.setTotalDoses(totalDoses);
             canister.setDosesLeft(totalDoses);
             canister.setExpiryDate(expiryDate);
-            canister.setPurchaseDate(System.currentTimeMillis());
+            canister.setPurchaseDate(purchaseDate);
             canister.setLastMarkedBy("parent");
 
             FirebaseFirestore.getInstance().collection("inventory").add(canister).addOnSuccessListener(documentReference -> {
@@ -193,10 +198,44 @@ public class InventoryFragment extends Fragment implements InventoryAdapter.OnIt
     private void showEditDosesDialog(MedicineCanister canister) {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_doses, null);
         EditText dosesLeftEdit = dialogView.findViewById(R.id.editDosesLeft);
+        DatePicker expiryEditPicker = dialogView.findViewById(R.id.datePickerExpiryEdit);
         Button saveButton = dialogView.findViewById(R.id.buttonSave);
         Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
 
         dosesLeftEdit.setText(String.valueOf(canister.getDosesLeft()));
+
+        // Initialize expiry picker to existing expiry date and hide by default
+        if (expiryEditPicker != null) {
+            long expiry = canister.getExpiryDate();
+            if (expiry > 0) {
+                Calendar cal = Calendar.getInstance();
+                cal.setTimeInMillis(expiry);
+                expiryEditPicker.updateDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+            }
+            expiryEditPicker.setVisibility(View.GONE); // hide until we verify this user is a parent
+        }
+
+        // Verify current user is a parent account (has a 'children' field) before showing expiry picker
+        String currentUid = null;
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        }
+        if (currentUid != null) {
+            String finalCurrentUid = currentUid;
+            FirebaseFirestore.getInstance().collection("users").document(currentUid).get().addOnCompleteListener(userTask -> {
+                if (userTask.isSuccessful() && userTask.getResult() != null && userTask.getResult().exists()) {
+                    DocumentSnapshot userDoc = userTask.getResult();
+                    Object childrenField = userDoc.get("children");
+                    boolean isParentAccount = childrenField != null; // parent accounts have a 'children' list
+                    if (isParentAccount && expiryEditPicker != null) {
+                        // ensure only the parent who owns the canister can edit expiry
+                        if (finalCurrentUid.equals(canister.getParentId())) {
+                            expiryEditPicker.setVisibility(View.VISIBLE);
+                        }
+                    }
+                }
+            });
+        }
 
         AlertDialog dialog = new AlertDialog.Builder(getContext())
                 .setView(dialogView)
@@ -235,18 +274,37 @@ public class InventoryFragment extends Fragment implements InventoryAdapter.OnIt
                             Toast.makeText(getContext(), "Failed to remove canister.", Toast.LENGTH_SHORT).show();
                         });
             } else {
-                // Otherwise, UPDATE the canister as before
-                db.collection("inventory").document(canister.getCanisterId())
-                        .update("dosesLeft", newDosesLeft, "lastMarkedBy", "parent")
-                        .addOnSuccessListener(aVoid -> {
-                            canister.setDosesLeft(newDosesLeft);
-                            canister.setLastMarkedBy("parent"); // Mark that the parent made the change
-                            adapter.notifyDataSetChanged();
-                            dialog.dismiss();
-                        })
-                        .addOnFailureListener(e -> {
-                            Toast.makeText(getContext(), "Failed to update canister.", Toast.LENGTH_SHORT).show();
-                        });
+                // Otherwise, UPDATE the canister. If the expiry picker is visible (parent), also allow updating expiry.
+                if (expiryEditPicker != null && expiryEditPicker.getVisibility() == View.VISIBLE) {
+                    Calendar c = Calendar.getInstance();
+                    c.set(expiryEditPicker.getYear(), expiryEditPicker.getMonth(), expiryEditPicker.getDayOfMonth());
+                    long newExpiry = c.getTimeInMillis();
+
+                    db.collection("inventory").document(canister.getCanisterId())
+                            .update("dosesLeft", newDosesLeft, "lastMarkedBy", "parent", "expiryDate", newExpiry)
+                            .addOnSuccessListener(aVoid -> {
+                                canister.setDosesLeft(newDosesLeft);
+                                canister.setExpiryDate(newExpiry);
+                                canister.setLastMarkedBy("parent"); // Mark that the parent made the change
+                                adapter.notifyDataSetChanged();
+                                dialog.dismiss();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(getContext(), "Failed to update canister.", Toast.LENGTH_SHORT).show();
+                            });
+                } else {
+                    db.collection("inventory").document(canister.getCanisterId())
+                            .update("dosesLeft", newDosesLeft, "lastMarkedBy", "parent")
+                            .addOnSuccessListener(aVoid -> {
+                                canister.setDosesLeft(newDosesLeft);
+                                canister.setLastMarkedBy("parent"); // Mark that the parent made the change
+                                adapter.notifyDataSetChanged();
+                                dialog.dismiss();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(getContext(), "Failed to update canister.", Toast.LENGTH_SHORT).show();
+                            });
+                }
             }
         });
 

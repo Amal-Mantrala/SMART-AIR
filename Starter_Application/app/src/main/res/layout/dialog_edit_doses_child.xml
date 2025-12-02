@@ -8,7 +8,9 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Update Doses Remaining" />
+        android:text="Update Doses Remaining" 
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <EditText
         android:id="@+id/editDosesLeft"
@@ -16,19 +18,6 @@
         android:layout_height="wrap_content"
         android:hint="Enter new dose count"
         android:inputType="number"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Expiry Date (parents only)"/>
-
-    <DatePicker
-        android:id="@+id/datePickerExpiryEdit"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:calendarViewShown="false"
-        android:datePickerMode="spinner"/>
 
     <LinearLayout
         android:layout_width="match_parent"

@@ -7,13 +7,14 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.b07demosummer2024.R;
 import com.example.b07demosummer2024.models.MedicineCanister;
+import com.google.firebase.firestore.auth.User;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 public class InventoryAdapter extends BaseRecyclerAdapter<MedicineCanister, InventoryAdapter.ViewHolder> {
-
     private OnItemClickListener listener;
 
     public interface OnItemClickListener {
