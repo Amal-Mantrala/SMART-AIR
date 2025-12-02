@@ -18,17 +18,24 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.b07demosummer2024.R;
 import com.example.b07demosummer2024.adapters.HealthHistoryAdapter;
+import com.example.b07demosummer2024.auth.ProviderSharingService;
+import com.example.b07demosummer2024.models.ChildSharingSettings;
 import com.example.b07demosummer2024.models.DailyWellnessLog;
 import com.example.b07demosummer2024.models.MedicineLog;
+import com.example.b07demosummer2024.models.SharingSettings;
 import com.example.b07demosummer2024.models.SymptomLog;
+import com.example.b07demosummer2024.models.User;
 import com.example.b07demosummer2024.models.ZoneLog;
 import com.example.b07demosummer2024.services.ChildHealthService;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class HealthHistoryFragment extends ProtectedFragment {
@@ -55,6 +62,8 @@ public class HealthHistoryFragment extends ProtectedFragment {
     // filter state
     private Long startDate = null;
     private Long endDate = null;
+    
+    private Map<String, Boolean> providerSettings = null;
 
     public static HealthHistoryFragment newInstance(String childId) {
         HealthHistoryFragment fragment = new HealthHistoryFragment();
@@ -115,7 +124,68 @@ public class HealthHistoryFragment extends ProtectedFragment {
     }
 
     private void loadHealthHistory() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            return;
+        }
+        
+        String userId = auth.getCurrentUser().getUid();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        
+        db.collection("users").document(userId).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                User user = task.getResult().toObject(User.class);
+                if (user != null && "provider".equals(user.getRole())) {
+                    checkProviderAccess(userId);
+                } else {
+                    loadData();
+                }
+            } else {
+                loadData();
+            }
+        });
+    }
+    
+    private void checkProviderAccess(String providerId) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users").document(childId).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                User child = task.getResult().toObject(User.class);
+                if (child != null && child.getParentId() != null) {
+                    String parentId = child.getParentId();
+                    ProviderSharingService service = new ProviderSharingService();
+                    service.getSharingSettings(parentId, providerId, new ProviderSharingService.SettingsCallback() {
+                        @Override
+                        public void onResult(SharingSettings settings) {
+                            if (settings != null && settings.getChildSettings() != null) {
+                                ChildSharingSettings childSettings = settings.getChildSettings().get(childId);
+                                if (childSettings != null && childSettings.getSharedFields() != null) {
+                                    providerSettings = childSettings.getSharedFields();
+                                } else {
+                                    providerSettings = new HashMap<>();
+                                }
+                            } else {
+                                providerSettings = new HashMap<>();
+                            }
+                            loadData();
+                        }
 
+                        @Override
+                        public void onError(String error) {
+                            providerSettings = new HashMap<>();
+                            loadData();
+                        }
+                    });
+                } else {
+                    loadData();
+                }
+            } else {
+                loadData();
+            }
+        });
+    }
+    
+    private void loadData() {
         ChildHealthService healthService = new ChildHealthService();
 
         healthService.getAllHealthData(childId, 30, new ChildHealthService.AllHealthDataCallback() {
@@ -130,6 +200,10 @@ public class HealthHistoryFragment extends ProtectedFragment {
                 fullWellness = wellnessData != null ? wellnessData : new ArrayList<>();
                 fullZone = zoneData != null ? zoneData : new ArrayList<>();
 
+                if (providerSettings != null) {
+                    applyProviderFilters();
+                }
+
                 populateFilters();
                 adapter.updateData(fullMedicine, fullSymptoms, fullWellness, fullZone);
             }
@@ -139,6 +213,40 @@ public class HealthHistoryFragment extends ProtectedFragment {
                 Toast.makeText(requireContext(), "Error loading health history: " + error, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+    
+    private void applyProviderFilters() {
+        fullWellness.clear();
+        
+        Boolean rescueLogs = providerSettings.get("rescueLogs");
+        if (rescueLogs == null || !rescueLogs) {
+            fullMedicine.removeIf(m -> "rescue".equals(m.getMedicineType()));
+        }
+        
+        Boolean controllerSummary = providerSettings.get("controllerSummary");
+        if (controllerSummary == null || !controllerSummary) {
+            fullMedicine.removeIf(m -> "controller".equals(m.getMedicineType()));
+        }
+        
+        Boolean symptoms = providerSettings.get("symptoms");
+        if (symptoms == null || !symptoms) {
+            fullSymptoms.clear();
+        } else {
+            Boolean triggers = providerSettings.get("triggers");
+            if (triggers == null || !triggers) {
+                fullSymptoms.removeIf(s -> s.getTriggers() != null && !s.getTriggers().isEmpty());
+            }
+        }
+        
+        Boolean summaryCharts = providerSettings.get("summaryCharts");
+        if (summaryCharts == null || !summaryCharts) {
+            fullZone.clear();
+        } else {
+            Boolean peakFlow = providerSettings.get("peakFlow");
+            if (peakFlow == null || !peakFlow) {
+                fullZone.removeIf(z -> z.getPefValue() > 0);
+            }
+        }
     }
 
     private void populateFilters() {
