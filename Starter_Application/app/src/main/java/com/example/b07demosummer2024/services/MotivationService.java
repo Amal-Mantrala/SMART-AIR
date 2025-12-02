@@ -50,6 +50,11 @@ public class MotivationService {
         void onError(String error);
     }
 
+    public interface ScheduleCallback {
+        void onScheduleLoaded(Map<String, Boolean> weeklySchedule);
+        void onError(String error);
+    }
+
     // Initialize default streaks and badges for a new child
     public void initializeMotivationForChild(String childId, MotivationCallback callback) {
         // Create default settings
@@ -188,115 +193,162 @@ public class MotivationService {
 
     // Update streak based on medicine log
     public void updateControllerStreak(String childId, boolean tookController, MotivationCallback callback) {
-        getStreakByType(childId, "controller_planned", new StreakCallback() {
+        // Load weekly schedule first to decide whether today is a scheduled day
+        getWeeklySchedule(childId, new ScheduleCallback() {
             @Override
-            public void onStreaksLoaded(List<Streak> streaks) {
-                if (streaks.isEmpty()) {
-                    // If a streak document doesn't exist yet for this child/type, create one
-                    Streak newStreak = new Streak(childId + "_controller_streak", childId, "controller_planned");
-                    newStreak.setCurrentCount(0);
-                    newStreak.setBestCount(0);
-                    newStreak.setLastUpdateDate(0);
-                    saveStreak(newStreak, new MotivationCallback() {
-                        @Override
-                        public void onSuccess(String message) {
-                            // retry the update now that the streak exists
-                            updateControllerStreak(childId, tookController, callback);
+            public void onScheduleLoaded(Map<String, Boolean> weeklySchedule) {
+                getStreakByType(childId, "controller_planned", new StreakCallback() {
+                    @Override
+                    public void onStreaksLoaded(List<Streak> streaks) {
+                        if (streaks.isEmpty()) {
+                            // If a streak document doesn't exist yet for this child/type, create one
+                            Streak newStreak = new Streak(childId + "_controller_streak", childId, "controller_planned");
+                            newStreak.setCurrentCount(0);
+                            newStreak.setBestCount(0);
+                            newStreak.setLastUpdateDate(0);
+                            saveStreak(newStreak, new MotivationCallback() {
+                                @Override
+                                public void onSuccess(String message) {
+                                    // retry the update now that the streak exists
+                                    updateControllerStreak(childId, tookController, callback);
+                                }
+
+                                @Override
+                                public void onError(String error) {
+                                    callback.onError("Failed to create controller streak: " + error);
+                                }
+                            });
+                            return;
                         }
 
-                        @Override
-                        public void onError(String error) {
-                            callback.onError("Failed to create controller streak: " + error);
+                        Streak streak = streaks.get(0);
+                        long today = getTodayTimestamp();
+
+                        int scheduledDaysBetween = countScheduledDaysBetween(streak.getLastUpdateDate(), today, weeklySchedule);
+
+                        boolean todayScheduled = isDayScheduled(today, weeklySchedule);
+
+                        if (!todayScheduled) {
+                            // If today is not scheduled, do nothing (no increment, no reset)
+                            callback.onSuccess("");
+                            return;
                         }
-                    });
-                    return;
-                }
 
-                Streak streak = streaks.get(0);
-                long today = getTodayTimestamp();
-                long daysSinceLastUpdate = getDaysDifference(streak.getLastUpdateDate(), today);
+                        if (tookController) {
+                            if (scheduledDaysBetween == 0) {
+                                // already counted today - nothing to do
+                            } else if (scheduledDaysBetween == 1) {
+                                // consecutive scheduled day -> increment
+                                streak.incrementStreak();
+                            } else {
+                                // more than 1 scheduled-day gap -> start new streak
+                                streak.setCurrentCount(1);
+                                streak.setLastUpdateDate(today);
+                            }
+                        } else {
+                            if (scheduledDaysBetween > 1) {
+                                // missed at least one scheduled day in the gap -> reset
+                                streak.resetStreak();
+                            } else if (scheduledDaysBetween == 1) {
+                                // today is scheduled and not taken -> reset
+                                streak.resetStreak();
+                            } else {
+                                // scheduledDaysBetween == 0 -> nothing to do
+                            }
+                        }
 
-                if (tookController) {
-                    // If we've already recorded a controller hit today, do nothing (only once per day)
-                    if (getDaysDifference(streak.getLastUpdateDate(), today) == 0) {
-                        // already counted today - nothing to do
-                    } else if (getDaysDifference(streak.getLastUpdateDate(), today) == 1) {
-                        // consecutive day -> increment
-                        streak.incrementStreak();
-                    } else {
-                        // more than 1 day gap -> start new streak
-                        streak.setCurrentCount(1);
-                        streak.setLastUpdateDate(today);
+                        saveStreak(streak, callback);
                     }
-                } else {
-                    if (daysSinceLastUpdate > 1) {
-                        streak.resetStreak();
-                    }
-                }
 
-                saveStreak(streak, callback);
+                    @Override
+                    public void onError(String error) {
+                        callback.onError("Failed to load controller streak: " + error);
+                    }
+                });
             }
 
             @Override
             public void onError(String error) {
-                callback.onError("Failed to load controller streak: " + error);
+                callback.onError("Failed to load schedule: " + error);
             }
         });
+        
     }
 
     // Update technique streak based on technique completion
     public void updateTechniqueStreak(String childId, boolean completedTechnique, MotivationCallback callback) {
-        getStreakByType(childId, "technique_completed", new StreakCallback() {
+        // First load weekly schedule then proceed with streak update logic
+        getWeeklySchedule(childId, new ScheduleCallback() {
             @Override
-            public void onStreaksLoaded(List<Streak> streaks) {
-                if (streaks.isEmpty()) {
-                    // Create a new technique streak if missing and retry
-                    Streak newStreak = new Streak(childId + "_technique_streak", childId, "technique_completed");
-                    newStreak.setCurrentCount(0);
-                    newStreak.setBestCount(0);
-                    newStreak.setLastUpdateDate(0);
-                    saveStreak(newStreak, new MotivationCallback() {
-                        @Override
-                        public void onSuccess(String message) {
-                            updateTechniqueStreak(childId, completedTechnique, callback);
+            public void onScheduleLoaded(Map<String, Boolean> weeklySchedule) {
+                getStreakByType(childId, "technique_completed", new StreakCallback() {
+                    @Override
+                    public void onStreaksLoaded(List<Streak> streaks) {
+                        if (streaks.isEmpty()) {
+                            // Create a new technique streak if missing and retry
+                            Streak newStreak = new Streak(childId + "_technique_streak", childId, "technique_completed");
+                            newStreak.setCurrentCount(0);
+                            newStreak.setBestCount(0);
+                            newStreak.setLastUpdateDate(0);
+                            saveStreak(newStreak, new MotivationCallback() {
+                                @Override
+                                public void onSuccess(String message) {
+                                    updateTechniqueStreak(childId, completedTechnique, callback);
+                                }
+
+                                @Override
+                                public void onError(String error) {
+                                    callback.onError("Failed to create technique streak: " + error);
+                                }
+                            });
+                            return;
                         }
 
-                        @Override
-                        public void onError(String error) {
-                            callback.onError("Failed to create technique streak: " + error);
+                        Streak streak = streaks.get(0);
+                        long today = getTodayTimestamp();
+
+                        int scheduledDaysBetween = countScheduledDaysBetween(streak.getLastUpdateDate(), today, weeklySchedule);
+                        boolean todayScheduled = isDayScheduled(today, weeklySchedule);
+
+                        if (!todayScheduled) {
+                            // if today is not scheduled, do nothing
+                            callback.onSuccess("");
+                            return;
                         }
-                    });
-                    return;
-                }
 
-                Streak streak = streaks.get(0);
-                long today = getTodayTimestamp();
-                long daysSinceLastUpdate = getDaysDifference(streak.getLastUpdateDate(), today);
+                        if (completedTechnique) {
+                            if (scheduledDaysBetween == 0) {
+                                // already counted today
+                            } else if (scheduledDaysBetween == 1) {
+                                // consecutive scheduled day -> increment
+                                streak.incrementStreak();
+                            } else {
+                                // start new streak
+                                streak.setCurrentCount(1);
+                                streak.setLastUpdateDate(today);
+                            }
+                        } else {
+                            if (scheduledDaysBetween > 1) {
+                                streak.resetStreak();
+                            } else if (scheduledDaysBetween == 1) {
+                                // today scheduled and not completed
+                                streak.resetStreak();
+                            }
+                        }
 
-                if (completedTechnique) {
-                    // Only count one technique-completed per day
-                    if (getDaysDifference(streak.getLastUpdateDate(), today) == 0) {
-                        // already counted today
-                    } else if (getDaysDifference(streak.getLastUpdateDate(), today) == 1) {
-                        // consecutive day -> increment
-                        streak.incrementStreak();
-                    } else {
-                        // start new streak
-                        streak.setCurrentCount(1);
-                        streak.setLastUpdateDate(today);
+                        saveStreak(streak, callback);
                     }
-                } else {
-                    if (daysSinceLastUpdate > 1) {
-                        streak.resetStreak();
-                    }
-                }
 
-                saveStreak(streak, callback);
+                    @Override
+                    public void onError(String error) {
+                        callback.onError("Failed to load technique streak: " + error);
+                    }
+                });
             }
 
             @Override
             public void onError(String error) {
-                callback.onError("Failed to load technique streak: " + error);
+                callback.onError("Failed to load schedule: " + error);
             }
         });
     }
@@ -911,6 +963,70 @@ public class MotivationService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    // Load weekly schedule for a child. weeklySchedule keys are strings "1".."7" matching Calendar.DAY_OF_WEEK.
+    private void getWeeklySchedule(String childId, ScheduleCallback callback) {
+        FirebaseFirestore.getInstance().collection("users").document(childId).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                DocumentSnapshot doc = task.getResult();
+                Map<String, Boolean> schedule = new HashMap<>();
+                Map<String, Object> raw = (Map<String, Object>) doc.get("weeklySchedule");
+                if (raw == null) {
+                    // default: all days scheduled
+                    for (int i = 1; i <= 7; i++) schedule.put(String.valueOf(i), true);
+                } else {
+                    for (int i = 1; i <= 7; i++) {
+                        Object val = raw.get(String.valueOf(i));
+                        schedule.put(String.valueOf(i), Boolean.TRUE.equals(val));
+                    }
+                }
+                callback.onScheduleLoaded(schedule);
+            } else {
+                // default to all true if doc missing or error
+                Map<String, Boolean> defaultSchedule = new HashMap<>();
+                for (int i = 1; i <= 7; i++) defaultSchedule.put(String.valueOf(i), true);
+                callback.onScheduleLoaded(defaultSchedule);
+            }
+        }).addOnFailureListener(e -> {
+            Map<String, Boolean> defaultSchedule = new HashMap<>();
+            for (int i = 1; i <= 7; i++) defaultSchedule.put(String.valueOf(i), true);
+            callback.onScheduleLoaded(defaultSchedule);
+        });
+    }
+
+    private boolean isDayScheduled(long timestamp, Map<String, Boolean> schedule) {
+        if (schedule == null) return true;
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(timestamp);
+        int dow = cal.get(Calendar.DAY_OF_WEEK); // 1..7
+        Boolean val = schedule.get(String.valueOf(dow));
+        return val == null ? true : val;
+    }
+
+    // Count number of scheduled days between (exclusive) fromTs and (inclusive) toTs
+    private int countScheduledDaysBetween(long fromTs, long toTs, Map<String, Boolean> schedule) {
+        if (toTs < fromTs) return 0;
+        if (fromTs == 0) {
+            return isDayScheduled(toTs, schedule) ? 1 : 0;
+        }
+
+        Calendar cal = Calendar.getInstance();
+        Calendar end = Calendar.getInstance();
+        cal.setTimeInMillis(fromTs);
+        end.setTimeInMillis(toTs);
+
+        // move to the next day after fromTs
+        cal.add(Calendar.DAY_OF_MONTH, 1);
+
+        int count = 0;
+        while (!cal.after(end)) {
+            int dow = cal.get(Calendar.DAY_OF_WEEK);
+            Boolean val = schedule.get(String.valueOf(dow));
+            if (val == null || val) count++;
+            cal.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        return count;
     }
 
     private void updateCalculatedStreak(String childId, String streakType, int currentCount, int bestCount) {

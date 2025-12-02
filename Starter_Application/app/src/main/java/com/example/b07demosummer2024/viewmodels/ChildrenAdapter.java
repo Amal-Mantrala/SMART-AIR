@@ -33,7 +33,13 @@ public class ChildrenAdapter extends BaseRecyclerAdapter<User, ChildrenAdapter.C
         void onOpenChild(User child);
     }
 
+    /** Listener invoked when user taps "Set Schedule" for a child */
+    public interface OnSetScheduleListener {
+        void onSetSchedule(User child);
+    }
+
     private OnOpenChildListener openChildListener;
+    private OnSetScheduleListener setScheduleListener;
 
     @Override
     protected void bindViewHolder(ChildViewHolder holder, User child, int position) {
@@ -43,20 +49,31 @@ public class ChildrenAdapter extends BaseRecyclerAdapter<User, ChildrenAdapter.C
                 openChildListener.onOpenChild(child);
             }
         });
+        holder.setScheduleButton.setOnClickListener(v -> {
+            if (setScheduleListener != null && child != null) {
+                setScheduleListener.onSetSchedule(child);
+            }
+        });
     }
 
     public void setOnOpenChildListener(OnOpenChildListener listener) {
         this.openChildListener = listener;
     }
 
+    public void setOnSetScheduleListener(OnSetScheduleListener listener) {
+        this.setScheduleListener = listener;
+    }
+
     static class ChildViewHolder extends RecyclerView.ViewHolder {
         TextView childName;
         android.widget.Button openButton;
+        android.widget.Button setScheduleButton;
 
         ChildViewHolder(View itemView) {
             super(itemView);
             childName = itemView.findViewById(R.id.childName);
             openButton = itemView.findViewById(R.id.buttonOpenAsChild);
+            setScheduleButton = itemView.findViewById(R.id.buttonSetSchedule);
         }
     }
 }

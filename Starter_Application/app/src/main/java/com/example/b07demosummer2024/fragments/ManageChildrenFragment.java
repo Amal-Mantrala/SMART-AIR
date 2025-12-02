@@ -51,6 +51,13 @@ public class ManageChildrenFragment extends Fragment {
         });
         recyclerView.setAdapter(adapter);
 
+        // Open schedule dialog when parent taps Set Schedule
+        adapter.setOnSetScheduleListener(child -> {
+            if (getContext() == null || child == null || child.getUid() == null) return;
+            com.example.b07demosummer2024.fragments.WeekScheduleDialogFragment dialog = com.example.b07demosummer2024.fragments.WeekScheduleDialogFragment.newInstance(child.getUid());
+            dialog.show(getParentFragmentManager(), "week_schedule_dialog");
+        });
+
         loadChildren();
     }
 
