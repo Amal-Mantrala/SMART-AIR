@@ -192,7 +192,23 @@ public class MotivationService {
             @Override
             public void onStreaksLoaded(List<Streak> streaks) {
                 if (streaks.isEmpty()) {
-                    callback.onError("Controller streak not found");
+                    // If a streak document doesn't exist yet for this child/type, create one
+                    Streak newStreak = new Streak(childId + "_controller_streak", childId, "controller_planned");
+                    newStreak.setCurrentCount(0);
+                    newStreak.setBestCount(0);
+                    newStreak.setLastUpdateDate(0);
+                    saveStreak(newStreak, new MotivationCallback() {
+                        @Override
+                        public void onSuccess(String message) {
+                            // retry the update now that the streak exists
+                            updateControllerStreak(childId, tookController, callback);
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            callback.onError("Failed to create controller streak: " + error);
+                        }
+                    });
                     return;
                 }
 
@@ -201,10 +217,15 @@ public class MotivationService {
                 long daysSinceLastUpdate = getDaysDifference(streak.getLastUpdateDate(), today);
 
                 if (tookController) {
-                    if (daysSinceLastUpdate <= 1) {
+                    // If we've already recorded a controller hit today, do nothing (only once per day)
+                    if (getDaysDifference(streak.getLastUpdateDate(), today) == 0) {
+                        // already counted today - nothing to do
+                    } else if (getDaysDifference(streak.getLastUpdateDate(), today) == 1) {
+                        // consecutive day -> increment
                         streak.incrementStreak();
                     } else {
-                        streak.setCurrentCount(1); // Start new streak
+                        // more than 1 day gap -> start new streak
+                        streak.setCurrentCount(1);
                         streak.setLastUpdateDate(today);
                     }
                 } else {
@@ -229,7 +250,22 @@ public class MotivationService {
             @Override
             public void onStreaksLoaded(List<Streak> streaks) {
                 if (streaks.isEmpty()) {
-                    callback.onError("Technique streak not found");
+                    // Create a new technique streak if missing and retry
+                    Streak newStreak = new Streak(childId + "_technique_streak", childId, "technique_completed");
+                    newStreak.setCurrentCount(0);
+                    newStreak.setBestCount(0);
+                    newStreak.setLastUpdateDate(0);
+                    saveStreak(newStreak, new MotivationCallback() {
+                        @Override
+                        public void onSuccess(String message) {
+                            updateTechniqueStreak(childId, completedTechnique, callback);
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            callback.onError("Failed to create technique streak: " + error);
+                        }
+                    });
                     return;
                 }
 
@@ -238,10 +274,15 @@ public class MotivationService {
                 long daysSinceLastUpdate = getDaysDifference(streak.getLastUpdateDate(), today);
 
                 if (completedTechnique) {
-                    if (daysSinceLastUpdate <= 1) {
+                    // Only count one technique-completed per day
+                    if (getDaysDifference(streak.getLastUpdateDate(), today) == 0) {
+                        // already counted today
+                    } else if (getDaysDifference(streak.getLastUpdateDate(), today) == 1) {
+                        // consecutive day -> increment
                         streak.incrementStreak();
                     } else {
-                        streak.setCurrentCount(1); // Start new streak
+                        // start new streak
+                        streak.setCurrentCount(1);
                         streak.setLastUpdateDate(today);
                     }
                 } else {
@@ -879,7 +920,8 @@ public class MotivationService {
         Map<String, Object> streakData = new HashMap<>();
         streakData.put("currentCount", currentCount);
         streakData.put("bestCount", bestCount);
-        streakData.put("lastUpdated", System.currentTimeMillis());
+        // Keep field name consistent with Streak model: lastUpdateDate
+        streakData.put("lastUpdateDate", System.currentTimeMillis());
         
         streakRef.set(streakData, SetOptions.merge());
     }

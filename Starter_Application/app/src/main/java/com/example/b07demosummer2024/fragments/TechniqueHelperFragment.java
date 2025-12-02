@@ -139,11 +139,9 @@ public class TechniqueHelperFragment extends DialogFragment {
     }
 
     private void logTechnique() {
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        if (auth.getCurrentUser() == null) {
-            return; // Not logged in
-        }
-        String userId = auth.getCurrentUser().getUid();
+        // Use impersonation helper so parents viewing a child's profile log technique for the child
+        String userId = com.example.b07demosummer2024.auth.ImpersonationService.getActiveChildId(getContext());
+        if (userId == null) return; // Not available
         long timestamp = System.currentTimeMillis();
 
         TechniqueLog log = new TechniqueLog(timestamp, userId);
@@ -154,11 +152,21 @@ public class TechniqueHelperFragment extends DialogFragment {
                 if (isAdded()) {
                     Toast.makeText(getContext(), "Technique practice logged!", Toast.LENGTH_SHORT).show();
                     
-                    // Trigger motivation streak recalculation for technique usage
+                    // Trigger motivation streak update for technique completion (counts once per day)
                     try {
-                        com.example.b07demosummer2024.services.MotivationService motivationService = 
-                            new com.example.b07demosummer2024.services.MotivationService();
-                        motivationService.calculateStreaksFromLogs(userId);
+                        com.example.b07demosummer2024.services.MotivationService motivationService =
+                                new com.example.b07demosummer2024.services.MotivationService();
+                        motivationService.updateTechniqueStreak(userId, true, new com.example.b07demosummer2024.services.MotivationService.MotivationCallback() {
+                            @Override
+                            public void onSuccess(String message) {
+                                // optional: show celebration toast if present
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                android.util.Log.w("TechniqueHelper", "Could not update technique streak: " + error);
+                            }
+                        });
                     } catch (Exception e) {
                         // Ignore motivation service errors
                         android.util.Log.w("TechniqueHelper", "Could not update motivation streaks", e);
