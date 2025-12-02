@@ -121,10 +121,6 @@ public class LoginFragment extends Fragment implements LoginContract.View {
                 if (role != null) {
                     // Navigate to the appropriate role-specific homepage
                     navigateToRoleHome(role);
-                } else {
-                    // User doesn't have a role yet - show role selection
-                    RoleSelectionFragment roleDialog = RoleSelectionFragment.newInstance(name != null ? name : "");
-                    roleDialog.show(getParentFragmentManager(), "roleSelection");
                 }
             }).addOnFailureListener(e -> {
                 if (!isAdded()) return;
@@ -148,9 +144,6 @@ public class LoginFragment extends Fragment implements LoginContract.View {
                 target = new ProviderHomeFragment();
                 break;
             default:
-                // If role is unrecognized, show role selection again
-                RoleSelectionFragment roleDialog = RoleSelectionFragment.newInstance("");
-                roleDialog.show(getParentFragmentManager(), "roleSelection");
                 return;
         }
         requireActivity().runOnUiThread(() -> {

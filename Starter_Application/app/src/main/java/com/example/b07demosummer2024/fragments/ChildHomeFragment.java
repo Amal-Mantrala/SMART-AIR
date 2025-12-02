@@ -130,7 +130,7 @@ public class ChildHomeFragment extends ProtectedFragment {
             FragmentManager fm = getParentFragmentManager();
             fm.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
             fm.beginTransaction()
-                    .replace(R.id.fragment_container, new LoginFragment())
+                    .replace(R.id.fragment_container, new HomePageFragment())
                     .commit();
         });
 

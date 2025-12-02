@@ -55,7 +55,7 @@ public class ProviderHomeFragment extends ProtectedFragment {
         // Load user name and set greeting
         loadUserNameAndSetGreeting(greetingText);
         
-        signOut.setOnClickListener(v -> signOutAndReturnToLogin());
+        signOut.setOnClickListener(v -> signOutAndReturnToHome());
 
         detailsButton.setOnClickListener(v -> showUserDetailsDialog());
         informationButton.setOnClickListener(v -> showTutorial());
@@ -115,7 +115,7 @@ public class ProviderHomeFragment extends ProtectedFragment {
     /**
      * Common sign out functionality
      */
-    private void signOutAndReturnToLogin() {
+    private void signOutAndReturnToHome() {
         // Clear cached role data before signing out
         SharedPreferences prefs = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
         if (auth.getCurrentUser() != null) {
@@ -126,7 +126,7 @@ public class ProviderHomeFragment extends ProtectedFragment {
         FragmentManager fm = getParentFragmentManager();
         fm.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         fm.beginTransaction()
-                .replace(R.id.fragment_container, new LoginFragment())
+                .replace(R.id.fragment_container, new HomePageFragment())
                 .commit();
     }
 
