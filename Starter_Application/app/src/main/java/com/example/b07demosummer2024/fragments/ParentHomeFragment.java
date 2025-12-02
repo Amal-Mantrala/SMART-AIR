@@ -283,6 +283,8 @@ public class ParentHomeFragment extends ProtectedFragment {
         EditText childNameEdit = dialogView.findViewById(R.id.editChildName);
         EditText childUsernameEdit = dialogView.findViewById(R.id.editChildUsername);
         EditText childPasswordEdit = dialogView.findViewById(R.id.editChildPassword);
+        android.widget.DatePicker dobPicker = dialogView.findViewById(R.id.datePickerExpiry);
+        EditText childNoteEdit = dialogView.findViewById(R.id.editChildNote);
         Button saveButton = dialogView.findViewById(R.id.buttonSave);
         Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
 
@@ -295,6 +297,28 @@ public class ParentHomeFragment extends ProtectedFragment {
             String childName = childNameEdit.getText().toString().trim();
             String childUsername = childUsernameEdit.getText().toString().trim();
             String childPassword = childPasswordEdit.getText().toString().trim();
+            String childNote = childNoteEdit.getText().toString().trim();
+
+            // Build dob date from DatePicker
+            int dobYear = dobPicker.getYear();
+            int dobMonth = dobPicker.getMonth(); // 0-based
+            int dobDay = dobPicker.getDayOfMonth();
+
+            java.util.Calendar dobCal = java.util.Calendar.getInstance();
+            dobCal.clear();
+            dobCal.set(dobYear, dobMonth, dobDay, 0, 0, 0);
+            java.util.Date dobDate = dobCal.getTime();
+
+            // compute age in years as fractional years
+            double years = (double) (new java.util.Date().getTime() - dobDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000.0);
+
+            // Validate age: must be over 6 years and under 17 years
+            if (!(years > 6.0 && years < 17.0)) {
+                // show friendly error message and stop
+                String errMsg = "Child must be older than 6 and younger than 17";
+                if (isAdded()) Toast.makeText(requireContext(), errMsg, Toast.LENGTH_LONG).show();
+                return;
+            }
 
             if (childName.isEmpty()) {
                 childNameEdit.setError("Child\'s name cannot be empty");
@@ -341,6 +365,10 @@ public class ParentHomeFragment extends ProtectedFragment {
                         childData.put("username", childUsername);
                         childData.put("role", "child");
                         childData.put("parentId", parentId);
+                        // Save date of birth as ISO yyyy-MM-dd string
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
+                        childData.put("dob", sdf.format(dobDate));
+                        if (!childNote.isEmpty()) childData.put("note", childNote);
                         db.collection("users").document(childId)
                                 .set(childData)
                                 .addOnSuccessListener(aVoid -> {
