@@ -139,45 +139,72 @@ public class ProviderInviteService {
             db.collection("providerAccess").add(access);
         }
         
-        // Now write sharingSettings/{parentId}/providers/{providerId} so the provider has explicit
-        // sharing configuration. Default to sharing the 'name' field for invited children.
+        // Now update sharingSettings/{parentId}/providers/{providerId} to include these children
         List<String> childIds = invite.getSharedChildrenIds();
         if (childIds == null || childIds.isEmpty()) {
             callback.onResult(true);
             return;
         }
 
-        SharingSettings settings = new SharingSettings();
-        settings.setParentId(invite.getParentId());
-        settings.setProviderId(providerId);
-        Map<String, ChildSharingSettings> childSettingsMap = new HashMap<>();
-
-        for (String childId : childIds) {
-            ChildSharingSettings cs = new ChildSharingSettings();
-            cs.setChildId(childId);
-            Map<String, Boolean> shared = new HashMap<>();
-            // Default granular fields - start conservative (all false). Parent can enable as desired.
-            shared.put("rescueLogs", false);
-            shared.put("controllerSummary", false);
-            shared.put("symptoms", false);
-            shared.put("triggers", false);
-            shared.put("peakFlow", false);
-            shared.put("triageIncidents", false);
-            shared.put("summaryCharts", false);
-            cs.setSharedFields(shared);
-            childSettingsMap.put(childId, cs);
-        }
-
-        settings.setChildSettings(childSettingsMap);
-        settings.setLastUpdated(System.currentTimeMillis());
-
+        // First, load any existing settings to preserve already-shared children
         db.collection("sharingSettings")
                 .document(invite.getParentId())
                 .collection("providers")
                 .document(providerId)
-                .set(settings)
-                .addOnSuccessListener(aVoid -> callback.onResult(true))
-                .addOnFailureListener(e -> callback.onError(e.getMessage()));
+                .get()
+                .addOnCompleteListener(task -> {
+                    SharingSettings settings;
+                    if (task.isSuccessful() && task.getResult().exists()) {
+                        settings = task.getResult().toObject(SharingSettings.class);
+                        if (settings == null) {
+                            settings = new SharingSettings();
+                            settings.setParentId(invite.getParentId());
+                            settings.setProviderId(providerId);
+                        }
+                    } else {
+                        settings = new SharingSettings();
+                        settings.setParentId(invite.getParentId());
+                        settings.setProviderId(providerId);
+                    }
+
+                    // Initialize childSettings if null
+                    if (settings.getChildSettings() == null) {
+                        settings.setChildSettings(new HashMap<>());
+                    }
+
+                    // Add new children while preserving existing ones
+                    Map<String, ChildSharingSettings> childSettingsMap = settings.getChildSettings();
+                    for (String childId : childIds) {
+                        // Only add if not already present (avoid overwriting existing settings)
+                        if (!childSettingsMap.containsKey(childId)) {
+                            ChildSharingSettings cs = new ChildSharingSettings();
+                            cs.setChildId(childId);
+                            Map<String, Boolean> shared = new HashMap<>();
+                            // Default granular fields - start conservative (all false). Parent can enable as desired.
+                            shared.put("rescueLogs", false);
+                            shared.put("controllerSummary", false);
+                            shared.put("symptoms", false);
+                            shared.put("triggers", false);
+                            shared.put("peakFlow", false);
+                            shared.put("triageIncidents", false);
+                            shared.put("summaryCharts", false);
+                            cs.setSharedFields(shared);
+                            childSettingsMap.put(childId, cs);
+                        }
+                    }
+
+                    settings.setChildSettings(childSettingsMap);
+                    settings.setLastUpdated(System.currentTimeMillis());
+
+                    // Use merge to preserve existing children
+                    db.collection("sharingSettings")
+                            .document(invite.getParentId())
+                            .collection("providers")
+                            .document(providerId)
+                            .set(settings, com.google.firebase.firestore.SetOptions.merge())
+                            .addOnSuccessListener(aVoid -> callback.onResult(true))
+                            .addOnFailureListener(e -> callback.onError(e.getMessage()));
+                });
     }
 
     public void revokeInvite(String inviteId, BooleanCallback callback) {
