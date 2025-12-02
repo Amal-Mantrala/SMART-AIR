@@ -51,7 +51,7 @@ public class ChildInventoryFragment extends Fragment implements InventoryAdapter
     }
 
     private void loadChildInventory() {
-        String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String childId = com.example.b07demosummer2024.auth.ImpersonationService.getActiveChildId(requireContext());
         FirebaseFirestore.getInstance().collection("inventory")
                 .whereEqualTo("childId", childId)
                 .get()

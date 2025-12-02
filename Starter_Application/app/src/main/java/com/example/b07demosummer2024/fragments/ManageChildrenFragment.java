@@ -38,6 +38,17 @@ public class ManageChildrenFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         childrenList = new ArrayList<>();
         adapter = new ChildrenAdapter(childrenList);
+        // Allow parent to open a child's UI without needing their password
+        adapter.setOnOpenChildListener(child -> {
+            if (getContext() == null || child == null || child.getUid() == null) return;
+            // set impersonation and navigate into the child home
+            com.example.b07demosummer2024.auth.ImpersonationService.setImpersonatedChild(getContext(), child.getUid());
+            // navigate to child home - keep transaction on back stack so parent can return
+            getParentFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, new com.example.b07demosummer2024.fragments.ChildHomeFragment())
+                .addToBackStack(null)
+                .commit();
+        });
         recyclerView.setAdapter(adapter);
 
         loadChildren();
@@ -59,9 +70,13 @@ public class ManageChildrenFragment extends Fragment {
                             db.collection("users").document(childId).get().addOnCompleteListener(childTask -> {
                                 if (childTask.isSuccessful()) {
                                     DocumentSnapshot childDocument = childTask.getResult();
-                                    if (childDocument.exists()) {
-                                        User child = childDocument.toObject(User.class);
-                                        childrenList.add(child);
+                                        if (childDocument.exists()) {
+                                            User child = childDocument.toObject(User.class);
+                                            if (child != null) {
+                                                // persist document id so adapter/actions can use child id
+                                                child.setUid(childDocument.getId());
+                                                childrenList.add(child);
+                                            }
                                         adapter.notifyDataSetChanged();
                                     }
                                 }
