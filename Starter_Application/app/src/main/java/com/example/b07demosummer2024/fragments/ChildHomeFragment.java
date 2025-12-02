@@ -388,10 +388,9 @@ public class ChildHomeFragment extends ProtectedFragment {
                         Toast.makeText(requireContext(), "Medicine log saved successfully!", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
                         
-                        // Trigger motivation streak recalculation for controller medicines
+                        // Trigger motivation update: record controller medicine completion (one-per-day)
                         if (motivationService != null && "controller".equals(medicineType)) {
-                            String childId = ImpersonationService.getActiveChildId(requireContext());
-                            motivationService.calculateStreaksFromLogs(childId);
+                            updateStreaksBasedOnActivity("controller_medicine", true);
                         }
                     }
                 }
