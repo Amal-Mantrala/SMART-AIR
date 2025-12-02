@@ -12,6 +12,7 @@ import com.example.b07demosummer2024.R;
 import com.example.b07demosummer2024.models.MedicineLog;
 import com.example.b07demosummer2024.models.SymptomLog;
 import com.example.b07demosummer2024.models.DailyWellnessLog;
+import com.example.b07demosummer2024.models.ZoneLog;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -50,7 +51,8 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
 
     public void updateData(List<MedicineLog> medicineData,
                            List<SymptomLog> symptomData,
-                           List<DailyWellnessLog> wellnessData) {
+                           List<DailyWellnessLog> wellnessData,
+                           List<ZoneLog> zoneData) {
 
         allItems.clear();
 
@@ -80,6 +82,16 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
                         "Daily Check-in",
                         w.getTimestamp(),
                         formatWellness(w)
+                ));
+            }
+        }
+
+        if (zoneData != null) {
+            for (ZoneLog z : zoneData) {
+                allItems.add(new HealthHistoryItem(
+                        "Zone Change",
+                        z.getTimestamp(),
+                        "Zone: " + z.getZone() + "\nPEF: " + z.getPefValue()
                 ));
             }
         }
