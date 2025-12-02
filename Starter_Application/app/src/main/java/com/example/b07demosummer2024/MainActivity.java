@@ -7,9 +7,9 @@ import androidx.fragment.app.Fragment;
 
 import com.example.b07demosummer2024.auth.AuthService;
 import com.example.b07demosummer2024.fragments.ChildHomeFragment;
+import com.example.b07demosummer2024.fragments.HomePageFragment;
 import com.example.b07demosummer2024.fragments.ParentHomeFragment;
 import com.example.b07demosummer2024.fragments.ProviderHomeFragment;
-import com.example.b07demosummer2024.fragments.RoleSelectionFragment;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
             if (!authService.isSignedIn()) {
                 // User is not signed in - redirect to login
                 getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, new LoginFragment())
+                        .replace(R.id.fragment_container, new HomePageFragment())
                         .commit();
             }
         }
@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         if (!authService.isSignedIn()) {
             // User is not signed in - show login fragment
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new LoginFragment())
+                    .replace(R.id.fragment_container, new HomePageFragment())
                     .commitNow(); // Use commitNow for immediate execution
             return;
         }
@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() == null) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new LoginFragment())
+                    .replace(R.id.fragment_container, new HomePageFragment())
                     .commitNow(); // Use commitNow for immediate execution
             return;
         }
@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Show LoginFragment as placeholder while fetching from Firebase
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, new LoginFragment())
+                .replace(R.id.fragment_container, new HomePageFragment())
                 .commitNow(); // Use commitNow for immediate execution
 
         // Always fetch latest data from Firestore
@@ -83,17 +83,11 @@ public class MainActivity extends AppCompatActivity {
         firestoreDb.collection("users").document(uid).get()
                 .addOnCompleteListener(task -> {
                     if (!task.isSuccessful()) {
-                        // Show role selector if fetch failed
-                        RoleSelectionFragment roleDialog = RoleSelectionFragment.newInstance("");
-                        roleDialog.show(getSupportFragmentManager(), "roleSelection");
                         return;
                     }
                     
                     com.google.firebase.firestore.DocumentSnapshot document = task.getResult();
                     if (document == null || !document.exists()) {
-                        // No user data yet — prompt selection
-                        RoleSelectionFragment roleDialog = RoleSelectionFragment.newInstance("");
-                        roleDialog.show(getSupportFragmentManager(), "roleSelection");
                         return;
                     }
                     
@@ -101,9 +95,6 @@ public class MainActivity extends AppCompatActivity {
                     String name = document.getString("name");
                     
                     if (role == null) {
-                        // No role yet — prompt selection
-                        RoleSelectionFragment roleDialog = RoleSelectionFragment.newInstance(name != null ? name : "");
-                        roleDialog.show(getSupportFragmentManager(), "roleSelection");
                         return;
                     }
                     
@@ -126,8 +117,6 @@ public class MainActivity extends AppCompatActivity {
                 break;
             default:
                 // Unknown role - show role selection
-                RoleSelectionFragment roleDialog = RoleSelectionFragment.newInstance("");
-                roleDialog.show(getSupportFragmentManager(), "roleSelection");
                 return;
         }
         getSupportFragmentManager().beginTransaction()

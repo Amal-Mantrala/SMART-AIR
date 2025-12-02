@@ -130,7 +130,7 @@ public class ParentHomeFragment extends ProtectedFragment {
         loadUserNameAndSetGreeting(greetingText);
 
         signOut.setOnClickListener(v -> {
-            signOutAndReturnToLogin();
+            signOutAndReturnToHome();
         });
 
         setPB.setOnClickListener( v -> showSetPBDialog());
@@ -296,7 +296,7 @@ public class ParentHomeFragment extends ProtectedFragment {
                 });
     }
 
-    private void signOutAndReturnToLogin() {
+    private void signOutAndReturnToHome() {
         if (getContext() == null) return;
         SharedPreferences prefs = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
         FirebaseAuth auth = FirebaseAuth.getInstance();
@@ -310,7 +310,7 @@ public class ParentHomeFragment extends ProtectedFragment {
         FragmentManager fm = getParentFragmentManager();
         fm.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         fm.beginTransaction()
-                .replace(R.id.fragment_container, new LoginFragment())
+                .replace(R.id.fragment_container, new HomePageFragment())
                 .commit();
     }
 
