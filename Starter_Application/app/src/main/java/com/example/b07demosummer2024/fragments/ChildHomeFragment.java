@@ -367,7 +367,6 @@ public class ChildHomeFragment extends ProtectedFragment {
             medicineLog.setDosage(dosage);
             medicineLog.setNotes(notes + (effectiveness.isEmpty() ? "" : "\nEffectiveness: " + effectiveness));
             medicineLog.setLocation(locationSpinner.getSelectedItem().toString());
-            medicineLog.setEnteredBy("child");
 
             if ("rescue".equals(medicineType)) {
                 List<String> symptoms = new ArrayList<>();
@@ -506,7 +505,6 @@ public class ChildHomeFragment extends ProtectedFragment {
             symptomLog.setRescueInhalerUsed(checkRescueUsed.isChecked());
             symptomLog.setPeakFlowReading(peakFlowEdit.getText().toString().trim());
             symptomLog.setNotes(notesEdit.getText().toString().trim());
-            symptomLog.setEnteredBy("child");
 
             ChildHealthService healthService = new ChildHealthService();
             healthService.saveSymptomLog(symptomLog, new ChildHealthService.SaveCallback() {
