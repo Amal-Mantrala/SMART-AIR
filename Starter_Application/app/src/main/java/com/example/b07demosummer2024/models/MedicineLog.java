@@ -10,6 +10,7 @@ public class MedicineLog extends BaseHealthLog {
     private int severityLevel; // 1-10 scale
     private String location; // where the medicine was taken
     private boolean reminderTaken; // whether this was from a reminder
+    private String enteredBy;
 
     public MedicineLog() {
         super();
@@ -49,4 +50,7 @@ public class MedicineLog extends BaseHealthLog {
 
     public boolean isReminderTaken() { return reminderTaken; }
     public void setReminderTaken(boolean reminderTaken) { this.reminderTaken = reminderTaken; }
+    public String getEnteredBy() { return enteredBy; }
+    public void setEnteredBy(String enteredBy) { this.enteredBy = enteredBy; }
+
 }

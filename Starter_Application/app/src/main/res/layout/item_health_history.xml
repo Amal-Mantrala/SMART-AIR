@@ -40,6 +40,20 @@
             android:textSize="14sp"
             android:textColor="@android:color/black" />
 
+        <TextView
+            android:id="@+id/textEntrySource"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="child-entered"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:padding="6dp"
+            android:background="@drawable/tag_background"
+            android:textColor="@android:color/white"
+            android:layout_alignParentEnd="true"
+            android:layout_margin="4dp"
+            android:visibility="gone"/>
+
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>
