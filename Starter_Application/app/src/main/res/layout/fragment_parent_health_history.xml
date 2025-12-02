@@ -109,8 +109,20 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Export as PDF"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="8dp"
         android:backgroundTint="#673AB7"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toTopOf="@id/buttonExportProviderReport"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <Button
+        android:id="@+id/buttonExportProviderReport"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Export Provider Report"
+        android:layout_marginBottom="12dp"
+        android:backgroundTint="#2196F3"
         android:textColor="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
