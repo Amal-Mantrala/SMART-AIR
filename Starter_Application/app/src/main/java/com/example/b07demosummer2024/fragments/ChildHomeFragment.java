@@ -352,6 +352,7 @@ public class ChildHomeFragment extends ProtectedFragment {
             medicineLog.setDosage(dosage);
             medicineLog.setNotes(notes + (effectiveness.isEmpty() ? "" : "\nEffectiveness: " + effectiveness));
             medicineLog.setLocation(locationSpinner.getSelectedItem().toString());
+            medicineLog.setEnteredBy("child");
 
             if ("rescue".equals(medicineType)) {
                 List<String> symptoms = new ArrayList<>();
@@ -488,6 +489,7 @@ public class ChildHomeFragment extends ProtectedFragment {
             symptomLog.setRescueInhalerUsed(checkRescueUsed.isChecked());
             symptomLog.setPeakFlowReading(peakFlowEdit.getText().toString().trim());
             symptomLog.setNotes(notesEdit.getText().toString().trim());
+            symptomLog.setEnteredBy("child");
 
             ChildHealthService healthService = new ChildHealthService();
             healthService.saveSymptomLog(symptomLog, new ChildHealthService.SaveCallback() {
@@ -589,6 +591,7 @@ public class ChildHomeFragment extends ProtectedFragment {
                 wellnessLog.setSleepQuality(sleepSeekBar.getProgress() + 1);
                 wellnessLog.setRescueInhalerUses(rescueUses);
                 wellnessLog.setMood(moodSpinner.getSelectedItem().toString());
+                wellnessLog.setEnteredBy("child");
                 String notes = notesEdit.getText().toString().trim();
                 if (nightWaking > 0) {
                     notes += (notes.isEmpty() ? "" : "\n") + "Night wakings: " + nightWaking;
@@ -992,7 +995,7 @@ public class ChildHomeFragment extends ProtectedFragment {
                                                             return;
                                                         }
 
-                                                        // 🔥 Zone changed → SAVE new log
+                                                        // Zone changed - SAVE new log
                                                         db.collection("zoneLogs")
                                                                 .add(newLog);
                                                     });

@@ -61,7 +61,8 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
                 allItems.add(new HealthHistoryItem(
                         "Medicine Log",
                         m.getTimestamp(),
-                        formatMedicine(m)
+                        formatMedicine(m),
+                        m.getEnteredBy()
                 ));
             }
         }
@@ -71,7 +72,8 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
                 allItems.add(new HealthHistoryItem(
                         "Symptom Log",
                         s.getTimestamp(),
-                        formatSymptom(s)
+                        formatSymptom(s),
+                        s.getEnteredBy()
                 ));
             }
         }
@@ -81,7 +83,8 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
                 allItems.add(new HealthHistoryItem(
                         "Daily Check-in",
                         w.getTimestamp(),
-                        formatWellness(w)
+                        formatWellness(w),
+                        w.getEnteredBy()
                 ));
             }
         }
@@ -91,7 +94,8 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
                 allItems.add(new HealthHistoryItem(
                         "Zone Change",
                         z.getTimestamp(),
-                        "Zone: " + z.getZone() + "\nPEF: " + z.getPefValue()
+                        "Zone: " + z.getZone() + "\nPEF: " + z.getPefValue(),
+                        "none"
                 ));
             }
         }
@@ -159,6 +163,7 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView titleText, dateText, detailText;
+        TextView sourceTag = itemView.findViewById(R.id.textEntrySource);
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -174,6 +179,20 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
                             .format(new Date(item.timestamp))
             );
             detailText.setText(item.details);
+
+            if (item.source != null) {
+                sourceTag.setVisibility(View.VISIBLE);
+
+                if (item.source.equals("child")) {
+                    sourceTag.setText("child-entered");
+                    sourceTag.setBackgroundResource(R.drawable.tag_background); // green
+                }
+                if (item.source.equals("none")) {
+                    sourceTag.setVisibility(View.GONE);
+                }
+            } else {
+                sourceTag.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -181,11 +200,14 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
         public final String title;
         public final long timestamp;
         public final String details;
+        public final String source;
 
-        public HealthHistoryItem(String title, long timestamp, String details) {
+        public HealthHistoryItem(String title, long timestamp, String details, String source) {
             this.title = title;
             this.timestamp = timestamp;
             this.details = details;
+            this.source = source;
+
         }
         public String getFormattedDate() {
             return new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())

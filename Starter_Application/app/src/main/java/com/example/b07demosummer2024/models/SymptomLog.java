@@ -13,6 +13,7 @@ public class SymptomLog extends BaseHealthLog {
     private String weatherConditions;
     private String activityLevel; // resting, light activity, intense exercise
     private int sleepQuality; // 1-5 scale if symptoms affected sleep
+    private String enteredBy;
 
     public SymptomLog() {
         super();
@@ -64,4 +65,7 @@ public class SymptomLog extends BaseHealthLog {
 
     public int getSleepQuality() { return sleepQuality; }
     public void setSleepQuality(int sleepQuality) { this.sleepQuality = sleepQuality; }
+    public String getEnteredBy() { return enteredBy; }
+    public void setEnteredBy(String enteredBy) { this.enteredBy = enteredBy; }
+
 }

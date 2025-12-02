@@ -12,6 +12,7 @@ public class DailyWellnessLog extends BaseHealthLog {
     private boolean exerciseDone;
     private String exerciseType;
     private boolean schoolAttended;
+    private String enteredBy;
 
     public DailyWellnessLog() {
         super();
@@ -69,4 +70,7 @@ public class DailyWellnessLog extends BaseHealthLog {
 
     public boolean isSchoolAttended() { return schoolAttended; }
     public void setSchoolAttended(boolean schoolAttended) { this.schoolAttended = schoolAttended; }
+    public String getEnteredBy() { return enteredBy; }
+    public void setEnteredBy(String enteredBy) { this.enteredBy = enteredBy; }
+
 }
