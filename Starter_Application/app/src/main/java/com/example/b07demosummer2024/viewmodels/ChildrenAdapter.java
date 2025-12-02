@@ -25,17 +25,38 @@ public class ChildrenAdapter extends BaseRecyclerAdapter<User, ChildrenAdapter.C
         return new ChildViewHolder(view);
     }
 
+    /**
+     * Listener interface invoked when the parent chooses to open a child profile
+     * from the Manage Children UI.
+     */
+    public interface OnOpenChildListener {
+        void onOpenChild(User child);
+    }
+
+    private OnOpenChildListener openChildListener;
+
     @Override
     protected void bindViewHolder(ChildViewHolder holder, User child, int position) {
         holder.childName.setText(child.getName());
+        holder.openButton.setOnClickListener(v -> {
+            if (openChildListener != null && child != null) {
+                openChildListener.onOpenChild(child);
+            }
+        });
+    }
+
+    public void setOnOpenChildListener(OnOpenChildListener listener) {
+        this.openChildListener = listener;
     }
 
     static class ChildViewHolder extends RecyclerView.ViewHolder {
         TextView childName;
+        android.widget.Button openButton;
 
         ChildViewHolder(View itemView) {
             super(itemView);
             childName = itemView.findViewById(R.id.childName);
+            openButton = itemView.findViewById(R.id.buttonOpenAsChild);
         }
     }
 }

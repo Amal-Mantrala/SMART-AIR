@@ -40,6 +40,7 @@ import com.example.b07demosummer2024.services.ChildHealthService;
 import com.example.b07demosummer2024.services.TriageService;
 import com.example.b07demosummer2024.services.MotivationService;
 import com.google.firebase.auth.FirebaseAuth;
+import com.example.b07demosummer2024.auth.ImpersonationService;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -107,13 +108,24 @@ public class ChildHomeFragment extends ProtectedFragment {
         loadUserNameAndSetGreeting(greetingText);
         
         signOut.setOnClickListener(v -> {
-            // Clear cached role data before signing out
+            // If we are impersonating a child (parent viewing child), clear impersonation
+            if (ImpersonationService.isImpersonating(requireContext())) {
+                ImpersonationService.clearImpersonation(requireContext());
+                // return to parent home
+                getParentFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                getParentFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new ParentHomeFragment())
+                        .commit();
+                return;
+            }
+
+            // Normal sign out flow for a real child account
             SharedPreferences prefs = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
             FirebaseAuth auth = FirebaseAuth.getInstance();
             if (auth.getCurrentUser() != null) {
                 prefs.edit().remove("user_role_" + auth.getCurrentUser().getUid()).apply();
             }
-            
+
             new AuthService().signOut();
             FragmentManager fm = getParentFragmentManager();
             fm.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
@@ -162,11 +174,11 @@ public class ChildHomeFragment extends ProtectedFragment {
     }
 
     private void loadUserNameAndSetGreeting(TextView greetingText) {
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        if (auth.getCurrentUser() != null) {
+        String childId = ImpersonationService.getActiveChildId(requireContext());
+        if (childId != null) {
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             db.collection("users")
-                    .document(auth.getCurrentUser().getUid())
+                    .document(childId)
                     .get()
                     .addOnSuccessListener(document -> {
                         if (document.exists() && isAdded()) {
@@ -211,22 +223,19 @@ public class ChildHomeFragment extends ProtectedFragment {
         Button saveButton = dialogView.findViewById(R.id.buttonSave);
         Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
 
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        if (auth.getCurrentUser() != null) {
-            // Set email
-            emailText.setText(auth.getCurrentUser().getEmail());
-            
-            // Load name from Firestore
+        String childId = ImpersonationService.getActiveChildId(requireContext());
+        if (childId != null) {
+            // Try to read stored email from users/{childId} (child profiles may not have email)
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             db.collection("users")
-                    .document(auth.getCurrentUser().getUid())
+                    .document(childId)
                     .get()
                     .addOnSuccessListener(document -> {
                         if (document.exists()) {
                             String name = document.getString("name");
-                            if (name != null) {
-                                nameEdit.setText(name);
-                            }
+                            String email = document.getString("email");
+                            if (email != null) emailText.setText(email);
+                            if (name != null) nameEdit.setText(name);
                         }
                     });
         }
@@ -242,7 +251,7 @@ public class ChildHomeFragment extends ProtectedFragment {
                 // Save name to Firestore
                 FirebaseFirestore db = FirebaseFirestore.getInstance();
                 db.collection("users")
-                        .document(auth.getCurrentUser().getUid())
+                    .document(childId)
                         .update("name", name)
                         .addOnSuccessListener(aVoid -> {
                             if (isAdded()) {
@@ -352,7 +361,7 @@ public class ChildHomeFragment extends ProtectedFragment {
             }
             
             MedicineLog medicineLog = new MedicineLog();
-            medicineLog.setChildId(FirebaseAuth.getInstance().getCurrentUser().getUid());
+            medicineLog.setChildId(ImpersonationService.getActiveChildId(requireContext()));
             medicineLog.setMedicineType(medicineType);
             medicineLog.setMedicineName(medicineName);
             medicineLog.setDosage(dosage);
@@ -381,7 +390,7 @@ public class ChildHomeFragment extends ProtectedFragment {
                         
                         // Trigger motivation streak recalculation for controller medicines
                         if (motivationService != null && "controller".equals(medicineType)) {
-                            String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                            String childId = ImpersonationService.getActiveChildId(requireContext());
                             motivationService.calculateStreaksFromLogs(childId);
                         }
                     }
@@ -486,7 +495,7 @@ public class ChildHomeFragment extends ProtectedFragment {
             }
 
             SymptomLog symptomLog = new SymptomLog();
-            symptomLog.setChildId(FirebaseAuth.getInstance().getCurrentUser().getUid());
+            symptomLog.setChildId(ImpersonationService.getActiveChildId(requireContext()));
             symptomLog.setSymptoms(symptoms);
             symptomLog.setOverallSeverity(severitySeekBar.getProgress() + 1);
             symptomLog.setTriggers(triggers);
@@ -594,7 +603,7 @@ public class ChildHomeFragment extends ProtectedFragment {
                 int nightWaking = Integer.parseInt(nightWakingStr);
                 
                 DailyWellnessLog wellnessLog = new DailyWellnessLog();
-                wellnessLog.setChildId(FirebaseAuth.getInstance().getCurrentUser().getUid());
+                wellnessLog.setChildId(ImpersonationService.getActiveChildId(requireContext()));
                 wellnessLog.setEnergyLevel(energySeekBar.getProgress() + 1);
                 wellnessLog.setBreathingEase(breathingSeekBar.getProgress() + 1);
                 wellnessLog.setSleepQuality(sleepSeekBar.getProgress() + 1);
@@ -635,7 +644,7 @@ public class ChildHomeFragment extends ProtectedFragment {
     }
 
     private void showHealthHistoryDialog() {
-        String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String childId = ImpersonationService.getActiveChildId(requireContext());
         getParentFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, HealthHistoryFragment.newInstance(childId))
                 .addToBackStack(null)
@@ -668,7 +677,7 @@ public class ChildHomeFragment extends ProtectedFragment {
                 .setCancelable(true)
                 .create();
 
-        String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String childId = ImpersonationService.getActiveChildId(requireContext());
         TriageService triageService = new TriageService();
         triageService.getRecentRescueAttempts(childId, new TriageService.RescueAttemptsCallback() {
             @Override
@@ -930,7 +939,7 @@ public class ChildHomeFragment extends ProtectedFragment {
 
 
                     FirebaseFirestore db = FirebaseFirestore.getInstance();
-                    String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    String uid = ImpersonationService.getActiveChildId(requireContext());
 
                     String timestamp = String.valueOf(System.currentTimeMillis());
                     String date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
@@ -1119,8 +1128,8 @@ public class ChildHomeFragment extends ProtectedFragment {
             techniqueBest.setText("Calculating...");
 
             // Calculate and load data from actual health logs if service is available
-            if (motivationService != null && FirebaseAuth.getInstance().getCurrentUser() != null) {
-                String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            if (motivationService != null && ImpersonationService.getActiveChildId(requireContext()) != null) {
+                String childId = ImpersonationService.getActiveChildId(requireContext());
                 
                 // Only calculate if enough time has passed since last calculation
                 long currentTime = System.currentTimeMillis();
@@ -1176,11 +1185,10 @@ public class ChildHomeFragment extends ProtectedFragment {
     private void loadStreaksData(TextView controllerCount, TextView controllerBest, 
                                 TextView techniqueCount, TextView techniqueBest) {
         try {
-            if (motivationService == null || FirebaseAuth.getInstance().getCurrentUser() == null) {
+            if (motivationService == null || ImpersonationService.getActiveChildId(requireContext()) == null) {
                 return;
             }
-            
-            String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            String childId = ImpersonationService.getActiveChildId(requireContext());
             
             motivationService.getChildStreaks(childId, new MotivationService.StreakCallback() {
                 @Override
@@ -1227,11 +1235,11 @@ public class ChildHomeFragment extends ProtectedFragment {
 
     private void loadBadgesData(LinearLayout badgesLayout) {
         try {
-            if (motivationService == null || FirebaseAuth.getInstance().getCurrentUser() == null) {
+            if (motivationService == null || ImpersonationService.getActiveChildId(requireContext()) == null) {
                 return;
             }
             
-            String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            String childId = ImpersonationService.getActiveChildId(requireContext());
             
             motivationService.getChildBadges(childId, new MotivationService.BadgeCallback() {
                 @Override
@@ -1336,8 +1344,8 @@ public class ChildHomeFragment extends ProtectedFragment {
                                    streakNotifications, badgeNotifications, weeklyProgress);
 
             // Load current settings if possible
-            if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-                String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            if (ImpersonationService.getActiveChildId(requireContext()) != null) {
+                String childId = ImpersonationService.getActiveChildId(requireContext());
                 loadCurrentSettings(childId, controllerThreshold, techniqueThreshold, perfectWeekDays,
                                   techniqueSessions, lowRescueLimit, lowRescuePeriod,
                                   streakNotifications, badgeNotifications, weeklyProgress);
@@ -1356,11 +1364,11 @@ public class ChildHomeFragment extends ProtectedFragment {
 
     private void updateStreaksBasedOnActivity(String activityType, boolean successful) {
         try {
-            if (motivationService == null || FirebaseAuth.getInstance().getCurrentUser() == null) {
+            if (motivationService == null || ImpersonationService.getActiveChildId(requireContext()) == null) {
                 return;
             }
             
-            String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            String childId = ImpersonationService.getActiveChildId(requireContext());
             
             if ("controller_medicine".equals(activityType)) {
                 motivationService.updateControllerStreak(childId, successful, new MotivationService.MotivationCallback() {
@@ -1424,8 +1432,8 @@ public class ChildHomeFragment extends ProtectedFragment {
 
     private void initializeMotivationForNewUser() {
         try {
-            if (motivationService != null && FirebaseAuth.getInstance().getCurrentUser() != null) {
-                String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            if (motivationService != null && ImpersonationService.getActiveChildId(requireContext()) != null) {
+                String childId = ImpersonationService.getActiveChildId(requireContext());
                 motivationService.initializeMotivationForChild(childId, new MotivationService.MotivationCallback() {
                     @Override
                     public void onSuccess(String message) {
@@ -1499,12 +1507,11 @@ public class ChildHomeFragment extends ProtectedFragment {
                             EditText techniqueSessions, EditText lowRescueLimit, EditText lowRescuePeriod,
                             CheckBox streakNotifications, CheckBox badgeNotifications, CheckBox weeklyProgress) {
         try {
-            if (FirebaseAuth.getInstance().getCurrentUser() == null) {
-                Toast.makeText(requireContext(), "Please sign in first", Toast.LENGTH_SHORT).show();
+            String childId = ImpersonationService.getActiveChildId(requireContext());
+            if (childId == null) {
+                Toast.makeText(requireContext(), "Please select a child", Toast.LENGTH_SHORT).show();
                 return;
             }
-
-            String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
             MotivationSettings settings = new MotivationSettings(childId);
             
             // Parse values with defaults
@@ -1549,12 +1556,12 @@ public class ChildHomeFragment extends ProtectedFragment {
 
     // Test method to create sample motivation data - you can call this from a button
     private void createTestMotivationData() {
-        if (motivationService == null || FirebaseAuth.getInstance().getCurrentUser() == null) {
+        if (motivationService == null || ImpersonationService.getActiveChildId(requireContext()) == null) {
             Toast.makeText(requireContext(), "Service not available", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String childId = ImpersonationService.getActiveChildId(requireContext());
         
         // Initialize motivation system for child
         motivationService.initializeMotivationForChild(childId, new MotivationService.MotivationCallback() {
