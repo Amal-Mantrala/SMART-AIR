@@ -15,6 +15,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.example.b07demosummer2024.fragments.LoginFragment;
 import com.example.b07demosummer2024.fragments.SignupFragment;
+import com.example.b07demosummer2024.services.NotificationService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -28,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
         db = FirebaseDatabase.getInstance("https://b07-demo-summer-2024-default-rtdb.firebaseio.com/");
         DatabaseReference myRef = db.getReference("testDemo");
         myRef.child("movies").setValue("B07 Demo!");
+
+        NotificationService.getInstance().initialize(this);
 
         if (savedInstanceState == null) {
             checkAuthAndLoadFragment();
