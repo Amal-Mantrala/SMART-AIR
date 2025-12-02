@@ -22,6 +22,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -29,6 +30,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.b07demosummer2024.R;
 import com.example.b07demosummer2024.adapters.ChildSelectionAdapter;
 import com.example.b07demosummer2024.auth.AuthService;
+import com.example.b07demosummer2024.components.ChartsComponent;
 import com.example.b07demosummer2024.models.ChildSelection;
 import com.example.b07demosummer2024.models.ProviderInvite;
 import com.example.b07demosummer2024.models.TriageIncident;
@@ -49,6 +51,7 @@ import java.util.Map;
 import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.List;
+import com.google.firebase.firestore.Query;
 
 public class ParentHomeFragment extends ProtectedFragment {
 
@@ -56,7 +59,13 @@ public class ParentHomeFragment extends ProtectedFragment {
     private List<String> childNames = new ArrayList<>();
     private ArrayAdapter<String> spinnerAdapter;
     private String selectedChildUid;
-    TextView zoneText;
+    
+    // Dashboard tile views
+    private TextView textTodaysZone, textZoneChild, textLastRescueTime;
+    private TextView textWeeklyRescueCount, textTrendTitle;
+    private Button buttonToggleTrend;
+    private ChartsComponent chartTrend;
+    private boolean showingMonthlyTrend = false;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -73,17 +82,23 @@ public class ParentHomeFragment extends ProtectedFragment {
         Button signOut = view.findViewById(R.id.buttonSignOut);
         Button detailsButton = view.findViewById(R.id.buttonDetails);
         Button informationButton = view.findViewById(R.id.buttonInformation);
-        Button newChildButton = view.findViewById(R.id.buttonAddChild);
-        Button manageChildrenButton = view.findViewById(R.id.buttonManageChildren);
+        Button childrenManagementButton = view.findViewById(R.id.buttonChildrenManagement);
         Button privacySharingButton = view.findViewById(R.id.buttonPrivacySharing);
-        Button inviteProviderButton = view.findViewById(R.id.buttonInviteProvider);
         Button viewAlertsButton = view.findViewById(R.id.buttonViewAlerts);
         Button viewTriageLogsButton = view.findViewById(R.id.buttonViewTriageLogs);
+        Button viewHistoryButton = view.findViewById(R.id.buttonViewHistory);
         Button setPB = view.findViewById(R.id.buttonSetPB);
         Spinner childSpinner = view.findViewById(R.id.dropdownMenu);
         Button inventoryButton = view.findViewById(R.id.buttonInventory);
-        Button viewHistoryButton = view.findViewById(R.id.buttonViewHistory);
-        zoneText = view.findViewById(R.id.textZoneValue);
+        
+        // Initialize dashboard tile views
+        textTodaysZone = view.findViewById(R.id.textTodaysZone);
+        textZoneChild = view.findViewById(R.id.textZoneChild);
+        textLastRescueTime = view.findViewById(R.id.textLastRescueTime);
+        textWeeklyRescueCount = view.findViewById(R.id.textWeeklyRescueCount);
+        textTrendTitle = view.findViewById(R.id.textTrendTitle);
+        buttonToggleTrend = view.findViewById(R.id.buttonToggleTrend);
+        chartTrend = view.findViewById(R.id.chartTrend);
 
         spinnerAdapter = new ArrayAdapter<>(
                 requireContext(),
@@ -93,18 +108,6 @@ public class ParentHomeFragment extends ProtectedFragment {
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         childSpinner.setAdapter(spinnerAdapter);
 
-        viewHistoryButton.setOnClickListener(v -> {
-            if (selectedChildUid == null) {
-                Toast.makeText(getContext(), "Please select a child first", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, ParentHealthHistoryFragment.newInstance(selectedChildUid))
-                    .addToBackStack(null)
-                    .commit();
-        });
-
         loadChildrenForParent();
 
         childSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -112,14 +115,14 @@ public class ParentHomeFragment extends ProtectedFragment {
             public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
                 if (pos < childIds.size()) {
                     selectedChildUid = childIds.get(pos);
-                    loadChildZone(selectedChildUid);
+                    updateDashboardForChild(selectedChildUid);
                 }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                zoneText.setText("Zone: --");
                 selectedChildUid = null;
+                updateDashboardForChild(null);
             }
         });
 
@@ -133,10 +136,9 @@ public class ParentHomeFragment extends ProtectedFragment {
         setPB.setOnClickListener( v -> showSetPBDialog());
         detailsButton.setOnClickListener(v -> showUserDetailsDialog());
         informationButton.setOnClickListener(v -> showTutorial());
-        newChildButton.setOnClickListener(v -> showAddChildDialog());
-        manageChildrenButton.setOnClickListener(v -> {
+        childrenManagementButton.setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new ManageChildrenFragment())
+                    .replace(R.id.fragment_container, new ChildrenManagementFragment())
                     .addToBackStack(null)
                     .commit();
         });
@@ -146,7 +148,6 @@ public class ParentHomeFragment extends ProtectedFragment {
                     .addToBackStack(null)
                     .commit();
         });
-        inviteProviderButton.setOnClickListener(v -> showInviteProviderDialog());
         viewAlertsButton.setOnClickListener(v -> showAlertsDialog());
         viewTriageLogsButton.setOnClickListener(v -> showTriageLogsDialog());
         inventoryButton.setOnClickListener(v -> {
@@ -155,6 +156,16 @@ public class ParentHomeFragment extends ProtectedFragment {
                     .addToBackStack(null)
                     .commit();
         });
+        
+        viewHistoryButton.setOnClickListener(v -> {
+            showChildSelectionForHistoryDialog();
+        });
+        
+        // Dashboard tile functionality
+        buttonToggleTrend.setOnClickListener(v -> toggleTrendView());
+        
+        // Initialize dashboard
+        initializeDashboard();
         showTutorialIfFirstTime();
         checkForAlerts(viewAlertsButton);
     }
@@ -278,134 +289,6 @@ public class ParentHomeFragment extends ProtectedFragment {
                 });
     }
 
-    private void showAddChildDialog() {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_child, null);
-        EditText childNameEdit = dialogView.findViewById(R.id.editChildName);
-        EditText childUsernameEdit = dialogView.findViewById(R.id.editChildUsername);
-        EditText childPasswordEdit = dialogView.findViewById(R.id.editChildPassword);
-        android.widget.DatePicker dobPicker = dialogView.findViewById(R.id.datePickerExpiry);
-        EditText childNoteEdit = dialogView.findViewById(R.id.editChildNote);
-        Button saveButton = dialogView.findViewById(R.id.buttonSave);
-        Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
-
-        AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                .setView(dialogView)
-                .setCancelable(true)
-                .create();
-
-        saveButton.setOnClickListener(v -> {
-            String childName = childNameEdit.getText().toString().trim();
-            String childUsername = childUsernameEdit.getText().toString().trim();
-            String childPassword = childPasswordEdit.getText().toString().trim();
-            String childNote = childNoteEdit.getText().toString().trim();
-
-            // Build dob date from DatePicker
-            int dobYear = dobPicker.getYear();
-            int dobMonth = dobPicker.getMonth(); // 0-based
-            int dobDay = dobPicker.getDayOfMonth();
-
-            java.util.Calendar dobCal = java.util.Calendar.getInstance();
-            dobCal.clear();
-            dobCal.set(dobYear, dobMonth, dobDay, 0, 0, 0);
-            java.util.Date dobDate = dobCal.getTime();
-
-            // compute age in years as fractional years
-            double years = (double) (new java.util.Date().getTime() - dobDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000.0);
-
-            // Validate age: must be over 6 years and under 17 years
-            if (!(years > 6.0 && years < 17.0)) {
-                // show friendly error message and stop
-                String errMsg = "Child must be older than 6 and younger than 17";
-                if (isAdded()) Toast.makeText(requireContext(), errMsg, Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            if (childName.isEmpty()) {
-                childNameEdit.setError("Child\'s name cannot be empty");
-                return;
-            }
-            if (childUsername.isEmpty()) {
-                childUsernameEdit.setError("Child\'s username cannot be empty");
-                return;
-            }
-            if (childUsername.contains("@") || childUsername.contains(".")) {
-                childUsernameEdit.setError("Username cannot contain '@' or '.'");
-                return;
-            }
-            if (childPassword.isEmpty() || childPassword.length() < 6) {
-                childPasswordEdit.setError("Password must be at least 6 characters");
-                return;
-            }
-
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection("users").whereEqualTo("username", childUsername).get().addOnCompleteListener(task -> {
-                if (task.isSuccessful() && !task.getResult().isEmpty()) {
-                    childUsernameEdit.setError("Username is already taken");
-                    return;
-                }
-
-                FirebaseAuth auth = FirebaseAuth.getInstance();
-                String parentId = auth.getCurrentUser().getUid();
-                String childEmail = childUsername + "@smart-air-child.com";
-
-                AuthService authService = new AuthService();
-                // Create the child user without switching the currently signed-in user.
-                authService.createUserSilently(childEmail, childPassword, (success, message, createdUid) -> {
-                    if (success) {
-                        // Use the uid returned by the silent create (don't rely on default auth currentUser)
-                        String childId = createdUid;
-                        if (childId == null) {
-                            if (isAdded()) {
-                                Toast.makeText(requireContext(), "Failed to retrieve new child id", Toast.LENGTH_SHORT).show();
-                            }
-                            return;
-                        }
-                        Map<String, Object> childData = new HashMap<>();
-                        childData.put("name", childName);
-                        childData.put("username", childUsername);
-                        childData.put("role", "child");
-                        childData.put("parentId", parentId);
-                        // Save date of birth as ISO yyyy-MM-dd string
-                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
-                        childData.put("dob", sdf.format(dobDate));
-                        if (!childNote.isEmpty()) childData.put("note", childNote);
-                        db.collection("users").document(childId)
-                                .set(childData)
-                                .addOnSuccessListener(aVoid -> {
-                                    db.collection("users").document(parentId)
-                                            .update("children", FieldValue.arrayUnion(childId))
-                                                .addOnSuccessListener(aVoid2 -> {
-                                                if (isAdded()) {
-                                                    Toast.makeText(requireContext(), "Child account created successfully.", Toast.LENGTH_LONG).show();
-                                                    dialog.dismiss();
-                                                    // Keep parent signed in — do not automatically switch to the child account.
-                                                    // No signOutAndReturnToLogin() here.
-                                                }
-                                            })
-                                            .addOnFailureListener(e2 -> {
-                                                if (isAdded()) {
-                                                    Toast.makeText(requireContext(), "Failed to update parent data.", Toast.LENGTH_SHORT).show();
-                                                }
-                                            });
-                                })
-                                .addOnFailureListener(e -> {
-                                    if (isAdded()) {
-                                        Toast.makeText(requireContext(), "Failed to save child data", Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                    } else {
-                        if (isAdded()) {
-                            Toast.makeText(requireContext(), "Failed to create child account: " + message, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-            });
-        });
-
-        cancelButton.setOnClickListener(v -> dialog.dismiss());
-        dialog.show();
-    }
-
     private void signOutAndReturnToLogin() {
         if (getContext() == null) return;
         SharedPreferences prefs = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
@@ -508,10 +391,13 @@ public class ParentHomeFragment extends ProtectedFragment {
                             if (isAdded()) {
                                 Toast.makeText(requireContext(), R.string.name_saved, Toast.LENGTH_SHORT).show();
                                 // Refresh the greeting with new name
-                                TextView greetingText = getView().findViewById(R.id.textGreeting);
-                                if (greetingText != null) {
-                                    String greeting = getString(R.string.parent_greeting, name);
-                                    greetingText.setText(greeting);
+                                View fragmentView = getView();
+                                if (fragmentView != null) {
+                                    TextView greetingText = fragmentView.findViewById(R.id.textGreeting);
+                                    if (greetingText != null) {
+                                        String greeting = getString(R.string.parent_greeting, name);
+                                        greetingText.setText(greeting);
+                                    }
                                 }
                                 dialog.dismiss();
                             }
@@ -531,183 +417,6 @@ public class ParentHomeFragment extends ProtectedFragment {
         dialog.show();
     }
 
-    private void showInviteProviderDialog() {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_invite_provider, null);
-        EditText providerNameEdit = dialogView.findViewById(R.id.editProviderName);
-        RecyclerView recyclerViewChildren = dialogView.findViewById(R.id.recyclerViewChildren);
-        LinearLayout layoutInviteCode = dialogView.findViewById(R.id.layoutInviteCode);
-        TextView textInviteCode = dialogView.findViewById(R.id.textInviteCode);
-        Button generateButton = dialogView.findViewById(R.id.buttonGenerateInvite);
-        Button copyButton = dialogView.findViewById(R.id.buttonCopyCode);
-        Button shareButton = dialogView.findViewById(R.id.buttonShareCode);
-        Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
-
-        // Setup RecyclerView for children selection
-        recyclerViewChildren.setLayoutManager(new LinearLayoutManager(requireContext()));
-        List<ChildSelection> childrenList = new ArrayList<>();
-        ChildSelectionAdapter adapter = new ChildSelectionAdapter(childrenList);
-        recyclerViewChildren.setAdapter(adapter);
-
-        // Load children
-        loadChildrenForSelection(childrenList, adapter);
-
-        AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                .setView(dialogView)
-                .setCancelable(true)
-                .create();
-
-        final ProviderInvite[] generatedInvite = {null};
-
-        generateButton.setOnClickListener(v -> {
-            String providerName = providerNameEdit.getText().toString().trim();
-            List<String> selectedChildrenIds = new ArrayList<>();
-            
-            for (ChildSelection child : childrenList) {
-                if (child.isSelected()) {
-                    selectedChildrenIds.add(child.getChildId());
-                }
-            }
-
-            if (selectedChildrenIds.isEmpty()) {
-                Toast.makeText(requireContext(), "Please select at least one child to share with the provider", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            generateButton.setEnabled(false);
-            generateButton.setText("Generating...");
-
-            FirebaseAuth auth = FirebaseAuth.getInstance();
-            String parentId = auth.getCurrentUser().getUid();
-            String parentName = auth.getCurrentUser().getDisplayName();
-            if (parentName == null || parentName.isEmpty()) {
-                // Try to get name from Firestore
-                FirebaseFirestore.getInstance()
-                        .collection("users")
-                        .document(parentId)
-                        .get()
-                        .addOnSuccessListener(document -> {
-                            String name = document.exists() ? document.getString("name") : "Parent";
-                            createInvite(parentId, name, providerName, selectedChildrenIds, 
-                                       layoutInviteCode, textInviteCode, generateButton, generatedInvite);
-                        });
-            } else {
-                createInvite(parentId, parentName, providerName, selectedChildrenIds, 
-                           layoutInviteCode, textInviteCode, generateButton, generatedInvite);
-            }
-        });
-
-        copyButton.setOnClickListener(v -> {
-            if (generatedInvite[0] != null) {
-                copyInviteCodeToClipboard(generatedInvite[0].getInviteCode());
-            }
-        });
-
-        shareButton.setOnClickListener(v -> {
-            if (generatedInvite[0] != null) {
-                shareInviteCode(generatedInvite[0]);
-            }
-        });
-
-        cancelButton.setOnClickListener(v -> dialog.dismiss());
-
-        dialog.show();
-    }
-
-    private void loadChildrenForSelection(List<ChildSelection> childrenList, ChildSelectionAdapter adapter) {
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        String parentId = auth.getCurrentUser().getUid();
-
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("users")
-                .document(parentId)
-                .get()
-                .addOnSuccessListener(document -> {
-                    if (document.exists() && document.contains("children")) {
-                        @SuppressWarnings("unchecked")
-                        List<String> childrenIds = (List<String>) document.get("children");
-                        if (childrenIds != null && !childrenIds.isEmpty()) {
-                            loadChildrenDetails(childrenIds, childrenList, adapter);
-                        }
-                    }
-                });
-    }
-
-    private void loadChildrenDetails(List<String> childrenIds, List<ChildSelection> childrenList, 
-                                   ChildSelectionAdapter adapter) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        int[] completed = {0};
-        int total = childrenIds.size();
-
-        for (String childId : childrenIds) {
-            db.collection("users")
-                    .document(childId)
-                    .get()
-                    .addOnSuccessListener(document -> {
-                        if (document.exists()) {
-                            String childName = document.getString("name");
-                            if (childName == null || childName.isEmpty()) {
-                                childName = "Child " + childId.substring(0, 6); // Fallback name
-                            }
-                            childrenList.add(new ChildSelection(childId, childName, false));
-                        }
-                        completed[0]++;
-                        if (completed[0] == total) {
-                            adapter.notifyDataSetChanged();
-                        }
-                    });
-        }
-    }
-
-    private void createInvite(String parentId, String parentName, String providerName, 
-                             List<String> selectedChildrenIds, LinearLayout layoutInviteCode, 
-                             TextView textInviteCode, Button generateButton, 
-                             ProviderInvite[] generatedInvite) {
-        ProviderInviteService inviteService = new ProviderInviteService();
-        inviteService.createProviderInvite(parentId, parentName, providerName, selectedChildrenIds, 
-                new ProviderInviteService.InviteCallback() {
-                    @Override
-                    public void onSuccess(ProviderInvite invite) {
-                        if (isAdded()) {
-                            generatedInvite[0] = invite;
-                            textInviteCode.setText(invite.getInviteCode());
-                            layoutInviteCode.setVisibility(View.VISIBLE);
-                            generateButton.setText("Generate New Invite");
-                            generateButton.setEnabled(true);
-                            Toast.makeText(requireContext(), "Invite code generated successfully!", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        if (isAdded()) {
-                            generateButton.setText("Generate Invite");
-                            generateButton.setEnabled(true);
-                            Toast.makeText(requireContext(), "Failed to generate invite: " + error, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-    }
-
-    private void copyInviteCodeToClipboard(String inviteCode) {
-        ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clip = ClipData.newPlainText("Provider Invite Code", inviteCode);
-        clipboard.setPrimaryClip(clip);
-        Toast.makeText(requireContext(), "Invite code copied to clipboard", Toast.LENGTH_SHORT).show();
-    }
-
-    private void shareInviteCode(ProviderInvite invite) {
-        String shareText = "SMART-AIR Provider Invite\n\n" +
-                "You have been invited to access patient data by " + invite.getParentName() + ".\n\n" +
-                "Invite Code: " + invite.getInviteCode() + "\n\n" +
-                "This code will expire in 7 days. Please enter this code in the SMART-AIR app to gain access to the shared patient information.";
-
-        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.setType("text/plain");
-        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "SMART-AIR Provider Invite");
-        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
-        startActivity(Intent.createChooser(shareIntent, "Share Invite Code"));
-    }
-
     private void loadChildrenForParent() {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -724,7 +433,6 @@ public class ParentHomeFragment extends ProtectedFragment {
                         childNames.clear();
                         childIds.clear();
                         spinnerAdapter.notifyDataSetChanged();
-                        zoneText.setText("Zone: --");
                         return;
                     }
 
@@ -756,60 +464,6 @@ public class ParentHomeFragment extends ProtectedFragment {
                     childNames.add(name);
                     spinnerAdapter.notifyDataSetChanged();
                 });
-    }
-    private void loadChildZone(String childUid) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("users")
-                .document(childUid)
-                .get()
-                .addOnSuccessListener(doc -> {
-                    if (!doc.exists()) {
-                        zoneText.setText("Zone: --");
-                        return;
-                    }
-
-                    String zone = doc.getString("zone");
-                    String lastZoneDate = doc.getString("lastZoneDate");
-
-                    String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                            .format(new Date());
-
-                    if (lastZoneDate == null || !lastZoneDate.equals(today)) {
-                        // New day — reset zone
-                        zoneText.setText("Zone: --");
-                        updateZoneUI("none");
-
-                        // reset value in Firestore too
-                        db.collection("users")
-                                .document(childUid)
-                                .update("zone", null,
-                                        "lastZoneDate", today);
-                    } else {
-                        // Same day — show stored zone
-                        if (zone != null) {
-                            zoneText.setText("Zone: " + zone);
-                            updateZoneUI(zone);
-                        } else {
-                            zoneText.setText("Zone: --");
-                            updateZoneUI("none");
-                        }
-                    }
-                });
-    }
-    private void updateZoneUI(String zone) {
-        switch (zone) {
-            case "Green":
-                zoneText.setTextColor(Color.parseColor("#2ecc71")); // green
-                break;
-            case "Yellow":
-                zoneText.setTextColor(Color.parseColor("#f1c40f")); // yellow
-                break;
-            case "Red":
-                zoneText.setTextColor(Color.parseColor("#e74c3c")); // red
-                break;
-            case "none" :
-                zoneText.setTextColor(Color.parseColor("#000000"));
-        }
     }
 
     private void showSetPBDialog() {
@@ -859,7 +513,6 @@ public class ParentHomeFragment extends ProtectedFragment {
                 .update("pb", pbValue)
                 .addOnSuccessListener(a -> {
                     Toast.makeText(getContext(), "PB updated!", Toast.LENGTH_SHORT).show();
-                    loadChildZone(childUid);
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(getContext(), "Failed to update PB", Toast.LENGTH_SHORT).show());
@@ -1148,6 +801,279 @@ public class ParentHomeFragment extends ProtectedFragment {
                     summaryText.setText(String.join(", ", flags));
                 }
             }
+        }
+    }
+    
+    private void showChildSelectionForHistoryDialog() {
+        // First, we need to load the parent's children
+        String parentId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        
+        FirebaseFirestore.getInstance().collection("users")
+                .whereEqualTo("parentId", parentId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (queryDocumentSnapshots.isEmpty()) {
+                        Toast.makeText(requireContext(), "No children found. Add a child first.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // Create a simple selection dialog
+                    String[] childNames = new String[queryDocumentSnapshots.size()];
+                    String[] childIds = new String[queryDocumentSnapshots.size()];
+                    
+                    int i = 0;
+                    for (com.google.firebase.firestore.QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        childNames[i] = document.getString("name");
+                        childIds[i] = document.getId();
+                        i++;
+                    }
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                    builder.setTitle("Select Child")
+                            .setItems(childNames, (dialog, which) -> {
+                                // Navigate to ParentHealthHistoryFragment with selected child
+                                getParentFragmentManager().beginTransaction()
+                                        .replace(R.id.fragment_container, ParentHealthHistoryFragment.newInstance(childIds[which]))
+                                        .addToBackStack(null)
+                                        .commit();
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(requireContext(), "Failed to load children", Toast.LENGTH_SHORT).show();
+                });
+    }
+    
+    private void initializeDashboard() {
+        // Set initial values
+        textTodaysZone.setText("--");
+        textZoneChild.setText("Select child");
+        textLastRescueTime.setText("No data");
+        textWeeklyRescueCount.setText("0");
+        
+        // Initialize chart with empty data
+        chartTrend.setChartTitle("");
+        chartTrend.setChartColor(android.graphics.Color.parseColor("#2196F3"));
+        updateTrendChart();
+    }
+    
+    private void toggleTrendView() {
+        showingMonthlyTrend = !showingMonthlyTrend;
+        buttonToggleTrend.setText(showingMonthlyTrend ? "30 Days" : "7 Days");
+        textTrendTitle.setText("Rescue Trend (" + (showingMonthlyTrend ? "30" : "7") + " days)");
+        updateTrendChart();
+    }
+    
+    private void updateDashboardForChild(String childUid) {
+        if (childUid == null) {
+            initializeDashboard();
+            return;
+        }
+        
+        // Update child name in dashboard
+        String childName = "Unknown";
+        for (int i = 0; i < childIds.size(); i++) {
+            if (childIds.get(i).equals(childUid)) {
+                childName = childNames.get(i);
+                break;
+            }
+        }
+        textZoneChild.setText(childName);
+        
+        // Load today's zone
+        loadTodaysZoneForChild(childUid);
+        
+        // Load rescue statistics
+        loadRescueStatistics(childUid);
+        
+        // Update trend chart
+        updateTrendChart();
+    }
+    
+    private void loadTodaysZoneForChild(String childUid) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users")
+                .document(childUid)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (!doc.exists() || !isAdded()) return;
+                    
+                    String zone = doc.getString("zone");
+                    String lastZoneDate = doc.getString("lastZoneDate");
+                    
+                    String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                            .format(new Date());
+                    
+                    if (lastZoneDate != null && lastZoneDate.equals(today) && zone != null) {
+                        textTodaysZone.setText(zone);
+                        updateZoneColor(textTodaysZone, zone);
+                    } else {
+                        textTodaysZone.setText("--");
+                        textTodaysZone.setTextColor(android.graphics.Color.BLACK);
+                    }
+                });
+    }
+    
+    private void loadRescueStatistics(String childUid) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        
+        // Load last rescue medication time from medication logs
+        db.collection("medicineLog")
+                .whereEqualTo("childId", childUid)
+                .whereEqualTo("medicineType", "rescue")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (!isAdded()) return;
+                    
+                    if (!querySnapshot.isEmpty()) {
+                        Long timestamp = querySnapshot.getDocuments().get(0).getLong("timestamp");
+                        if (timestamp != null) {
+                            String timeAgo = getTimeAgo(timestamp);
+                            textLastRescueTime.setText(timeAgo);
+                        } else {
+                            textLastRescueTime.setText("No rescues");
+                        }
+                    } else {
+                        textLastRescueTime.setText("No rescues");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    if (isAdded()) {
+                        textLastRescueTime.setText("Error loading");
+                    }
+                });
+        
+        // Load weekly rescue medication count
+        long weekAgo = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L);
+        db.collection("medicineLog")
+                .whereEqualTo("childId", childUid)
+                .whereEqualTo("medicineType", "rescue")
+                .whereGreaterThan("timestamp", weekAgo)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (!isAdded()) return;
+                    textWeeklyRescueCount.setText(String.valueOf(querySnapshot.size()));
+                })
+                .addOnFailureListener(e -> {
+                    if (isAdded()) {
+                        textWeeklyRescueCount.setText("0");
+                    }
+                });
+    }
+    
+    private void updateTrendChart() {
+        if (selectedChildUid == null) {
+            List<Float> emptyData = new ArrayList<>();
+            List<String> emptyLabels = new ArrayList<>();
+            chartTrend.setData(emptyData, emptyLabels, 10f);
+            return;
+        }
+        
+        int days = showingMonthlyTrend ? 30 : 7;
+        long timeRange = days * 24 * 60 * 60 * 1000L;
+        long startTime = System.currentTimeMillis() - timeRange;
+        
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("medicineLog")
+                .whereEqualTo("childId", selectedChildUid)
+                .whereEqualTo("medicineType", "rescue")
+                .whereGreaterThan("timestamp", startTime)
+                .orderBy("timestamp", Query.Direction.ASCENDING)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (!isAdded()) return;
+                    
+                    // Group rescue medication usage by day
+                    Map<String, Integer> dailyCounts = new HashMap<>();
+                    SimpleDateFormat dayFormat = new SimpleDateFormat("MM/dd", Locale.getDefault());
+                    
+                    // Initialize all days with 0
+                    for (int i = days - 1; i >= 0; i--) {
+                        long dayTime = System.currentTimeMillis() - (i * 24 * 60 * 60 * 1000L);
+                        String dayKey = dayFormat.format(new Date(dayTime));
+                        dailyCounts.put(dayKey, 0);
+                    }
+                    
+                    // Count actual rescue medication usage
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        Long timestamp = doc.getLong("timestamp");
+                        if (timestamp != null) {
+                            String dayKey = dayFormat.format(new Date(timestamp));
+                            dailyCounts.put(dayKey, dailyCounts.getOrDefault(dayKey, 0) + 1);
+                        }
+                    }
+                    
+                    // Convert to chart data
+                    List<Float> chartData = new ArrayList<>();
+                    List<String> chartLabels = new ArrayList<>();
+                    float maxCount = 1f;
+                    
+                    for (int i = days - 1; i >= 0; i--) {
+                        long dayTime = System.currentTimeMillis() - (i * 24 * 60 * 60 * 1000L);
+                        String dayKey = dayFormat.format(new Date(dayTime));
+                        int count = dailyCounts.getOrDefault(dayKey, 0);
+                        
+                        chartData.add((float) count);
+                        
+                        // Add label every few days to avoid crowding
+                        if (days == 7 || i % 5 == 0) {
+                            chartLabels.add(dayKey);
+                        } else {
+                            chartLabels.add("");
+                        }
+                        
+                        maxCount = Math.max(maxCount, count);
+                    }
+                    
+                    chartTrend.setData(chartData, chartLabels, maxCount + 1);
+                })
+                .addOnFailureListener(e -> {
+                    if (isAdded()) {
+                        // Show empty chart on error
+                        List<Float> emptyData = new ArrayList<>();
+                        List<String> emptyLabels = new ArrayList<>();
+                        chartTrend.setData(emptyData, emptyLabels, 10f);
+                    }
+                });
+    }
+    
+    private void updateZoneColor(TextView textView, String zone) {
+        switch (zone) {
+            case "Green":
+                textView.setTextColor(android.graphics.Color.parseColor("#2ecc71"));
+                break;
+            case "Yellow":
+                textView.setTextColor(android.graphics.Color.parseColor("#f1c40f"));
+                break;
+            case "Red":
+                textView.setTextColor(android.graphics.Color.parseColor("#e74c3c"));
+                break;
+            default:
+                textView.setTextColor(android.graphics.Color.BLACK);
+                break;
+        }
+    }
+    
+    private String getTimeAgo(long timestamp) {
+        long now = System.currentTimeMillis();
+        long diff = now - timestamp;
+        
+        long seconds = diff / 1000;
+        long minutes = seconds / 60;
+        long hours = minutes / 60;
+        long days = hours / 24;
+        
+        if (days > 0) {
+            return days == 1 ? "1 day" : days + " days";
+        } else if (hours > 0) {
+            return hours == 1 ? "1 hour" : hours + " hours";
+        } else if (minutes > 0) {
+            return minutes == 1 ? "1 min" : minutes + " mins";
+        } else {
+            return "Just now";
         }
     }
 }

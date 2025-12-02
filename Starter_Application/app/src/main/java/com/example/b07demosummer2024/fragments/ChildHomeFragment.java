@@ -59,6 +59,9 @@ public class ChildHomeFragment extends ProtectedFragment {
     private TextView zoneText;
     private MotivationService motivationService;
     private int pbValue = 0;
+    private boolean isCalculatingMotivation = false;
+    private long lastMotivationCalculation = 0;
+    private static final long MOTIVATION_CALCULATION_COOLDOWN = 5000; // 5 seconds
 
     private ListenerRegistration userListener;
 
@@ -245,10 +248,13 @@ public class ChildHomeFragment extends ProtectedFragment {
                             if (isAdded()) {
                                 Toast.makeText(requireContext(), R.string.name_saved, Toast.LENGTH_SHORT).show();
                                 // Refresh the greeting with new name
-                                TextView greetingText = getView().findViewById(R.id.textGreeting);
-                                if (greetingText != null) {
-                                    String greeting = getString(R.string.child_greeting, name);
-                                    greetingText.setText(greeting);
+                                View fragmentView = getView();
+                                if (fragmentView != null) {
+                                    TextView greetingText = fragmentView.findViewById(R.id.textGreeting);
+                                    if (greetingText != null) {
+                                        String greeting = getString(R.string.child_greeting, name);
+                                        greetingText.setText(greeting);
+                                    }
                                 }
                                 dialog.dismiss();
                             }
@@ -373,8 +379,11 @@ public class ChildHomeFragment extends ProtectedFragment {
                         Toast.makeText(requireContext(), "Medicine log saved successfully!", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
                         
-                        // Note: Motivation streaks are now calculated automatically from logs
-                        // when viewing the motivation dialog
+                        // Trigger motivation streak recalculation for controller medicines
+                        if (motivationService != null && "controller".equals(medicineType)) {
+                            String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                            motivationService.calculateStreaksFromLogs(childId);
+                        }
                     }
                 }
 
@@ -814,9 +823,7 @@ public class ChildHomeFragment extends ProtectedFragment {
 
                 @Override
                 public void onError(String error) {
-                    if (isAdded()) {
-                        Toast.makeText(requireContext(), getString(R.string.escalation_message), Toast.LENGTH_LONG).show();
-                    }
+                    // Don't show duplicate toast on error - the success case already shows the message
                 }
             });
         
@@ -940,14 +947,20 @@ public class ChildHomeFragment extends ProtectedFragment {
                                 put("date", date);
                                 put("time", time);
                             }})
-                            .addOnSuccessListener(a ->
-                                    Toast.makeText(getContext(),
-                                            "PEF saved (" + medType + "-med)",
-                                            Toast.LENGTH_SHORT).show())
-                            .addOnFailureListener(e ->
-                                    Toast.makeText(getContext(),
-                                            "Error saving PEF",
-                                            Toast.LENGTH_SHORT).show());
+                            .addOnSuccessListener(a -> {
+                                    if (getContext() != null) {
+                                        Toast.makeText(getContext(),
+                                                "PEF saved (" + medType + "-med)",
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                            })
+                            .addOnFailureListener(e -> {
+                                    if (getContext() != null) {
+                                        Toast.makeText(getContext(),
+                                                "Error saving PEF",
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                            });
 
                     db.collection("users")
                             .document(uid)
@@ -1109,21 +1122,33 @@ public class ChildHomeFragment extends ProtectedFragment {
             if (motivationService != null && FirebaseAuth.getInstance().getCurrentUser() != null) {
                 String childId = FirebaseAuth.getInstance().getCurrentUser().getUid();
                 
-                // Calculate streaks and badges from actual health logs
-                motivationService.calculateStreaksFromLogs(childId);
-                motivationService.calculateBadgesFromLogs(childId);
-                
-                // Load data immediately first, then refresh after calculations
-                loadStreaksData(controllerStreakCount, controllerBest, techniqueStreakCount, techniqueBest);
-                loadBadgesData(badgesLayout);
-                
-                // Refresh data after calculations complete
-                new android.os.Handler().postDelayed(() -> {
-                    if (isAdded()) {
-                        loadStreaksData(controllerStreakCount, controllerBest, techniqueStreakCount, techniqueBest);
-                        loadBadgesData(badgesLayout);
-                    }
-                }, 2000); // 2 second delay to allow calculations to complete
+                // Only calculate if enough time has passed since last calculation
+                long currentTime = System.currentTimeMillis();
+                if (!isCalculatingMotivation && (currentTime - lastMotivationCalculation) > MOTIVATION_CALCULATION_COOLDOWN) {
+                    isCalculatingMotivation = true;
+                    lastMotivationCalculation = currentTime;
+                    
+                    // Calculate streaks and badges from actual health logs
+                    motivationService.calculateStreaksFromLogs(childId);
+                    motivationService.calculateBadgesFromLogs(childId);
+                    
+                    // Load data immediately first, then refresh after calculations
+                    loadStreaksData(controllerStreakCount, controllerBest, techniqueStreakCount, techniqueBest);
+                    loadBadgesData(badgesLayout);
+                    
+                    // Refresh data after calculations complete (only once)
+                    new android.os.Handler().postDelayed(() -> {
+                        if (isAdded()) {
+                            loadStreaksData(controllerStreakCount, controllerBest, techniqueStreakCount, techniqueBest);
+                            loadBadgesData(badgesLayout);
+                        }
+                        isCalculatingMotivation = false; // Reset flag
+                    }, 2000); // 2 second delay to allow calculations to complete
+                } else {
+                    // Just load existing data without recalculating
+                    loadStreaksData(controllerStreakCount, controllerBest, techniqueStreakCount, techniqueBest);
+                    loadBadgesData(badgesLayout);
+                }
             } else {
                 // Set default values if service is not available
                 controllerStreakCount.setText("0 days");
@@ -1341,10 +1366,11 @@ public class ChildHomeFragment extends ProtectedFragment {
                 motivationService.updateControllerStreak(childId, successful, new MotivationService.MotivationCallback() {
                     @Override
                     public void onSuccess(String message) {
-                        if (isAdded() && message.contains("🎉")) {
+                        if (isAdded() && message.contains("🎉") && !message.isEmpty()) {
+                            // Only show streak celebration toasts, not regular updates
                             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
                         }
-                        checkForBadgeUpdates(childId);
+                        // Don't check for badge updates here to prevent repeated calls
                     }
 
                     @Override
@@ -1356,10 +1382,11 @@ public class ChildHomeFragment extends ProtectedFragment {
                 motivationService.updateTechniqueStreak(childId, successful, new MotivationService.MotivationCallback() {
                     @Override
                     public void onSuccess(String message) {
-                        if (isAdded() && message.contains("🎉")) {
+                        if (isAdded() && message.contains("🎉") && !message.isEmpty()) {
+                            // Only show streak celebration toasts, not regular updates
                             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
                         }
-                        checkForBadgeUpdates(childId);
+                        // Don't check for badge updates here to prevent repeated calls
                     }
 
                     @Override
@@ -1375,11 +1402,11 @@ public class ChildHomeFragment extends ProtectedFragment {
 
     private void checkForBadgeUpdates(String childId) {
         try {
-            if (motivationService != null) {
+            if (motivationService != null && !isCalculatingMotivation) {
                 motivationService.checkBadgeProgress(childId, new MotivationService.MotivationCallback() {
                     @Override
                     public void onSuccess(String message) {
-                        if (isAdded() && message.contains("Badge earned")) {
+                        if (isAdded() && message.contains("Badge earned") && !message.isEmpty()) {
                             Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show();
                         }
                     }
@@ -1553,7 +1580,7 @@ public class ChildHomeFragment extends ProtectedFragment {
         for (int i = 0; i < 5; i++) {
             long timestamp = currentTime - (i * oneDayMs);
             
-            // Create controller medicine log
+            // Create controller medicine log for test collection
             MedicineLog controllerLog = new MedicineLog();
             controllerLog.setChildId(childId);
             controllerLog.setMedicineType("Controller");
@@ -1562,8 +1589,19 @@ public class ChildHomeFragment extends ProtectedFragment {
             controllerLog.setTimestamp(timestamp);
             controllerLog.setNotes("Test data");
 
-            // Save to Firestore
+            // Save to Firestore test collection
             FirebaseFirestore.getInstance().collection("medicineLogs").add(controllerLog);
+            
+            // Also create data in the real collection for streaks
+            MedicineLog realControllerLog = new MedicineLog();
+            realControllerLog.setChildId(childId);
+            realControllerLog.setMedicineType("controller"); // lowercase for real system
+            realControllerLog.setMedicineName("Test Controller Medicine");
+            realControllerLog.setDosage("1 puff");
+            realControllerLog.setTimestamp(timestamp);
+            realControllerLog.setNotes("Test controller data for streaks");
+            
+            FirebaseFirestore.getInstance().collection("medicineLog").add(realControllerLog);
 
             // Create rescue medicine log for some days (to test badge)
             if (i < 2) { // Only for first 2 days
@@ -1576,6 +1614,17 @@ public class ChildHomeFragment extends ProtectedFragment {
                 rescueLog.setNotes("Test rescue data");
 
                 FirebaseFirestore.getInstance().collection("medicineLogs").add(rescueLog);
+                
+                // Also add to the real medicineLog collection for dashboard testing
+                MedicineLog realRescueLog = new MedicineLog();
+                realRescueLog.setChildId(childId);
+                realRescueLog.setMedicineType("rescue"); // lowercase for real system
+                realRescueLog.setMedicineName("Test Rescue Medicine");
+                realRescueLog.setDosage("2 puffs");
+                realRescueLog.setTimestamp(timestamp + 3600000); // 1 hour later
+                realRescueLog.setNotes("Test rescue data for dashboard");
+                
+                FirebaseFirestore.getInstance().collection("medicineLog").add(realRescueLog);
             }
         }
     }

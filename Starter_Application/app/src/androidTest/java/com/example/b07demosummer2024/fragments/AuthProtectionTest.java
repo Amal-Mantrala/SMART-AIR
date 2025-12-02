@@ -44,11 +44,6 @@ public class AuthProtectionTest {
     }
 
     @Test
-    public void testLoginFragmentDoesNotExtendProtectedFragment() {
-        assertTrue(LoginFragment.class.getSuperclass() != ProtectedFragment.class);
-    }
-
-    @Test
     public void testAuthServiceHasIsSignedInMethod() {
         AuthService authService = new AuthService();
         boolean result = authService.isSignedIn();

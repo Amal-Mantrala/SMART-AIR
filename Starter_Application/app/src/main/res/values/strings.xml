@@ -26,7 +26,7 @@
     <string name="child_homepage">Child Homepage</string>
     <string name="parent_homepage">Parent Homepage</string>
     <string name="provider_homepage">Provider Homepage</string>
-    <string name="details">Details</string>
+    <string name="details">Personal Details</string>
     <string name="user_details">User Details</string>
     <string name="email_label">Email:</string>
     <string name="name_label">Name:</string>
@@ -37,7 +37,7 @@
     <string name="tutorial_title">Welcome to SMART-AIR</string>
     <string name="tutorial_got_it">Got it</string>
     <string name="help">Help</string>
-    <string name="information">Information</string>
+    <string name="information">Information/Tutorial</string>
     
     <!-- Greeting Messages -->
     <string name="child_greeting">Hello %1$s, welcome to SMART-AIR, your asthma management app!</string>

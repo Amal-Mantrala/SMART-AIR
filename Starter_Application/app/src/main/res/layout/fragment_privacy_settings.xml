@@ -60,6 +60,16 @@
         android:layout_marginBottom="8dp"/>
 
     <Button
+        android:id="@+id/buttonInviteProvider"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Invite Provider"
+        app:layout_constraintTop_toBottomOf="@+id/buttonManageSharing"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
         android:id="@+id/buttonBack"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

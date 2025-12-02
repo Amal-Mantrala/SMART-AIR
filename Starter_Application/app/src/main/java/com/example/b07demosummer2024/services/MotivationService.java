@@ -476,7 +476,14 @@ public class MotivationService {
         db.collection(COLLECTION_STREAKS)
             .document(streak.getStreakId())
             .set(streak)
-            .addOnSuccessListener(aVoid -> callback.onSuccess("Streak updated successfully"))
+            .addOnSuccessListener(aVoid -> {
+                // Only return celebration message for significant milestones
+                if (streak.getCurrentCount() > 0 && (streak.getCurrentCount() % 7 == 0 || streak.getCurrentCount() == streak.getBestCount())) {
+                    callback.onSuccess("🎉 " + streak.getCurrentCount() + " day streak!");
+                } else {
+                    callback.onSuccess(""); // Empty success message for regular updates
+                }
+            })
             .addOnFailureListener(e -> callback.onError(e.getMessage()));
     }
 
@@ -488,7 +495,7 @@ public class MotivationService {
                 if (badge.isUnlocked()) {
                     callback.onSuccess("🎉 Badge earned: " + badge.getTitle() + "!");
                 } else {
-                    callback.onSuccess("Badge progress updated");
+                    callback.onSuccess(""); // Empty success message for progress updates
                 }
             })
             .addOnFailureListener(e -> callback.onError(e.getMessage()));
@@ -516,28 +523,30 @@ public class MotivationService {
     }
 
     private void calculateControllerStreakFromLogs(String childId) {
-        db.collection("medicineLogs")
+        db.collection("medicineLog")
                 .whereEqualTo("childId", childId)
+                .whereEqualTo("medicineType", "controller")
                 .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         List<DocumentSnapshot> logs = task.getResult().getDocuments();
                         
+                        android.util.Log.d("MotivationService", "Found " + logs.size() + " controller medicine logs for child: " + childId);
+                        
                         int currentStreak = 0;
                         int bestStreak = 0;
-                        long lastDayTimestamp = -1;
                         
-                        // Group logs by day and check for consecutive controller medicine days
+                        // Group logs by day - only count 1 per day
                         Map<String, Boolean> dayHasController = new HashMap<>();
                         
                         for (DocumentSnapshot log : logs) {
                             Long timestamp = log.getLong("timestamp");
-                            String medicineType = log.getString("medicineType");
                             
-                            if (timestamp != null && "Controller".equals(medicineType)) {
+                            if (timestamp != null) {
                                 String dayKey = getDayKey(timestamp);
-                                dayHasController.put(dayKey, true);
+                                dayHasController.put(dayKey, true); // Only 1 per day
+                                android.util.Log.d("MotivationService", "Added controller day: " + dayKey);
                             }
                         }
                         
@@ -545,20 +554,43 @@ public class MotivationService {
                         List<String> sortedDays = new ArrayList<>(dayHasController.keySet());
                         Collections.sort(sortedDays, Collections.reverseOrder());
                         
-                        for (int i = 0; i < sortedDays.size(); i++) {
-                            if (i == 0) {
-                                currentStreak = 1;
-                                bestStreak = 1;
-                            } else {
-                                // Check if days are consecutive
+                        // Get today's date key for comparison
+                        String todayKey = getDayKey(System.currentTimeMillis());
+                        
+                        // Only count as current streak if it includes today
+                        if (!sortedDays.isEmpty() && sortedDays.get(0).equals(todayKey)) {
+                            currentStreak = 1;
+                            bestStreak = 1;
+                            
+                            // Check backwards from today for consecutive days
+                            for (int i = 1; i < sortedDays.size(); i++) {
                                 if (areConsecutiveDays(sortedDays.get(i), sortedDays.get(i-1))) {
                                     currentStreak++;
-                                    bestStreak = Math.max(bestStreak, currentStreak);
                                 } else {
                                     break; // Streak is broken
                                 }
                             }
+                        } else {
+                            currentStreak = 0; // No current streak if today is not included
                         }
+                        
+                        // Calculate best streak from all data
+                        int tempStreak = 0;
+                        for (int i = 0; i < sortedDays.size(); i++) {
+                            if (i == 0) {
+                                tempStreak = 1;
+                            } else {
+                                if (areConsecutiveDays(sortedDays.get(i), sortedDays.get(i-1))) {
+                                    tempStreak++;
+                                } else {
+                                    bestStreak = Math.max(bestStreak, tempStreak);
+                                    tempStreak = 1;
+                                }
+                            }
+                        }
+                        bestStreak = Math.max(bestStreak, tempStreak);
+                        
+                        android.util.Log.d("MotivationService", "Controller streak calculation: current=" + currentStreak + ", best=" + bestStreak + ", days=" + dayHasController.keySet());
                         
                         // Update the controller streak
                         updateCalculatedStreak(childId, "controller_planned", currentStreak, bestStreak);
@@ -567,13 +599,15 @@ public class MotivationService {
     }
 
     private void calculateTechniqueStreakFromLogs(String childId) {
-        db.collection("breathingTechniqueLogs")
+        db.collection("techniqueLogs")
                 .whereEqualTo("childId", childId)
                 .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         List<DocumentSnapshot> logs = task.getResult().getDocuments();
+                        
+                        android.util.Log.d("MotivationService", "Found " + logs.size() + " technique logs for child: " + childId);
                         
                         int currentStreak = 0;
                         int bestStreak = 0;
@@ -583,11 +617,13 @@ public class MotivationService {
                         
                         for (DocumentSnapshot log : logs) {
                             Long timestamp = log.getLong("timestamp");
-                            Boolean completed = log.getBoolean("completed");
                             
-                            if (timestamp != null && Boolean.TRUE.equals(completed)) {
+                            android.util.Log.d("MotivationService", "Technique log: timestamp=" + timestamp);
+                            
+                            if (timestamp != null) {
                                 String dayKey = getDayKey(timestamp);
                                 dayHasTechnique.put(dayKey, true);
+                                android.util.Log.d("MotivationService", "Added technique day: " + dayKey);
                             }
                         }
                         
@@ -595,19 +631,43 @@ public class MotivationService {
                         List<String> sortedDays = new ArrayList<>(dayHasTechnique.keySet());
                         Collections.sort(sortedDays, Collections.reverseOrder());
                         
-                        for (int i = 0; i < sortedDays.size(); i++) {
-                            if (i == 0) {
-                                currentStreak = 1;
-                                bestStreak = 1;
-                            } else {
+                        // Get today's date key for comparison
+                        String todayKey = getDayKey(System.currentTimeMillis());
+                        
+                        // Only count as current streak if it includes today
+                        if (!sortedDays.isEmpty() && sortedDays.get(0).equals(todayKey)) {
+                            currentStreak = 1;
+                            bestStreak = 1;
+                            
+                            // Check backwards from today for consecutive days
+                            for (int i = 1; i < sortedDays.size(); i++) {
                                 if (areConsecutiveDays(sortedDays.get(i), sortedDays.get(i-1))) {
                                     currentStreak++;
-                                    bestStreak = Math.max(bestStreak, currentStreak);
                                 } else {
-                                    break;
+                                    break; // Streak is broken
+                                }
+                            }
+                        } else {
+                            currentStreak = 0; // No current streak if today is not included
+                        }
+                        
+                        // Calculate best streak from all data
+                        int tempStreak = 0;
+                        for (int i = 0; i < sortedDays.size(); i++) {
+                            if (i == 0) {
+                                tempStreak = 1;
+                            } else {
+                                if (areConsecutiveDays(sortedDays.get(i), sortedDays.get(i-1))) {
+                                    tempStreak++;
+                                } else {
+                                    bestStreak = Math.max(bestStreak, tempStreak);
+                                    tempStreak = 1;
                                 }
                             }
                         }
+                        bestStreak = Math.max(bestStreak, tempStreak);
+                        
+                        android.util.Log.d("MotivationService", "Technique streak calculation: current=" + currentStreak + ", best=" + bestStreak + ", days=" + dayHasTechnique.keySet());
                         
                         // Update the technique streak
                         updateCalculatedStreak(childId, "technique_completed", currentStreak, bestStreak);

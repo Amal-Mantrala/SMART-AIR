@@ -9,6 +9,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -267,14 +268,20 @@ public class ProviderSharingService {
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        List<ProviderAccess> providers = new ArrayList<>();
+                        // Deduplicate by providerId - providerAccess may contain multiple docs
+                        // (e.g. one per child). The UI should show each provider only once.
+                        Map<String, ProviderAccess> providerMap = new LinkedHashMap<>();
+
                         for (QueryDocumentSnapshot doc : task.getResult()) {
                             ProviderAccess access = doc.toObject(ProviderAccess.class);
-                            if (access != null) {
+                            if (access != null && access.getProviderId() != null) {
                                 access.setAccessId(doc.getId());
-                                providers.add(access);
+                                // Keep the first seen entry for a providerId
+                                providerMap.putIfAbsent(access.getProviderId(), access);
                             }
                         }
+
+                        List<ProviderAccess> providers = new ArrayList<>(providerMap.values());
                         callback.onResult(providers);
                     } else {
                         callback.onError(task.getException() != null ? task.getException().getMessage() : "Unknown error");

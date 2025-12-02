@@ -173,9 +173,12 @@ public class ProviderHomeFragment extends ProtectedFragment {
                             Toast.makeText(requireContext(), R.string.name_saved, Toast.LENGTH_SHORT).show();
                             dialog.dismiss();
                             // Refresh greeting
-                            TextView greetingText = getView().findViewById(R.id.textGreeting);
-                            if (greetingText != null) {
-                                loadUserNameAndSetGreeting(greetingText);
+                            View fragmentView = getView();
+                            if (fragmentView != null) {
+                                TextView greetingText = fragmentView.findViewById(R.id.textGreeting);
+                                if (greetingText != null) {
+                                    loadUserNameAndSetGreeting(greetingText);
+                                }
                             }
                         })
                         .addOnFailureListener(e -> {

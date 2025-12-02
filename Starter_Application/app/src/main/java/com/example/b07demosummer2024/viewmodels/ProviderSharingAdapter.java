@@ -90,46 +90,62 @@ public class ProviderSharingAdapter extends RecyclerView.Adapter<ProviderSharing
     }
 
     private void loadChildrenForProvider(String providerId, List<User> children, Map<String, String> childIdMap, ProviderSharingViewHolder holder) {
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        String currentParentId = auth.getCurrentUser().getUid();
+        // Load sharingSettings for this parent/provider to determine which children are shared
+        String currentParentId = this.parentId;
+        sharingService.getSharingSettings(currentParentId, providerId, new ProviderSharingService.SettingsCallback() {
+            @Override
+            public void onResult(SharingSettings settings) {
+                settingsMap.put(providerId, settings);
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("users").document(currentParentId).get().addOnCompleteListener(task -> {
-            if (task.isSuccessful() && task.getResult().exists()) {
-                List<String> childIds = (List<String>) task.getResult().get("children");
-                if (childIds != null) {
-                    int[] completed = {0};
-                    int total = childIds.size();
-
-                    for (String childId : childIds) {
-                        db.collection("users").document(childId).get().addOnCompleteListener(childTask -> {
-                            if (childTask.isSuccessful() && childTask.getResult().exists()) {
-                                User child = childTask.getResult().toObject(User.class);
-                                if (child != null) {
-                                    children.add(child);
-                                    if (child.getName() != null) {
-                                        childIdMap.put(child.getName(), childId);
-                                    }
-                                }
-                            }
-                            completed[0]++;
-                            if (completed[0] == total) {
-                                childrenMap.put(providerId, children);
-                                childIdMaps.put(providerId, childIdMap);
-                                SharingSettings settings = settingsMap.get(providerId);
-                                if (settings == null) {
-                                    loadSharingSettings(providerId, holder, children, childIdMap);
-                                } else {
-                                    setupChildrenRecyclerView(holder, providerId, children, childIdMap);
-                                }
-                            }
-                        });
-                    }
-                } else {
-                    childrenMap.put(providerId, children);
-                    childIdMaps.put(providerId, childIdMap);
-                    setupChildrenRecyclerView(holder, providerId, children, childIdMap);
+                Map<String, ChildSharingSettings> csMap = settings != null && settings.getChildSettings() != null ? settings.getChildSettings() : new HashMap<>();
+                if (csMap.isEmpty()) {
+                    // No shared children for this provider
+                    childrenMap.put(providerId, new ArrayList<>());
+                    childIdMaps.put(providerId, new HashMap<>());
+                    setupChildrenRecyclerView(holder, providerId, new ArrayList<>(), new HashMap<>());
+                    return;
                 }
+
+                List<String> childIds = new ArrayList<>(csMap.keySet());
+                if (childIds.isEmpty()) {
+                    childrenMap.put(providerId, new ArrayList<>());
+                    childIdMaps.put(providerId, new HashMap<>());
+                    setupChildrenRecyclerView(holder, providerId, new ArrayList<>(), new HashMap<>());
+                    return;
+                }
+
+                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                int[] completed = {0};
+                int total = childIds.size();
+
+                for (String childId : childIds) {
+                    db.collection("users").document(childId).get().addOnCompleteListener(childTask -> {
+                        if (childTask.isSuccessful() && childTask.getResult().exists()) {
+                            User child = childTask.getResult().toObject(User.class);
+                            if (child != null) {
+                                children.add(child);
+                                if (child.getName() != null) {
+                                    childIdMap.put(child.getName(), childId);
+                                }
+                            }
+                        }
+                        completed[0]++;
+                        if (completed[0] == total) {
+                            childrenMap.put(providerId, children);
+                            childIdMaps.put(providerId, childIdMap);
+                            setupChildrenRecyclerView(holder, providerId, children, childIdMap);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                // On error, show empty children list rather than all parent children
+                childrenMap.put(providerId, new ArrayList<>());
+                childIdMaps.put(providerId, new HashMap<>());
+                settingsMap.put(providerId, new SharingSettings());
+                setupChildrenRecyclerView(holder, providerId, new ArrayList<>(), new HashMap<>());
             }
         });
     }
