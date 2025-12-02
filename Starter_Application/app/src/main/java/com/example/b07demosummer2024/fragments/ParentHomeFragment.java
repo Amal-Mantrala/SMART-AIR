@@ -158,7 +158,14 @@ public class ParentHomeFragment extends ProtectedFragment {
         });
         
         viewHistoryButton.setOnClickListener(v -> {
-            showChildSelectionForHistoryDialog();
+            if (selectedChildUid == null) {
+                Toast.makeText(requireContext(), "Please select a child first", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, ParentHealthHistoryFragment.newInstance(selectedChildUid))
+                    .addToBackStack(null)
+                    .commit();
         });
         
         // Dashboard tile functionality
