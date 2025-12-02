@@ -60,14 +60,41 @@ public class ChildSharingAdapter extends RecyclerView.Adapter<ChildSharingAdapte
         ChildSharingSettings settings = childId != null ? sharingSettings.get(childId) : null;
 
         Map<String, Boolean> sharedFields = settings != null && settings.getSharedFields() != null ? settings.getSharedFields() : new HashMap<>();
-        boolean isNameShared = sharedFields.getOrDefault("name", false);
 
-        holder.fieldName.setText("Name");
-        holder.fieldSwitch.setChecked(isNameShared);
-        holder.fieldSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (toggleListener != null && childId != null) {
-                toggleListener.onToggleChanged(childId, "name", isChecked);
-            }
+        // Set up switches for granular fields
+        holder.switchRescueLogs.setChecked(sharedFields.getOrDefault("rescueLogs", false));
+        holder.switchRescueLogs.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (toggleListener != null && childId != null) toggleListener.onToggleChanged(childId, "rescueLogs", isChecked);
+        });
+
+        holder.switchControllerSummary.setChecked(sharedFields.getOrDefault("controllerSummary", false));
+        holder.switchControllerSummary.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (toggleListener != null && childId != null) toggleListener.onToggleChanged(childId, "controllerSummary", isChecked);
+        });
+
+        holder.switchSymptoms.setChecked(sharedFields.getOrDefault("symptoms", false));
+        holder.switchSymptoms.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (toggleListener != null && childId != null) toggleListener.onToggleChanged(childId, "symptoms", isChecked);
+        });
+
+        holder.switchTriggers.setChecked(sharedFields.getOrDefault("triggers", false));
+        holder.switchTriggers.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (toggleListener != null && childId != null) toggleListener.onToggleChanged(childId, "triggers", isChecked);
+        });
+
+        holder.switchPeakFlow.setChecked(sharedFields.getOrDefault("peakFlow", false));
+        holder.switchPeakFlow.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (toggleListener != null && childId != null) toggleListener.onToggleChanged(childId, "peakFlow", isChecked);
+        });
+
+        holder.switchTriageIncidents.setChecked(sharedFields.getOrDefault("triageIncidents", false));
+        holder.switchTriageIncidents.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (toggleListener != null && childId != null) toggleListener.onToggleChanged(childId, "triageIncidents", isChecked);
+        });
+
+        holder.switchSummaryCharts.setChecked(sharedFields.getOrDefault("summaryCharts", false));
+        holder.switchSummaryCharts.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (toggleListener != null && childId != null) toggleListener.onToggleChanged(childId, "summaryCharts", isChecked);
         });
     }
 
@@ -83,14 +110,44 @@ public class ChildSharingAdapter extends RecyclerView.Adapter<ChildSharingAdapte
 
     static class ChildSharingViewHolder extends RecyclerView.ViewHolder {
         TextView childName;
-        TextView fieldName;
-        Switch fieldSwitch;
+        TextView textRescueLogs;
+        Switch switchRescueLogs;
+        TextView textControllerSummary;
+        Switch switchControllerSummary;
+        TextView textSymptoms;
+        Switch switchSymptoms;
+        TextView textTriggers;
+        Switch switchTriggers;
+        TextView textPeakFlow;
+        Switch switchPeakFlow;
+        TextView textTriageIncidents;
+        Switch switchTriageIncidents;
+        TextView textSummaryCharts;
+        Switch switchSummaryCharts;
 
         ChildSharingViewHolder(View itemView) {
             super(itemView);
             childName = itemView.findViewById(R.id.textChildName);
-            fieldName = itemView.findViewById(R.id.textFieldName);
-            fieldSwitch = itemView.findViewById(R.id.switchField);
+            textRescueLogs = itemView.findViewById(R.id.textRescueLogs);
+            switchRescueLogs = itemView.findViewById(R.id.switchRescueLogs);
+
+            textControllerSummary = itemView.findViewById(R.id.textControllerSummary);
+            switchControllerSummary = itemView.findViewById(R.id.switchControllerSummary);
+
+            textSymptoms = itemView.findViewById(R.id.textSymptoms);
+            switchSymptoms = itemView.findViewById(R.id.switchSymptoms);
+
+            textTriggers = itemView.findViewById(R.id.textTriggers);
+            switchTriggers = itemView.findViewById(R.id.switchTriggers);
+
+            textPeakFlow = itemView.findViewById(R.id.textPeakFlow);
+            switchPeakFlow = itemView.findViewById(R.id.switchPeakFlow);
+
+            textTriageIncidents = itemView.findViewById(R.id.textTriageIncidents);
+            switchTriageIncidents = itemView.findViewById(R.id.switchTriageIncidents);
+
+            textSummaryCharts = itemView.findViewById(R.id.textSummaryCharts);
+            switchSummaryCharts = itemView.findViewById(R.id.switchSummaryCharts);
         }
     }
 }
