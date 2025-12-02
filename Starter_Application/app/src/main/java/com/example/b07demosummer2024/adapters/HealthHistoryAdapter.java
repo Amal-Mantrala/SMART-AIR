@@ -104,6 +104,12 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
         notifyDataSetChanged();
     }
 
+    public void addAdherenceItem(HealthHistoryItem item) {
+        allItems.add(0, item);
+        allItems.sort((a, b) -> Long.compare(b.timestamp, a.timestamp));
+        notifyDataSetChanged();
+    }
+
     // Expose the currently displayed list (used for PDF export)
     public List<HealthHistoryItem> getDisplayedItems() {
         return new ArrayList<>(allItems);
