@@ -117,6 +117,8 @@ public class ParentHealthHistoryFragment extends ProtectedFragment {
         Button back = view.findViewById(R.id.buttonBackParent);
         back.setOnClickListener(v -> requireActivity().onBackPressed());
         export.setOnClickListener(v -> exportPdf());
+        Button exportProvider = view.findViewById(R.id.buttonExportProviderReport);
+        exportProvider.setOnClickListener(v -> exportProviderReportPdf());
     }
 
     private void loadData() {
@@ -250,6 +252,103 @@ public class ParentHealthHistoryFragment extends ProtectedFragment {
     }
 
     private void exportPdf() {
+        List<HealthHistoryAdapter.HealthHistoryItem> items = adapter.getItems();
+        if (items.isEmpty()) {
+            Toast.makeText(requireContext(), "No history data to export", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            PdfDocument pdf = new PdfDocument();
+            Paint paint = new Paint();
+            Paint titlePaint = new Paint();
+            titlePaint.setTextSize(18);
+            titlePaint.setFakeBoldText(true);
+
+            int pageNum = 1;
+            int y = 60;
+            int pageHeight = 842;
+            int pageWidth = 595;
+            int margin = 40;
+
+            PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNum).create();
+            PdfDocument.Page page = pdf.startPage(pageInfo);
+            Canvas canvas = page.getCanvas();
+
+            canvas.drawText("Health History", margin, y, titlePaint);
+            y += 30;
+
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+
+            for (HealthHistoryAdapter.HealthHistoryItem item : items) {
+                if (y > pageHeight - 100) {
+                    pdf.finishPage(page);
+                    pageNum++;
+                    pageInfo = new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNum).create();
+                    page = pdf.startPage(pageInfo);
+                    canvas = page.getCanvas();
+                    y = 60;
+                }
+
+                canvas.drawText(item.title, margin, y, titlePaint);
+                y += 20;
+                canvas.drawText(sdf.format(new java.util.Date(item.timestamp)), margin, y, paint);
+                y += 20;
+                String[] lines = item.details.split("\n");
+                for (String line : lines) {
+                    if (y > pageHeight - 80) {
+                        pdf.finishPage(page);
+                        pageNum++;
+                        pageInfo = new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNum).create();
+                        page = pdf.startPage(pageInfo);
+                        canvas = page.getCanvas();
+                        y = 60;
+                    }
+                    canvas.drawText(line, margin + 20, y, paint);
+                    y += 20;
+                }
+                y += 15;
+            }
+
+            pdf.finishPage(page);
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
+            String timestamp = dateFormat.format(new java.util.Date());
+            String filename = "health_history_" + timestamp + ".pdf";
+
+            File file;
+            try {
+                File downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS);
+                if (!downloadsDir.exists()) {
+                    downloadsDir.mkdirs();
+                }
+                file = new File(downloadsDir, filename);
+            } catch (Exception e) {
+                file = new File(requireContext().getExternalFilesDir(null), filename);
+            }
+
+            FileOutputStream out = new FileOutputStream(file);
+            pdf.writeTo(out);
+            pdf.close();
+            out.close();
+
+            Toast.makeText(requireContext(), "PDF saved to Downloads!\nFile: " + filename, Toast.LENGTH_LONG).show();
+
+            try {
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("application/pdf");
+                shareIntent.putExtra(Intent.EXTRA_STREAM, android.net.Uri.fromFile(file));
+                shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Health History");
+                startActivity(Intent.createChooser(shareIntent, "Share Health History"));
+            } catch (Exception shareError) {
+            }
+
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), "Export failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void exportProviderReportPdf() {
         if (startDate == null || endDate == null) {
             Toast.makeText(requireContext(), "Please select date range first", Toast.LENGTH_SHORT).show();
             return;
