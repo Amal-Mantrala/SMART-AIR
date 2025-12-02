@@ -153,6 +153,16 @@ public class TechniqueHelperFragment extends DialogFragment {
             .addOnSuccessListener(documentReference -> {
                 if (isAdded()) {
                     Toast.makeText(getContext(), "Technique practice logged!", Toast.LENGTH_SHORT).show();
+                    
+                    // Trigger motivation streak recalculation for technique usage
+                    try {
+                        com.example.b07demosummer2024.services.MotivationService motivationService = 
+                            new com.example.b07demosummer2024.services.MotivationService();
+                        motivationService.calculateStreaksFromLogs(userId);
+                    } catch (Exception e) {
+                        // Ignore motivation service errors
+                        android.util.Log.w("TechniqueHelper", "Could not update motivation streaks", e);
+                    }
                 }
             })
             .addOnFailureListener(e -> {
