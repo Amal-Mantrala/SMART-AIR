@@ -867,9 +867,12 @@ public class ParentHomeFragment extends ProtectedFragment {
     
     private void updateDashboardForChild(String childUid) {
         if (childUid == null) {
+            android.util.Log.d("ParentDashboard", "No child selected, initializing empty dashboard");
             initializeDashboard();
             return;
         }
+        
+        android.util.Log.d("ParentDashboard", "Updating dashboard for child UID: " + childUid);
         
         // Update child name in dashboard
         String childName = "Unknown";
@@ -880,6 +883,7 @@ public class ParentHomeFragment extends ProtectedFragment {
             }
         }
         textZoneChild.setText(childName);
+        android.util.Log.d("ParentDashboard", "Child name: " + childName);
         
         // Load today's zone
         loadTodaysZoneForChild(childUid);
@@ -893,17 +897,24 @@ public class ParentHomeFragment extends ProtectedFragment {
     
     private void loadTodaysZoneForChild(String childUid) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
+        android.util.Log.d("ParentDashboard", "Loading zone for child: " + childUid);
+        
         db.collection("users")
                 .document(childUid)
                 .get()
                 .addOnSuccessListener(doc -> {
-                    if (!doc.exists() || !isAdded()) return;
+                    if (!doc.exists() || !isAdded()) {
+                        android.util.Log.d("ParentDashboard", "Child document does not exist or fragment not added");
+                        return;
+                    }
                     
                     String zone = doc.getString("zone");
                     String lastZoneDate = doc.getString("lastZoneDate");
                     
                     String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                             .format(new Date());
+                    
+                    android.util.Log.d("ParentDashboard", "Zone: " + zone + ", lastZoneDate: " + lastZoneDate + ", today: " + today);
                     
                     if (lastZoneDate != null && lastZoneDate.equals(today) && zone != null) {
                         textTodaysZone.setText(zone);
@@ -912,35 +923,52 @@ public class ParentHomeFragment extends ProtectedFragment {
                         textTodaysZone.setText("--");
                         textTodaysZone.setTextColor(android.graphics.Color.BLACK);
                     }
+                })
+                .addOnFailureListener(e -> {
+                    android.util.Log.e("ParentDashboard", "Error loading zone", e);
                 });
     }
     
     private void loadRescueStatistics(String childUid) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         
+        android.util.Log.d("ParentDashboard", "Loading rescue stats for child: " + childUid);
+        
         // Load last rescue medication time from medication logs
         db.collection("medicineLog")
                 .whereEqualTo("childId", childUid)
                 .whereEqualTo("medicineType", "rescue")
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .limit(1)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     if (!isAdded()) return;
                     
+                    android.util.Log.d("ParentDashboard", "Last rescue query returned " + querySnapshot.size() + " documents");
+                    
                     if (!querySnapshot.isEmpty()) {
-                        Long timestamp = querySnapshot.getDocuments().get(0).getLong("timestamp");
-                        if (timestamp != null) {
-                            String timeAgo = getTimeAgo(timestamp);
+                        // Find the most recent rescue by comparing timestamps
+                        Long maxTimestamp = null;
+                        for (com.google.firebase.firestore.DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                            Long ts = doc.getLong("timestamp");
+                            if (ts != null && (maxTimestamp == null || ts > maxTimestamp)) {
+                                maxTimestamp = ts;
+                            }
+                        }
+                        
+                        if (maxTimestamp != null) {
+                            String timeAgo = getTimeAgo(maxTimestamp);
                             textLastRescueTime.setText(timeAgo);
+                            android.util.Log.d("ParentDashboard", "Last rescue time: " + timeAgo);
                         } else {
                             textLastRescueTime.setText("No rescues");
+                            android.util.Log.d("ParentDashboard", "All rescue logs have null timestamps");
                         }
                     } else {
                         textLastRescueTime.setText("No rescues");
+                        android.util.Log.d("ParentDashboard", "No rescue medications found");
                     }
                 })
                 .addOnFailureListener(e -> {
+                    android.util.Log.e("ParentDashboard", "Error loading last rescue", e);
                     if (isAdded()) {
                         textLastRescueTime.setText("Error loading");
                     }
@@ -948,16 +976,29 @@ public class ParentHomeFragment extends ProtectedFragment {
         
         // Load weekly rescue medication count
         long weekAgo = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L);
+        android.util.Log.d("ParentDashboard", "Querying weekly rescues since: " + new Date(weekAgo));
+        
         db.collection("medicineLog")
                 .whereEqualTo("childId", childUid)
                 .whereEqualTo("medicineType", "rescue")
-                .whereGreaterThan("timestamp", weekAgo)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     if (!isAdded()) return;
-                    textWeeklyRescueCount.setText(String.valueOf(querySnapshot.size()));
+                    
+                    // Filter by timestamp in code to avoid composite index requirement
+                    int count = 0;
+                    for (com.google.firebase.firestore.DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                        Long timestamp = doc.getLong("timestamp");
+                        if (timestamp != null && timestamp > weekAgo) {
+                            count++;
+                        }
+                    }
+                    
+                    android.util.Log.d("ParentDashboard", "Weekly rescue count: " + count);
+                    textWeeklyRescueCount.setText(String.valueOf(count));
                 })
                 .addOnFailureListener(e -> {
+                    android.util.Log.e("ParentDashboard", "Error loading weekly rescues", e);
                     if (isAdded()) {
                         textWeeklyRescueCount.setText("0");
                     }
@@ -969,6 +1010,7 @@ public class ParentHomeFragment extends ProtectedFragment {
             List<Float> emptyData = new ArrayList<>();
             List<String> emptyLabels = new ArrayList<>();
             chartTrend.setData(emptyData, emptyLabels, 10f);
+            android.util.Log.d("ParentDashboard", "No child selected for trend chart");
             return;
         }
         
@@ -976,15 +1018,17 @@ public class ParentHomeFragment extends ProtectedFragment {
         long timeRange = days * 24 * 60 * 60 * 1000L;
         long startTime = System.currentTimeMillis() - timeRange;
         
+        android.util.Log.d("ParentDashboard", "Loading trend chart for " + days + " days, child: " + selectedChildUid);
+        
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("medicineLog")
                 .whereEqualTo("childId", selectedChildUid)
                 .whereEqualTo("medicineType", "rescue")
-                .whereGreaterThan("timestamp", startTime)
-                .orderBy("timestamp", Query.Direction.ASCENDING)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     if (!isAdded()) return;
+                    
+                    android.util.Log.d("ParentDashboard", "Trend chart query returned " + querySnapshot.size() + " rescue logs");
                     
                     // Group rescue medication usage by day
                     Map<String, Integer> dailyCounts = new HashMap<>();
@@ -997,10 +1041,10 @@ public class ParentHomeFragment extends ProtectedFragment {
                         dailyCounts.put(dayKey, 0);
                     }
                     
-                    // Count actual rescue medication usage
+                    // Count actual rescue medication usage (filter by time range in code)
                     for (QueryDocumentSnapshot doc : querySnapshot) {
                         Long timestamp = doc.getLong("timestamp");
-                        if (timestamp != null) {
+                        if (timestamp != null && timestamp > startTime) {
                             String dayKey = dayFormat.format(new Date(timestamp));
                             dailyCounts.put(dayKey, dailyCounts.getOrDefault(dayKey, 0) + 1);
                         }
@@ -1029,8 +1073,10 @@ public class ParentHomeFragment extends ProtectedFragment {
                     }
                     
                     chartTrend.setData(chartData, chartLabels, maxCount + 1);
+                    android.util.Log.d("ParentDashboard", "Chart updated with " + chartData.size() + " data points, max: " + maxCount);
                 })
                 .addOnFailureListener(e -> {
+                    android.util.Log.e("ParentDashboard", "Error loading trend chart", e);
                     if (isAdded()) {
                         // Show empty chart on error
                         List<Float> emptyData = new ArrayList<>();
