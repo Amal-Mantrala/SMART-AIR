@@ -1,92 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="24dp">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Select Child" />
-
-    <Spinner
-        android:id="@+id/spinnerChildSelection"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Medicine Type"/>
-
-    <RadioGroup
-        android:id="@+id/radioGroupInventoryMedicineType"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <RadioButton
-            android:id="@+id/radioInventoryController"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Controller" />
-
-        <RadioButton
-            android:id="@+id/radioInventoryRescue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="Rescue" />
-    </RadioGroup>
-
-    <EditText
-        android:id="@+id/editMedicineName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Medicine Name (e.g., Ventolin)"
-        android:inputType="textCapWords"/>
-
-    <EditText
-        android:id="@+id/editTotalDoses"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Total Doses in Canister (e.g., 200)"
-        android:inputType="number"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Expiry Date"/>
-
-    <DatePicker
-        android:id="@+id/datePickerExpiry"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:calendarViewShown="false"
-        android:datePickerMode="spinner"/>
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="16dp">
+        android:orientation="vertical"
+        android:padding="24dp">
 
-        <Button
-            android:id="@+id/buttonCancel"
-            android:layout_width="0dp"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Cancel"/>
+            android:text="Select Child" />
 
-        <Button
-            android:id="@+id/buttonSave"
-            android:layout_width="0dp"
+        <Spinner
+            android:id="@+id/spinnerChildSelection"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Save"/>
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Medicine Type" />
+
+        <RadioGroup
+            android:id="@+id/radioGroupInventoryMedicineType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/radioInventoryController"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Controller" />
+
+            <RadioButton
+                android:id="@+id/radioInventoryRescue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="Rescue" />
+        </RadioGroup>
+
+        <EditText
+            android:id="@+id/editMedicineName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Medicine Name (e.g., Ventolin)"
+            android:inputType="textCapWords" />
+
+        <EditText
+            android:id="@+id/editTotalDoses"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Total Doses in Canister (e.g., 200)"
+            android:inputType="number" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Purchase Date" />
+
+        <DatePicker
+            android:id="@+id/datePickerPurchase"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:calendarViewShown="false"
+            android:datePickerMode="spinner" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Expiry Date" />
+
+        <DatePicker
+            android:id="@+id/datePickerExpiry"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:calendarViewShown="false"
+            android:datePickerMode="spinner" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
+
+            <Button
+                android:id="@+id/buttonCancel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Cancel" />
+
+            <Button
+                android:id="@+id/buttonSave"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Save" />
+        </LinearLayout>
+
     </LinearLayout>
 
-</LinearLayout>
+</ScrollView>

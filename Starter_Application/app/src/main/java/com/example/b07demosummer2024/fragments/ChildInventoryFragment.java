@@ -72,7 +72,7 @@ public class ChildInventoryFragment extends Fragment implements InventoryAdapter
     }
 
     private void showEditDosesDialog(MedicineCanister canister) {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_doses, null);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_doses_child, null);
         EditText dosesLeftEdit = dialogView.findViewById(R.id.editDosesLeft);
         Button saveButton = dialogView.findViewById(R.id.buttonSave);
         Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
