@@ -21,6 +21,7 @@ import com.example.b07demosummer2024.adapters.HealthHistoryAdapter;
 import com.example.b07demosummer2024.models.DailyWellnessLog;
 import com.example.b07demosummer2024.models.MedicineLog;
 import com.example.b07demosummer2024.models.SymptomLog;
+import com.example.b07demosummer2024.models.ZoneLog;
 import com.example.b07demosummer2024.services.ChildHealthService;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -49,6 +50,7 @@ public class HealthHistoryFragment extends ProtectedFragment {
     private List<MedicineLog> fullMedicine = new ArrayList<>();
     private List<SymptomLog> fullSymptoms = new ArrayList<>();
     private List<DailyWellnessLog> fullWellness = new ArrayList<>();
+    private List<ZoneLog> fullZone = new ArrayList<>();
 
     // filter state
     private Long startDate = null;
@@ -120,14 +122,16 @@ public class HealthHistoryFragment extends ProtectedFragment {
             @Override
             public void onSuccess(List<MedicineLog> medicineData,
                                   List<SymptomLog> symptomData,
-                                  List<DailyWellnessLog> wellnessData) {
+                                  List<DailyWellnessLog> wellnessData,
+                                  List<ZoneLog> zoneData) {
 
                 fullMedicine = medicineData != null ? medicineData : new ArrayList<>();
                 fullSymptoms = symptomData != null ? symptomData : new ArrayList<>();
                 fullWellness = wellnessData != null ? wellnessData : new ArrayList<>();
+                fullZone = zoneData != null ? zoneData : new ArrayList<>();
 
                 populateFilters();
-                adapter.updateData(fullMedicine, fullSymptoms, fullWellness);
+                adapter.updateData(fullMedicine, fullSymptoms, fullWellness, fullZone);
             }
 
             @Override
@@ -204,6 +208,7 @@ public class HealthHistoryFragment extends ProtectedFragment {
         List<MedicineLog> meds = new ArrayList<>(fullMedicine);
         List<SymptomLog> syms = new ArrayList<>(fullSymptoms);
         List<DailyWellnessLog> wells = new ArrayList<>(fullWellness);
+        List<ZoneLog> zones = new ArrayList<>(fullZone);
 
         // symptom filter
         if (!selectedSymptom.equals("All")) {
@@ -211,6 +216,7 @@ public class HealthHistoryFragment extends ProtectedFragment {
                     !s.getSymptoms().contains(selectedSymptom));
             meds.clear();
             wells.clear();
+            zones.clear();
         }
 
         // trigger filter
@@ -219,6 +225,7 @@ public class HealthHistoryFragment extends ProtectedFragment {
                     !s.getTriggers().contains(selectedTrigger));
             meds.clear();
             wells.clear();
+            zones.clear();
         }
 
         // date filter
@@ -228,7 +235,7 @@ public class HealthHistoryFragment extends ProtectedFragment {
             wells.removeIf(w -> w.getTimestamp() < startDate || w.getTimestamp() > endDate);
         }
 
-        adapter.updateData(meds, syms, wells);
+        adapter.updateData(meds, syms, wells, zones);
 
         if (meds.isEmpty() && syms.isEmpty() && wells.isEmpty()) {
             emptyView.setVisibility(View.VISIBLE);

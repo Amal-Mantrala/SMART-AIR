@@ -35,6 +35,7 @@ import com.example.b07demosummer2024.models.TriageIncident;
 import com.example.b07demosummer2024.models.Streak;
 import com.example.b07demosummer2024.models.Badge;
 import com.example.b07demosummer2024.models.MotivationSettings;
+import com.example.b07demosummer2024.models.ZoneLog;
 import com.example.b07demosummer2024.services.ChildHealthService;
 import com.example.b07demosummer2024.services.TriageService;
 import com.example.b07demosummer2024.services.MotivationService;
@@ -43,6 +44,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
@@ -961,6 +963,40 @@ public class ChildHomeFragment extends ProtectedFragment {
 
                                             // Compute correct zone using updated PB
                                             String zone = ZoneCalculator.computeZone(pefValue, (int) newPb);
+
+                                            String childId = uid;
+                                            String newZone = zone;
+                                            int pef = (int) pefValue;
+                                            long now = System.currentTimeMillis();
+
+                                            ZoneLog newLog = new ZoneLog(childId, newZone, pef, now);
+
+                                            db.collection("zoneLogs")
+                                                    .orderBy("timestamp", Query.Direction.DESCENDING)
+                                                    .limit(1)
+                                                    .get()
+                                                    .addOnSuccessListener(docsnapshot -> {
+
+                                                        // No previous log - always save the first one
+                                                        if (docsnapshot.isEmpty()) {
+                                                            db.collection("zoneLogs")
+                                                                    .add(newLog);
+                                                            return;
+                                                        }
+
+                                                        ZoneLog last = docsnapshot.getDocuments().get(0).toObject(ZoneLog.class);
+
+                                                        assert last != null;
+                                                        if (last.getZone() != null &&
+                                                                last.getZone().equals(newZone)) {
+                                                            return;
+                                                        }
+
+                                                        // 🔥 Zone changed → SAVE new log
+                                                        db.collection("zoneLogs")
+                                                                .add(newLog);
+                                                    });
+
 
                                             // Save zone and last zone date
                                             db.collection("users")

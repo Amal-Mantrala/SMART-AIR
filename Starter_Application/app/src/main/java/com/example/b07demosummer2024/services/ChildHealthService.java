@@ -3,6 +3,7 @@ package com.example.b07demosummer2024.services;
 import com.example.b07demosummer2024.models.MedicineLog;
 import com.example.b07demosummer2024.models.SymptomLog;
 import com.example.b07demosummer2024.models.DailyWellnessLog;
+import com.example.b07demosummer2024.models.ZoneLog;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -198,6 +199,11 @@ public class ChildHealthService {
         getHealthHistory(childId, limitDays, "dailyWellnessLog", DailyWellnessLog.class, callback);
     }
 
+    // Zone Log Operations
+    public void getZoneHistory(String childId, int limitDays, HealthDataCallback callback) {
+        getHealthHistory(childId, limitDays, "zoneLogs", ZoneLog.class, callback);
+    }
+
     // Check if daily check-in has been completed today
     public void hasDailyCheckInToday(String childId, HealthDataCallback callback) {
         long startOfDay = getStartOfDay(System.currentTimeMillis());
@@ -243,37 +249,49 @@ public class ChildHealthService {
                 });
     }
 
-    // Get all health data for a child (for provider access)
     public void getAllHealthData(String childId, int limitDays, AllHealthDataCallback callback) {
-        // Get all three types of data using the consolidated methods
+
         getMedicineHistory(childId, limitDays, new HealthDataCallback() {
             @Override
             public void onSuccess(List<?> medicineData) {
+
                 getSymptomHistory(childId, limitDays, new HealthDataCallback() {
                     @Override
                     public void onSuccess(List<?> symptomData) {
+
                         getDailyWellnessHistory(childId, limitDays, new HealthDataCallback() {
                             @Override
                             public void onSuccess(List<?> wellnessData) {
-                                callback.onSuccess((List<MedicineLog>) medicineData, 
-                                                 (List<SymptomLog>) symptomData, 
-                                                 (List<DailyWellnessLog>) wellnessData);
+
+                                getZoneHistory(childId, limitDays, new HealthDataCallback() {
+                                    @Override
+                                    public void onSuccess(List<?> zoneData) {
+
+                                        callback.onSuccess(
+                                                (List<MedicineLog>) medicineData,
+                                                (List<SymptomLog>) symptomData,
+                                                (List<DailyWellnessLog>) wellnessData,
+                                                (List<ZoneLog>) zoneData
+                                        );
+                                    }
+                                    @Override
+                                    public void onError(String error) {
+                                        callback.onError(error);
+                                    }
+                                });
                             }
-                            
                             @Override
                             public void onError(String error) {
                                 callback.onError(error);
                             }
                         });
                     }
-                    
                     @Override
                     public void onError(String error) {
                         callback.onError(error);
                     }
                 });
             }
-            
             @Override
             public void onError(String error) {
                 callback.onError(error);
@@ -281,8 +299,9 @@ public class ChildHealthService {
         });
     }
 
+
     public interface AllHealthDataCallback {
-        void onSuccess(List<MedicineLog> medicineData, List<SymptomLog> symptomData, List<DailyWellnessLog> wellnessData);
+        void onSuccess(List<MedicineLog> medicineData, List<SymptomLog> symptomData, List<DailyWellnessLog> wellnessData, List<ZoneLog> zoneData);
         void onError(String error);
     }
 }

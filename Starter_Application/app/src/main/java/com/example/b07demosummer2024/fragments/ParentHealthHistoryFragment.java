@@ -24,6 +24,7 @@ import com.example.b07demosummer2024.adapters.HealthHistoryAdapter;
 import com.example.b07demosummer2024.models.DailyWellnessLog;
 import com.example.b07demosummer2024.models.MedicineLog;
 import com.example.b07demosummer2024.models.SymptomLog;
+import com.example.b07demosummer2024.models.ZoneLog;
 import com.example.b07demosummer2024.services.ChildHealthService;
 
 import java.io.File;
@@ -53,6 +54,7 @@ public class ParentHealthHistoryFragment extends ProtectedFragment {
     private List<MedicineLog> fullMedicine = new ArrayList<>();
     private List<SymptomLog> fullSymptoms = new ArrayList<>();
     private List<DailyWellnessLog> fullWellness = new ArrayList<>();
+    private List<ZoneLog> fullZone = new ArrayList<>();
 
     // Date range
     private Long startDate = null;
@@ -117,11 +119,13 @@ public class ParentHealthHistoryFragment extends ProtectedFragment {
             @Override
             public void onSuccess(List<MedicineLog> meds,
                                   List<SymptomLog> symptoms,
-                                  List<DailyWellnessLog> wellness) {
+                                  List<DailyWellnessLog> wellness,
+                                  List<ZoneLog> zones) {
 
                 fullMedicine = meds != null ? meds : new ArrayList<>();
                 fullSymptoms = symptoms != null ? symptoms : new ArrayList<>();
                 fullWellness = wellness != null ? wellness : new ArrayList<>();
+                fullZone = zones != null ? zones : new ArrayList<>();
 
                 populateFilters();
                 applyFilters();
@@ -197,40 +201,48 @@ public class ParentHealthHistoryFragment extends ProtectedFragment {
     }
 
     private void applyFilters() {
+
         String selectedSymptom = spinnerSymptoms.getSelectedItem().toString();
         String selectedTrigger = spinnerTriggers.getSelectedItem().toString();
 
         List<MedicineLog> meds = new ArrayList<>(fullMedicine);
         List<SymptomLog> syms = new ArrayList<>(fullSymptoms);
         List<DailyWellnessLog> wells = new ArrayList<>(fullWellness);
+        List<ZoneLog> zones = new ArrayList<>(fullZone);
 
-        // filter symptoms
+        // symptom filter
         if (!selectedSymptom.equals("All")) {
             syms.removeIf(s -> s.getSymptoms() == null ||
                     !s.getSymptoms().contains(selectedSymptom));
+            meds.clear();
+            wells.clear();
+            zones.clear();
         }
 
-        // filter triggers
+        // trigger filter
         if (!selectedTrigger.equals("All")) {
             syms.removeIf(s -> s.getTriggers() == null ||
                     !s.getTriggers().contains(selectedTrigger));
+            meds.clear();
+            wells.clear();
+            zones.clear();
         }
 
-        // filter date range
+        // date filter
         if (startDate != null && endDate != null) {
             meds.removeIf(m -> m.getTimestamp() < startDate || m.getTimestamp() > endDate);
             syms.removeIf(s -> s.getTimestamp() < startDate || s.getTimestamp() > endDate);
             wells.removeIf(w -> w.getTimestamp() < startDate || w.getTimestamp() > endDate);
         }
 
-        adapter.updateData(meds, syms, wells);
+        adapter.updateData(meds, syms, wells, zones);
 
         if (meds.isEmpty() && syms.isEmpty() && wells.isEmpty()) {
-            recyclerView.setVisibility(View.GONE);
             emptyView.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
         } else {
-            recyclerView.setVisibility(View.VISIBLE);
             emptyView.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
         }
     }
 
