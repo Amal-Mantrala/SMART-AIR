@@ -62,7 +62,7 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
                         "Medicine Log",
                         m.getTimestamp(),
                         formatMedicine(m),
-                        m.getEnteredBy()
+                        "none"
                 ));
             }
         }
@@ -73,7 +73,7 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
                         "Symptom Log",
                         s.getTimestamp(),
                         formatSymptom(s),
-                        s.getEnteredBy()
+                        "none"
                 ));
             }
         }

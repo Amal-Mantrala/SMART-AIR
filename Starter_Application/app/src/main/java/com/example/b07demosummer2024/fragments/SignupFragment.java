@@ -14,11 +14,8 @@ import android.widget.Toast;
 import android.widget.TextView;
 
 import com.example.b07demosummer2024.R;
-
-import javax.annotation.Nullable;
 import com.example.b07demosummer2024.auth.AuthValidator;
 import com.example.b07demosummer2024.auth.AuthService;
-
 
 public class SignupFragment extends Fragment {
 
@@ -28,17 +25,15 @@ public class SignupFragment extends Fragment {
     private EditText confirmPasswordInput;
     private AuthService authService;
 
-    @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_signup, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view,
-                              @Nullable Bundle savedInstanceState) {
+                              @androidx.annotation.Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         nameInput = view.findViewById(R.id.signupName);
@@ -81,45 +76,36 @@ public class SignupFragment extends Fragment {
         }
 
         authService.createUser(email, password, (success, message) -> {
-            // This is the safety check. If the fragment is no longer active, stop.
-            if (!isAdded()) {
-                return;
-            }
-            
+            if (!isAdded()) return;
+
             requireActivity().runOnUiThread(() -> {
                 if (success) {
                     Toast.makeText(getContext(), "Account created!", Toast.LENGTH_SHORT).show();
-                    
-                    // Immediately save the user's name to Firestore
+
                     com.google.firebase.auth.FirebaseAuth auth = com.google.firebase.auth.FirebaseAuth.getInstance();
                     if (auth.getCurrentUser() != null) {
                         String uid = auth.getCurrentUser().getUid();
-                        com.google.firebase.firestore.FirebaseFirestore db = com.google.firebase.firestore.FirebaseFirestore.getInstance();
-                        
-                        // Create user document with name
+                        com.google.firebase.firestore.FirebaseFirestore db =
+                                com.google.firebase.firestore.FirebaseFirestore.getInstance();
+
                         java.util.Map<String, Object> user = new java.util.HashMap<>();
                         user.put("name", name);
                         user.put("email", email);
-                        
+
                         db.collection("users").document(uid)
-                            .set(user, com.google.firebase.firestore.SetOptions.merge())
-                            .addOnSuccessListener(aVoid -> {
-                                if (isAdded()) { 
-                                    Toast.makeText(getContext(), "Profile created successfully!", Toast.LENGTH_SHORT).show();
-                                }
-                            })
-                            .addOnFailureListener(e -> {
-                                if (isAdded()) {
-                                    Toast.makeText(getContext(), "Error saving profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                }
-                            });
+                                .set(user, com.google.firebase.firestore.SetOptions.merge())
+                                .addOnSuccessListener(aVoid -> {
+                                    if (isAdded()) {
+                                        showRoleDialog(name, uid);
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    if (isAdded()) {
+                                        Toast.makeText(getContext(), "Error saving profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                     }
-                    
-                    // Show role selection dialog with the user's name
-                    RoleSelectionFragment dialog = RoleSelectionFragment.newInstance(name);
-                    if (getParentFragmentManager() != null) {
-                        dialog.show(getParentFragmentManager(), "roleSelection");
-                    }
+
                 } else {
                     Toast.makeText(getContext(), "Signup failed: " + message, Toast.LENGTH_LONG).show();
                 }
@@ -127,8 +113,46 @@ public class SignupFragment extends Fragment {
         });
     }
 
+    private void showRoleDialog(String name, String uid) {
+        String[] roles = new String[]{"Parent", "Provider"};
+
+        new android.app.AlertDialog.Builder(getContext())
+                .setTitle("Choose Role")
+                .setItems(roles, (dialog, which) -> {
+
+                    String role = (which == 0) ? "parent" : "provider";
+
+                    java.util.Map<String, Object> userData = new java.util.HashMap<>();
+                    userData.put("role", role);
+                    userData.put("name", name);
+
+                    com.google.firebase.firestore.FirebaseFirestore db =
+                            com.google.firebase.firestore.FirebaseFirestore.getInstance();
+
+                    db.collection("users").document(uid)
+                            .set(userData, com.google.firebase.firestore.SetOptions.merge())
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(getContext(), "Role saved: " + role, Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getContext(), "Please log in now to continue.", Toast.LENGTH_LONG).show();
+
+                                com.google.firebase.auth.FirebaseAuth.getInstance().signOut();
+                                
+                                requireActivity().getSupportFragmentManager()
+                                        .beginTransaction()
+                                        .replace(R.id.fragment_container, new LoginFragment())
+                                        .commit();
+                            })
+                            .addOnFailureListener(e ->
+                                    Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                            );
+                })
+                .setCancelable(false)
+                .show();
+    }
+
     private void navigateToLogin() {
-        if (!isAdded()) return; // Add safety check here
+        if (!isAdded()) return;
+
         requireActivity().runOnUiThread(() -> {
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new LoginFragment())
