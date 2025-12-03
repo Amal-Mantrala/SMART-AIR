@@ -1103,10 +1103,10 @@ public class ChildHomeFragment extends ProtectedFragment {
     }
 
     private void startUserListener() {
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        if (auth.getCurrentUser() == null) return;
-
-        String uid = auth.getCurrentUser().getUid();
+        // Use impersonation-aware active child id so parents viewing a child
+        // see the child's zone/PEF data rather than the signed-in parent's document.
+        String uid = ImpersonationService.getActiveChildId(requireContext());
+        if (uid == null) return;
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         userListener = db.collection("users")
