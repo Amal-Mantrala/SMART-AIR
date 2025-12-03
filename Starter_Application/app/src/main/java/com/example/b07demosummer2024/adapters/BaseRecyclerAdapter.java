@@ -7,9 +7,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
-/**
- * Base adapter class to reduce code duplication across RecyclerView adapters
- */
 public abstract class BaseRecyclerAdapter<T, VH extends RecyclerView.ViewHolder> extends RecyclerView.Adapter<VH> {
     protected List<T> items;
 
@@ -36,33 +33,18 @@ public abstract class BaseRecyclerAdapter<T, VH extends RecyclerView.ViewHolder>
         return items != null ? items.size() : 0;
     }
 
-    /**
-     * Update the list of items and notify the adapter
-     */
     public void updateItems(List<T> newItems) {
         this.items = newItems;
         notifyDataSetChanged();
     }
 
-    /**
-     * Get the current list of items
-     */
     public List<T> getItems() {
         return items;
     }
 
-    /**
-     * Abstract method to provide the layout resource ID
-     */
     protected abstract int getLayoutResourceId();
 
-    /**
-     * Abstract method to create the ViewHolder
-     */
     protected abstract VH createViewHolder(View view);
 
-    /**
-     * Abstract method to bind data to the ViewHolder
-     */
     protected abstract void bindViewHolder(VH holder, T item, int position);
 }

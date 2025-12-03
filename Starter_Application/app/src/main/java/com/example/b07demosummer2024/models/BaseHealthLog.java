@@ -1,8 +1,5 @@
 package com.example.b07demosummer2024.models;
 
-/**
- * Base model class to reduce duplication of common fields across health log models
- */
 public abstract class BaseHealthLog {
     protected String logId;
     protected String childId;

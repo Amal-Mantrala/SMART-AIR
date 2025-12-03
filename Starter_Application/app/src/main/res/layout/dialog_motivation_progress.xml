@@ -21,7 +21,6 @@
             android:textColor="#1A1A1A"
             android:layout_marginBottom="20dp" />
 
-        <!-- Streaks Section -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -31,7 +30,6 @@
             android:textColor="#1A1A1A"
             android:layout_marginBottom="12dp" />
 
-        <!-- Controller Streak Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -89,7 +87,6 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Technique Streak Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -146,7 +143,6 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Badges Section -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -157,15 +153,13 @@
             android:layout_marginTop="8dp"
             android:layout_marginBottom="12dp" />
 
-        <!-- Badges Container -->
         <LinearLayout
             android:id="@+id/layoutBadges"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:minHeight="100dp">
-            
-            <!-- Empty state message -->
+
             <TextView
                 android:id="@+id/textNoBadges"
                 android:layout_width="match_parent"
@@ -179,7 +173,6 @@
 
         </LinearLayout>
 
-        <!-- Settings Button -->
         <Button
             android:id="@+id/buttonMotivationSettings"
             android:layout_width="match_parent"

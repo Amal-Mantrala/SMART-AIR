@@ -15,14 +15,12 @@
         android:textColor="@android:color/black"
         android:layout_marginBottom="16dp"/>
 
-    <!-- Dashboard Tiles Row 1 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginBottom="8dp">
 
-        <!-- Today's Zone Tile -->
         <androidx.cardview.widget.CardView
             android:layout_width="0dp"
             android:layout_height="120dp"
@@ -68,7 +66,6 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Last Rescue Time Tile -->
         <androidx.cardview.widget.CardView
             android:layout_width="0dp"
             android:layout_height="120dp"
@@ -116,14 +113,12 @@
 
     </LinearLayout>
 
-    <!-- Dashboard Tiles Row 2 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginBottom="8dp">
 
-        <!-- Weekly Rescue Count Tile -->
         <androidx.cardview.widget.CardView
             android:layout_width="0dp"
             android:layout_height="120dp"
@@ -168,7 +163,6 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Trend Toggle Tile -->
         <androidx.cardview.widget.CardView
             android:layout_width="0dp"
             android:layout_height="120dp"
@@ -216,7 +210,6 @@
 
     </LinearLayout>
 
-    <!-- Trend Chart -->
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="250dp"

@@ -403,7 +403,6 @@ public class MotivationService {
 
     private void checkTechniqueMasterBadge(String childId, MotivationSettings settings, MotivationCallback callback) {
         // Count high-quality technique sessions (this would need to be tracked in your app)
-        // For now, we'll use technique streak as a proxy
         getStreakByType(childId, "technique_completed", new StreakCallback() {
             @Override
             public void onStreaksLoaded(List<Streak> streaks) {
