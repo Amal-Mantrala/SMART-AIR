@@ -97,3 +97,14 @@ SMART-AIR provides three user roles with different capabilities:
 - **Alert Thresholds:** Configurable defaults (rapid rescue: ≥3 in 3 hours, low inventory: ≤20%)
 - **Export Window:** Provider reports can cover 3-6 months of data as selected by parent
 - **Invite:** Provider invite codes expire after 7 days but can be revoked anytime
+
+## Photos
+<p align="center">
+  <img src="Starter_Application/photo/History.png" alt="History" width="160" style="margin:6px;">
+  <img src="Starter_Application/photo/Child.png" alt="Child" width="160" style="margin:6px;">
+  <img src="Starter_Application/photo/Main%20Page.png" alt="Main Page" width="160" style="margin:6px;">
+  <img src="Starter_Application/photo/Parent.png" alt="Parent" width="160" style="margin:6px;">
+  <img src="Starter_Application/photo/Provider.png" alt="Provider" width="160" style="margin:6px;">
+</p>
+
+
