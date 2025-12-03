@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
+
+        <!-- Trophy Emoji -->
+        <TextView
+            android:id="@+id/textBadgeTrophy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🥉"
+            android:textSize="40sp"
+            android:layout_marginEnd="16dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- Badge Title -->
+            <TextView
+                android:id="@+id/textBadgeTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Perfect Controller Week"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A1A" />
+
+            <!-- Badge Description -->
+            <TextView
+                android:id="@+id/textBadgeDescription"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Complete 7 days of controller medicine"
+                android:textSize="13sp"
+                android:textColor="#666666"
+                android:layout_marginTop="4dp" />
+
+            <!-- Progress Bar -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="8dp">
+
+                <ProgressBar
+                    android:id="@+id/progressBadge"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:max="100"
+                    android:progress="75"
+                    android:progressTint="#FFD700"
+                    android:progressBackgroundTint="#E0E0E0" />
+
+                <TextView
+                    android:id="@+id/textBadgeProgress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="5/7 days"
+                    android:textSize="12sp"
+                    android:textColor="#888888"
+                    android:layout_marginTop="4dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Achievement Count (for multiple unlocks) -->
+        <TextView
+            android:id="@+id/textBadgeCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="x3"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFD700"
+            android:layout_marginStart="8dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

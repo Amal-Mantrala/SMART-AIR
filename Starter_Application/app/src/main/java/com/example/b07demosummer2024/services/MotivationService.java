@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.Set;
+import java.util.HashSet;
 
 public class MotivationService {
     private static final String COLLECTION_STREAKS = "streaks";
@@ -175,19 +177,27 @@ public class MotivationService {
             return;
         }
 
+        android.util.Log.d("MotivationService", "Saving " + badges.size() + " badges to Firestore");
+        
         for (int i = 0; i < badges.size(); i++) {
             final boolean isLast = (i == badges.size() - 1);
             Badge badge = badges.get(i);
             
+            android.util.Log.d("MotivationService", "Saving badge: " + badge.getBadgeId() + " type: " + badge.getBadgeType());
+            
             db.collection(COLLECTION_BADGES)
                 .document(badge.getBadgeId())
-                .set(badge)
+                .set(badge, SetOptions.merge())
                 .addOnSuccessListener(aVoid -> {
+                    android.util.Log.d("MotivationService", "Badge saved successfully");
                     if (isLast) {
                         callback.onSuccess("Badges initialized successfully");
                     }
                 })
-                .addOnFailureListener(e -> callback.onError(e.getMessage()));
+                .addOnFailureListener(e -> {
+                    android.util.Log.e("MotivationService", "Failed to save badge: " + e.getMessage());
+                    callback.onError(e.getMessage());
+                });
         }
     }
 
@@ -479,19 +489,31 @@ public class MotivationService {
 
     // Get all badges for a child
     public void getChildBadges(String childId, BadgeCallback callback) {
+        android.util.Log.d("MotivationService", "Getting badges for childId: " + childId);
+        
         db.collection(COLLECTION_BADGES)
             .whereEqualTo("childId", childId)
-            .orderBy("earnedDate")
             .get()
             .addOnSuccessListener(querySnapshot -> {
+                android.util.Log.d("MotivationService", "Query successful, found " + querySnapshot.size() + " badges");
+                
                 List<Badge> badges = new ArrayList<>();
                 for (QueryDocumentSnapshot document : querySnapshot) {
                     Badge badge = document.toObject(Badge.class);
+                    android.util.Log.d("MotivationService", "Badge found: " + badge.getBadgeType() + ", progress: " + badge.getProgress());
                     badges.add(badge);
                 }
+                
+                if (badges.isEmpty()) {
+                    android.util.Log.d("MotivationService", "No badges found, may need initialization");
+                }
+                
                 callback.onBadgesLoaded(badges);
             })
-            .addOnFailureListener(e -> callback.onError(e.getMessage()));
+            .addOnFailureListener(e -> {
+                android.util.Log.e("MotivationService", "Error getting badges: " + e.getMessage());
+                callback.onError(e.getMessage());
+            });
     }
 
     // Get motivation settings
@@ -527,8 +549,53 @@ public class MotivationService {
         db.collection(COLLECTION_MOTIVATION_SETTINGS)
             .document(settings.getSettingsId())
             .set(settings)
-            .addOnSuccessListener(aVoid -> callback.onSuccess("Settings saved successfully"))
+            .addOnSuccessListener(aVoid -> {
+                // Update badge target values when settings change
+                updateBadgeTargetsFromSettings(settings.getChildId(), settings, new MotivationCallback() {
+                    @Override
+                    public void onSuccess(String message) {
+                        // Recalculate badges with new targets
+                        calculateBadgesFromLogs(settings.getChildId());
+                        callback.onSuccess("Settings saved successfully");
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        // Still report success for settings save even if badge update fails
+                        android.util.Log.e("MotivationService", "Failed to update badge targets: " + error);
+                        callback.onSuccess("Settings saved successfully");
+                    }
+                });
+            })
             .addOnFailureListener(e -> callback.onError(e.getMessage()));
+    }
+
+    // Update badge target values based on current settings
+    private void updateBadgeTargetsFromSettings(String childId, MotivationSettings settings, MotivationCallback callback) {
+        // Update Perfect Controller Week badge
+        String perfectWeekId = childId + "_perfect_week";
+        db.collection(COLLECTION_BADGES).document(perfectWeekId)
+            .update("targetValue", settings.getPerfectControllerWeekDays(),
+                    "description", "Take your controller medicine every day for " + settings.getPerfectControllerWeekDays() + " days straight!");
+        
+        // Update Technique Master badge
+        String techniqueMasterId = childId + "_technique_master";
+        db.collection(COLLECTION_BADGES).document(techniqueMasterId)
+            .update("targetValue", settings.getTechniqueMasterSessions(),
+                    "description", "Complete " + settings.getTechniqueMasterSessions() + " high-quality breathing technique sessions!");
+        
+        // Update Low Rescue Month badge
+        String lowRescueId = childId + "_low_rescue_month";
+        db.collection(COLLECTION_BADGES).document(lowRescueId)
+            .update("description", "Use your rescue inhaler ≤" + settings.getLowRescueMonthLimit() + " days in a " + settings.getLowRescueMonthDays() + "-day period!")
+            .addOnSuccessListener(aVoid -> {
+                android.util.Log.d("MotivationService", "Badge targets updated successfully");
+                callback.onSuccess("Badge targets updated");
+            })
+            .addOnFailureListener(e -> {
+                android.util.Log.e("MotivationService", "Failed to update badge targets: " + e.getMessage());
+                callback.onError(e.getMessage());
+            });
     }
 
     // Helper methods
@@ -778,113 +845,86 @@ public class MotivationService {
     }
 
     private void calculatePerfectWeekBadge(String childId) {
-        // Check for perfect controller weeks (7 consecutive days with controller medicine)
-        db.collection("medicineLogs")
-                .whereEqualTo("childId", childId)
-                .whereEqualTo("medicineType", "Controller")
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        List<DocumentSnapshot> logs = task.getResult().getDocuments();
-                        
-                        Map<String, Boolean> dayHasController = new HashMap<>();
-                        for (DocumentSnapshot log : logs) {
-                            Long timestamp = log.getLong("timestamp");
-                            if (timestamp != null) {
-                                dayHasController.put(getDayKey(timestamp), true);
-                            }
+        android.util.Log.d("MotivationService", "Calculating perfect week badge for childId: " + childId);
+        
+        // Use the current controller streak value from the streaks collection
+        getStreakByType(childId, "controller_planned", new StreakCallback() {
+            @Override
+            public void onStreaksLoaded(List<Streak> streaks) {
+                int currentStreak = 0;
+                if (!streaks.isEmpty()) {
+                    currentStreak = streaks.get(0).getCurrentCount();
+                }
+                
+                final int streakValue = currentStreak;
+                android.util.Log.d("MotivationService", "Current controller streak: " + streakValue);
+                
+                // Update badge progress with current streak value
+                updateBadgeProgress(childId, "perfect_controller_week", streakValue, new MotivationCallback() {
+                    @Override
+                    public void onSuccess(String message) {
+                        // Badge updated successfully
+                        if (!message.isEmpty()) {
+                            android.util.Log.d("MotivationService", message);
                         }
-                        
-                        List<String> sortedDays = new ArrayList<>(dayHasController.keySet());
-                        Collections.sort(sortedDays);
-                        
-                        boolean hasWeeklyStreakGoal = false;
-                        int consecutiveDays = 0;
-                        
-                        for (int i = 0; i < sortedDays.size(); i++) {
-                            if (i == 0) {
-                                consecutiveDays = 1;
-                            } else {
-                                if (areConsecutiveDays(sortedDays.get(i-1), sortedDays.get(i))) {
-                                    consecutiveDays++;
-                                } else {
-                                    consecutiveDays = 1;
-                                }
-                            }
-                            
-                            if (consecutiveDays >= 7) {
-                                hasWeeklyStreakGoal = true;
-                                break;
-                            }
-                        }
-                        
-                        updateBadgeProgress(childId, "perfect_week", hasWeeklyStreakGoal ? 100 : 0, new MotivationCallback() {
-                            @Override
-                            public void onSuccess(String message) {
-                                // Badge updated successfully
-                            }
+                    }
 
-                            @Override
-                            public void onError(String error) {
-                                // Silent error
-                            }
-                        });
+                    @Override
+                    public void onError(String error) {
+                        android.util.Log.e("MotivationService", "Failed to update perfect week badge: " + error);
                     }
                 });
+            }
+
+            @Override
+            public void onError(String error) {
+                android.util.Log.e("MotivationService", "Failed to get controller streak: " + error);
+            }
+        });
     }
 
     private void calculateTechniqueMasteryBadge(String childId) {
-        // Count completed breathing technique sessions
-        db.collection("breathingTechniqueLogs")
-                .whereEqualTo("childId", childId)
-                .whereEqualTo("completed", true)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        int completedSessions = task.getResult().size();
-                        
-                        // Get the threshold from settings (default 10)
-                        getMotivationSettings(childId, new SettingsCallback() {
-                            @Override
-                            public void onSettingsLoaded(MotivationSettings settings) {
-                                int threshold = settings.getTechniqueMasterSessions();
-                                int progress = Math.min(100, (completedSessions * 100) / threshold);
-                                updateBadgeProgress(childId, "technique_mastery", progress, new MotivationCallback() {
-                                    @Override
-                                    public void onSuccess(String message) {
-                                        // Badge updated successfully
-                                    }
+        android.util.Log.d("MotivationService", "Calculating technique mastery badge for childId: " + childId);
+        
+        // Use the current technique streak value from the streaks collection
+        getStreakByType(childId, "technique_completed", new StreakCallback() {
+            @Override
+            public void onStreaksLoaded(List<Streak> streaks) {
+                int currentStreak = 0;
+                if (!streaks.isEmpty()) {
+                    currentStreak = streaks.get(0).getCurrentCount();
+                }
+                
+                final int streakValue = currentStreak;
+                android.util.Log.d("MotivationService", "Current technique streak: " + streakValue);
+                
+                // Update badge progress with current streak value
+                updateBadgeProgress(childId, "technique_master", streakValue, new MotivationCallback() {
+                    @Override
+                    public void onSuccess(String message) {
+                        // Badge updated successfully
+                        if (!message.isEmpty()) {
+                            android.util.Log.d("MotivationService", message);
+                        }
+                    }
 
-                                    @Override
-                                    public void onError(String error) {
-                                        // Silent error
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onError(String error) {
-                                // Silent error - use default threshold
-                                int threshold = 10;
-                                int progress = Math.min(100, (completedSessions * 100) / threshold);
-                                updateBadgeProgress(childId, "technique_mastery", progress, new MotivationCallback() {
-                                    @Override
-                                    public void onSuccess(String message) {
-                                        // Badge updated successfully
-                                    }
-
-                                    @Override
-                                    public void onError(String error) {
-                                        // Silent error
-                                    }
-                                });
-                            }
-                        });
+                    @Override
+                    public void onError(String error) {
+                        android.util.Log.e("MotivationService", "Failed to update technique master badge: " + error);
                     }
                 });
+            }
+
+            @Override
+            public void onError(String error) {
+                android.util.Log.e("MotivationService", "Failed to get technique streak: " + error);
+            }
+        });
     }
 
     private void calculateLowRescueBadge(String childId) {
+        android.util.Log.d("MotivationService", "Calculating low rescue badge for childId: " + childId);
+        
         // Check rescue medicine usage in the last 30 days
         long thirtyDaysAgo = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000);
         
@@ -895,7 +935,16 @@ public class MotivationService {
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
-                        int rescueDays = task.getResult().size();
+                        // Count unique days with rescue usage
+                        Set<String> rescueDaysSet = new HashSet<>();
+                        for (DocumentSnapshot log : task.getResult().getDocuments()) {
+                            Long timestamp = log.getLong("timestamp");
+                            if (timestamp != null) {
+                                rescueDaysSet.add(getDayKey(timestamp));
+                            }
+                        }
+                        int rescueDays = rescueDaysSet.size();
+                        android.util.Log.d("MotivationService", "Found " + rescueDays + " days with rescue inhaler in last 30 days");
                         
                         // Get the threshold from settings (default 4)
                         getMotivationSettings(childId, new SettingsCallback() {
@@ -903,7 +952,7 @@ public class MotivationService {
                             public void onSettingsLoaded(MotivationSettings settings) {
                                 int threshold = settings.getLowRescueMonthLimit();
                                 boolean qualifies = rescueDays <= threshold;
-                                updateBadgeProgress(childId, "low_rescue", qualifies ? 100 : 0, new MotivationCallback() {
+                                updateBadgeProgress(childId, "low_rescue_month", qualifies ? 1 : 0, new MotivationCallback() {
                                     @Override
                                     public void onSuccess(String message) {
                                         // Badge updated successfully
@@ -921,7 +970,7 @@ public class MotivationService {
                                 // Silent error - use default threshold
                                 int threshold = 4;
                                 boolean qualifies = rescueDays <= threshold;
-                                updateBadgeProgress(childId, "low_rescue", qualifies ? 100 : 0, new MotivationCallback() {
+                                updateBadgeProgress(childId, "low_rescue_month", qualifies ? 1 : 0, new MotivationCallback() {
                                     @Override
                                     public void onSuccess(String message) {
                                         // Badge updated successfully

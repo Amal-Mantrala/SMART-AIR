@@ -45,6 +45,28 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
         return allItems;
     }
 
+    // Method to update sharing settings for items
+    public void setSharingSettings(java.util.Map<String, Boolean> sharingSettings) {
+        for (HealthHistoryItem item : allItems) {
+            // Determine field name based on item title
+            String fieldName = null;
+            if (item.title.equals("Medicine Log")) {
+                fieldName = "medicine";
+            } else if (item.title.equals("Symptom Log")) {
+                fieldName = "symptoms";
+            } else if (item.title.equals("Daily Check-in")) {
+                fieldName = "dailyWellness";
+            } else if (item.title.equals("Zone Change")) {
+                fieldName = "zone";
+            }
+            
+            if (fieldName != null && sharingSettings.containsKey(fieldName)) {
+                item.isShared = sharingSettings.get(fieldName);
+            }
+        }
+        notifyDataSetChanged();
+    }
+
     private final List<HealthHistoryItem> allItems = new ArrayList<>();
     private final SimpleDateFormat dateFormat =
             new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
@@ -169,13 +191,16 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView titleText, dateText, detailText;
-        TextView sourceTag = itemView.findViewById(R.id.textEntrySource);
+        TextView sourceTag;
+        TextView sharedTag;
 
         ViewHolder(View itemView) {
             super(itemView);
             titleText = itemView.findViewById(R.id.textTitle);
             dateText = itemView.findViewById(R.id.textDate);
             detailText = itemView.findViewById(R.id.textDetail);
+            sourceTag = itemView.findViewById(R.id.textEntrySource);
+            sharedTag = itemView.findViewById(R.id.textSharedTag);
         }
 
         void bind(HealthHistoryItem item) {
@@ -199,6 +224,13 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
             } else {
                 sourceTag.setVisibility(View.GONE);
             }
+
+            // Show shared tag if this item is shared with provider
+            if (item.isShared) {
+                sharedTag.setVisibility(View.VISIBLE);
+            } else {
+                sharedTag.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -207,13 +239,14 @@ public class HealthHistoryAdapter extends RecyclerView.Adapter<HealthHistoryAdap
         public final long timestamp;
         public final String details;
         public final String source;
+        public boolean isShared;
 
         public HealthHistoryItem(String title, long timestamp, String details, String source) {
             this.title = title;
             this.timestamp = timestamp;
             this.details = details;
             this.source = source;
-
+            this.isShared = false;
         }
         public String getFormattedDate() {
             return new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
