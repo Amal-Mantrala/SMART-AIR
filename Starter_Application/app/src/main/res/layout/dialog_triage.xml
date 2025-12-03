@@ -11,7 +11,6 @@
         android:orientation="vertical"
         android:padding="28dp">
 
-        <!-- Safety Note -->
         <TextView
             android:id="@+id/textSafetyNote"
             android:layout_width="match_parent"
@@ -24,7 +23,6 @@
             android:background="#FFF3E0"
             android:layout_marginBottom="16dp" />
 
-        <!-- Red Flags Section -->
         <TextView
             android:id="@+id/textRedFlagsTitle"
             android:layout_width="match_parent"
@@ -57,7 +55,6 @@
             android:text="@string/blue_gray_lips"
             android:layout_marginBottom="16dp" />
 
-        <!-- Recent Rescue Attempts -->
         <TextView
             android:id="@+id/textRecentRescue"
             android:layout_width="match_parent"
@@ -83,7 +80,6 @@
             android:textColorHint="#999999"
             android:layout_marginBottom="16dp" />
 
-        <!-- Current PEF -->
         <TextView
             android:id="@+id/textCurrentPEF"
             android:layout_width="match_parent"
@@ -108,7 +104,6 @@
             android:textColorHint="#999999"
             android:layout_marginBottom="20dp" />
 
-        <!-- Decision Card (initially hidden) -->
         <LinearLayout
             android:id="@+id/layoutDecisionCard"
             android:layout_width="match_parent"
@@ -145,7 +140,6 @@
                 android:layout_marginBottom="8dp"
                 android:visibility="gone" />
 
-            <!-- Home Steps Content -->
             <LinearLayout
                 android:id="@+id/layoutHomeSteps"
                 android:layout_width="match_parent"
@@ -169,7 +163,6 @@
                     android:textSize="12sp"
                     android:layout_marginBottom="8dp" />
 
-                <!-- Timer -->
                 <TextView
                     android:id="@+id/textTimer"
                     android:layout_width="match_parent"
@@ -199,7 +192,6 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Action Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -8,22 +8,6 @@ import com.example.b07demosummer2024.models.MotivationSettings;
 import com.example.b07demosummer2024.services.MotivationService;
 import java.util.List;
 
-/**
- * Utility class to easily integrate motivation system into child activities
- * Usage examples for the ChildHomeFragment:
- * 
- * 1. Initialize for new users:
- *    MotivationHelper.initializeForNewChild(context, childId);
- * 
- * 2. Update streaks when controller medicine is taken:
- *    MotivationHelper.updateControllerStreak(context, childId, true);
- * 
- * 3. Update streaks when breathing technique is completed:
- *    MotivationHelper.updateTechniqueStreak(context, childId, true);
- * 
- * 4. Check for new badges earned:
- *    MotivationHelper.checkForNewBadges(context, childId);
- */
 public class MotivationHelper {
     
     private static MotivationService motivationService = new MotivationService();
@@ -168,33 +152,4 @@ public class MotivationHelper {
         void onError(String error);
     }
 
-    /**
-     * Example usage in ChildHomeFragment:
-     * 
-     * // In onViewCreated after tutorial check:
-     * if (isFirstTimeUser) {
-     *     MotivationHelper.initializeForNewChild(requireContext(), childId);
-     * }
-     * 
-     * // In medicine logging success callback:
-     * if ("controller".equals(medicineType)) {
-     *     MotivationHelper.updateControllerStreak(requireContext(), childId, true);
-     * }
-     * 
-     * // In breathing technique completion:
-     * MotivationHelper.updateTechniqueStreak(requireContext(), childId, true);
-     * 
-     * // To display current progress:
-     * MotivationHelper.getCurrentStreaks(childId, new MotivationHelper.StreakDisplayCallback() {
-     *     @Override
-     *     public void onStreaksLoaded(int controllerStreak, int techniqueStreak) {
-     *         // Update UI with streak counts
-     *     }
-     *     
-     *     @Override
-     *     public void onError(String error) {
-     *         // Handle error
-     *     }
-     * });
-     */
 }

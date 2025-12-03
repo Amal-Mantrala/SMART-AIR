@@ -13,11 +13,6 @@ public class AuthService implements IAuthService {
         void onResult(boolean success, String message);
     }
 
-    /**
-     * Callback used when creating users without switching the main auth instance.
-     * The third parameter will contain the newly-created user's UID on success
-     * and null on failure.
-     */
     public interface CreateUserSilentCallback {
         void onResult(boolean success, String message, String createdUid);
     }

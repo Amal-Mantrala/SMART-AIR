@@ -90,17 +90,10 @@ public class Badge {
         setProgress(progress + 1);
     }
 
-    /**
-     * Get trophy emoji based on achievement status
-     * 🥇 Gold - Achievement unlocked
-     */
     public String getTrophyEmoji() {
         return "🥇";
     }
 
-    /**
-     * No tier system - all unlocked badges are gold
-     */
     public void updateTierBasedOnProgress() {
         if (isUnlocked) {
             tier = "gold";

@@ -31,10 +31,6 @@ public class ImpersonationService {
         return getImpersonatedChildId(ctx) != null;
     }
 
-    /**
-     * Returns the id that should be used as the active child id. If impersonation is active,
-     * returns the impersonated child id; otherwise returns the currently signed-in user's uid.
-     */
     public static String getActiveChildId(Context ctx) {
         String impersonated = ctx == null ? null : getImpersonatedChildId(ctx);
         if (impersonated != null && !impersonated.isEmpty()) return impersonated;

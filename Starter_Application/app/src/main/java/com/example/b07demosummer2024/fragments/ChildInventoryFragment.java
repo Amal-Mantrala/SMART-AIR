@@ -101,7 +101,7 @@ public class ChildInventoryFragment extends Fragment implements InventoryAdapter
             }
 
             if (newDosesLeft == 0) {
-                // If doses are 0, DELETE the canister from Firestore
+                // If doses are 0, delete the canister from Firestore
                 FirebaseFirestore.getInstance().collection("inventory").document(canister.getCanisterId())
                         .delete()
                         .addOnSuccessListener(aVoid -> {
@@ -118,7 +118,7 @@ public class ChildInventoryFragment extends Fragment implements InventoryAdapter
                             Toast.makeText(getContext(), "Failed to remove canister.", Toast.LENGTH_SHORT).show();
                         });
             } else {
-                // Otherwise, UPDATE the canister as before
+                // Otherwise, update the canister as before
                 FirebaseFirestore.getInstance().collection("inventory").document(canister.getCanisterId())
                         .update("dosesLeft", newDosesLeft, "lastMarkedBy", "child")
                         .addOnSuccessListener(aVoid -> {
