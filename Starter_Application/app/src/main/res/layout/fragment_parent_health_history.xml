@@ -4,75 +4,113 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="@drawable/gradient_bg"
+    android:padding="20dp">
 
     <TextView
         android:id="@+id/textParentHistoryTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Child Health History"
-        android:textSize="22sp"
+        android:textSize="28sp"
         android:textStyle="bold"
+        android:textColor="@android:color/white"
         android:gravity="center"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginTop="16dp"/>
 
-    <LinearLayout
-        android:id="@+id/layoutFilters"
-        android:orientation="vertical"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardFilters"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="@android:color/white"
+        android:layout_marginTop="20dp"
         app:layout_constraintTop_toBottomOf="@id/textParentHistoryTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Filter by Symptoms"/>
-
-        <Spinner
-            android:id="@+id/spinnerSymptomsFilter"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Filter by Triggers"
-            android:layout_marginTop="8dp"/>
-
-        <Spinner
-            android:id="@+id/spinnerTriggersFilter"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-        <Button
-            android:id="@+id/buttonSelectDateRange"
+        <LinearLayout
+            android:id="@+id/layoutFilters"
+            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Select Date Range"
-            android:layout_marginTop="8dp"/>
+            android:padding="16dp">
 
-        <Button
-            android:id="@+id/buttonApplyFilters"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Apply Filters"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="#4CAF50"
-            android:textColor="@android:color/white"/>
-    </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Filter by Symptoms"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A1A"
+                android:layout_marginBottom="6dp"/>
+
+            <Spinner
+                android:id="@+id/spinnerSymptomsFilter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/spinner_background"
+                android:paddingVertical="10dp"
+                android:paddingHorizontal="12dp"
+                android:minHeight="44dp"
+                android:layout_marginBottom="12dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Filter by Triggers"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A1A"
+                android:layout_marginBottom="6dp"/>
+
+            <Spinner
+                android:id="@+id/spinnerTriggersFilter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/spinner_background"
+                android:paddingVertical="10dp"
+                android:paddingHorizontal="12dp"
+                android:minHeight="44dp"
+                android:layout_marginBottom="12dp"/>
+
+            <Button
+                android:id="@+id/buttonSelectDateRange"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Select Date Range"
+                android:textSize="16sp"
+                android:background="@drawable/btn_signin"
+                android:textColor="@android:color/white"
+                android:paddingVertical="12dp"
+                android:layout_marginBottom="8dp"
+                android:elevation="2dp"
+                android:stateListAnimator="@null"/>
+
+            <Button
+                android:id="@+id/buttonApplyFilters"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Apply Filters"
+                android:textSize="16sp"
+                android:background="@drawable/btn_signin"
+                android:textColor="@android:color/white"
+                android:paddingVertical="12dp"
+                android:elevation="2dp"
+                android:stateListAnimator="@null"/>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewParentHistory"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
-        app:layout_constraintTop_toBottomOf="@id/layoutFilters"
+        app:layout_constraintTop_toBottomOf="@id/cardFilters"
         app:layout_constraintBottom_toTopOf="@+id/buttonBackParent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
@@ -83,7 +121,7 @@
         android:layout_height="wrap_content"
         android:text="No results match your filters."
         android:textSize="16sp"
-        android:textColor="@android:color/darker_gray"
+        android:textColor="#E0E0E0"
         android:gravity="center"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="@id/recyclerViewParentHistory"
@@ -96,36 +134,48 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Back"
-        android:backgroundTint="#999999"
+        android:textSize="15sp"
+        android:background="@drawable/btn_signin"
         android:textColor="@android:color/white"
+        android:paddingVertical="10dp"
         android:layout_marginTop="12dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="6dp"
         app:layout_constraintBottom_toTopOf="@id/buttonExportPdf"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        android:elevation="2dp"
+        android:stateListAnimator="@null"/>
 
     <Button
         android:id="@+id/buttonExportPdf"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Export as PDF"
-        android:layout_marginBottom="8dp"
-        android:backgroundTint="#673AB7"
+        android:textSize="15sp"
+        android:background="@drawable/btn_signin"
         android:textColor="@android:color/white"
+        android:paddingVertical="10dp"
+        android:layout_marginBottom="6dp"
         app:layout_constraintBottom_toTopOf="@id/buttonExportProviderReport"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        android:elevation="2dp"
+        android:stateListAnimator="@null"/>
 
     <Button
         android:id="@+id/buttonExportProviderReport"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Export Provider Report"
-        android:layout_marginBottom="12dp"
-        android:backgroundTint="#2196F3"
+        android:textSize="15sp"
+        android:background="@drawable/btn_signin"
         android:textColor="@android:color/white"
+        android:paddingVertical="10dp"
+        android:layout_marginBottom="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        android:elevation="2dp"
+        android:stateListAnimator="@null"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

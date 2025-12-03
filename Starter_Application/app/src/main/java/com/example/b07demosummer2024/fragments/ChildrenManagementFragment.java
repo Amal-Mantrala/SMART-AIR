@@ -68,6 +68,10 @@ public class ChildrenManagementFragment extends Fragment {
                 .setCancelable(true)
                 .create();
 
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
         saveButton.setOnClickListener(v -> {
             String childName = childNameEdit.getText().toString().trim();
             String childUsername = childUsernameEdit.getText().toString().trim();

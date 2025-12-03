@@ -3,82 +3,124 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="@drawable/gradient_bg">
 
     <TextView
         android:id="@+id/textProviderHome"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/provider_homepage"
-        android:textSize="24sp"
+        android:textSize="32sp"
         android:textStyle="bold"
-        android:textColor="@android:color/black"
+        android:textColor="@android:color/white"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"/>
+        android:layout_marginTop="32dp"/>
 
     <TextView
         android:id="@+id/textGreeting"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Hello, review your patients' shared asthma data."
-        android:textSize="16sp"
-        android:textColor="@android:color/darker_gray"
+        android:textSize="17sp"
+        android:textColor="#E0E0E0"
         android:gravity="center"
         app:layout_constraintTop_toBottomOf="@+id/textProviderHome"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="32dp"/>
 
-    <Button
-        android:id="@+id/buttonInformation"
+    <ScrollView
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/information"
-        app:layout_constraintBottom_toTopOf="@+id/buttonDetails"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="8dp"/>
-
-    <Button
-        android:id="@+id/buttonDetails"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/details"
-        app:layout_constraintBottom_toTopOf="@+id/buttonAcceptInvite"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="8dp"/>
-
-    <Button
-        android:id="@+id/buttonAcceptInvite"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/accept_invite_code"
-        app:layout_constraintBottom_toTopOf="@+id/buttonViewPatientData"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="8dp"/>
-
-    <Button
-        android:id="@+id/buttonViewPatientData"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="View Patient Health Data"
-        app:layout_constraintBottom_toTopOf="@+id/buttonSignOut"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="8dp"/>
-
-    <Button
-        android:id="@+id/buttonSignOut"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/sign_out"
+        android:layout_height="0dp"
+        android:layout_marginTop="32dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@+id/textGreeting"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp"/>
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="32dp">
+
+            <Button
+                android:id="@+id/buttonViewPatientData"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="View Patient Health Data"
+                android:textSize="17sp"
+                android:textStyle="normal"
+                android:background="@drawable/btn_signin"
+                android:textColor="@android:color/white"
+                android:layout_marginBottom="16dp"
+                android:paddingVertical="18dp"
+                android:elevation="4dp"
+                android:stateListAnimator="@null"/>
+
+            <Button
+                android:id="@+id/buttonAcceptInvite"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/accept_invite_code"
+                android:textSize="17sp"
+                android:textStyle="normal"
+                android:background="@drawable/btn_signin"
+                android:textColor="@android:color/white"
+                android:layout_marginBottom="16dp"
+                android:paddingVertical="18dp"
+                android:elevation="4dp"
+                android:stateListAnimator="@null"/>
+
+            <Button
+                android:id="@+id/buttonInformation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/information"
+                android:textSize="17sp"
+                android:textStyle="normal"
+                android:background="@drawable/btn_signin"
+                android:textColor="@android:color/white"
+                android:layout_marginBottom="16dp"
+                android:paddingVertical="18dp"
+                android:elevation="4dp"
+                android:stateListAnimator="@null"/>
+
+            <Button
+                android:id="@+id/buttonDetails"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/details"
+                android:textSize="17sp"
+                android:textStyle="normal"
+                android:background="@drawable/btn_signin"
+                android:textColor="@android:color/white"
+                android:layout_marginBottom="16dp"
+                android:paddingVertical="18dp"
+                android:elevation="4dp"
+                android:stateListAnimator="@null"/>
+
+            <Button
+                android:id="@+id/buttonSignOut"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/sign_out"
+                android:textSize="17sp"
+                android:textStyle="normal"
+                android:background="@drawable/btn_signin"
+                android:textColor="@android:color/white"
+                android:layout_marginTop="8dp"
+                android:paddingVertical="18dp"
+                android:elevation="4dp"
+                android:stateListAnimator="@null"/>
+
+        </LinearLayout>
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

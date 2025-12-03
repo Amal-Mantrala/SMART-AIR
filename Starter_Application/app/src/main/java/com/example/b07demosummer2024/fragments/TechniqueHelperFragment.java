@@ -91,10 +91,15 @@ public class TechniqueHelperFragment extends DialogFragment {
             }
         });
 
-        builder.setView(view)
-               .setTitle("Technique Helper");
+        AlertDialog dialog = builder.setView(view)
+               .setTitle("Technique Helper")
+               .create();
 
-        return builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        return dialog;
     }
 
     private void updateStep() {

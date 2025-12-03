@@ -1,45 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:maxHeight="600dp"
+    android:background="@drawable/dialog_rounded_background">
 
-    <TextView
-        android:id="@+id/textTitle"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Triage Logs"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp" />
+        android:orientation="vertical"
+        android:padding="28dp">
 
-    <Spinner
-        android:id="@+id/spinnerChild"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp" />
+        <TextView
+            android:id="@+id/textTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Triage Logs"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:layout_marginBottom="20dp" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewTriage"
-        android:layout_width="match_parent"
-        android:layout_height="400dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select Child"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp" />
 
-    <TextView
-        android:id="@+id/textEmpty"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="No triage incidents found"
-        android:textSize="14sp"
-        android:gravity="center"
-        android:padding="16dp"
-        android:visibility="gone" />
+        <Spinner
+            android:id="@+id/spinnerChild"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/spinner_background"
+            android:paddingVertical="10dp"
+            android:paddingHorizontal="12dp"
+            android:minHeight="44dp"
+            android:layout_marginBottom="20dp" />
 
-    <Button
-        android:id="@+id/buttonClose"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Close"
-        android:layout_marginTop="16dp" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewTriage"
+            android:layout_width="match_parent"
+            android:layout_height="400dp" />
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/textEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No triage incidents found"
+            android:textSize="16sp"
+            android:textColor="#888888"
+            android:gravity="center"
+            android:padding="16dp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/buttonClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Close"
+            android:textSize="16sp"
+            android:textColor="#8E7CFF"
+            android:background="@android:color/transparent"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="20dp"
+            android:layout_gravity="end"
+            android:layout_marginTop="20dp" />
+
+    </LinearLayout>
+
+</ScrollView>
