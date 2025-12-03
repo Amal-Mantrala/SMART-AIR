@@ -8,6 +8,7 @@ public abstract class BaseHealthLog {
     protected String childId;
     protected long timestamp;
     protected String notes;
+    protected String enteredBy;
 
     public BaseHealthLog() {}
 
@@ -49,5 +50,13 @@ public abstract class BaseHealthLog {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public String getEnteredBy() {
+        return enteredBy;
+    }
+
+    public void setEnteredBy(String enteredBy) {
+        this.enteredBy = enteredBy;
     }
 }
