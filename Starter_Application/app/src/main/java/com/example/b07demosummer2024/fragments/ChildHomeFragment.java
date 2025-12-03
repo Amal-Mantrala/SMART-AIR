@@ -20,6 +20,7 @@ import android.widget.RadioButton;
 import android.widget.CheckBox;
 import android.widget.SeekBar;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -1289,71 +1290,146 @@ public class ChildHomeFragment extends ProtectedFragment {
     private void loadBadgesData(LinearLayout badgesLayout) {
         try {
             if (motivationService == null || ImpersonationService.getActiveChildId(requireContext()) == null) {
+                showNoBadgesMessage(badgesLayout, "Motivation service unavailable");
                 return;
             }
             
             String childId = ImpersonationService.getActiveChildId(requireContext());
+            
+            android.util.Log.d("ChildHomeFragment", "Loading badges for child: " + childId);
             
             motivationService.getChildBadges(childId, new MotivationService.BadgeCallback() {
                 @Override
                 public void onBadgesLoaded(List<Badge> badges) {
                     if (isAdded() && badgesLayout != null) {
                         badgesLayout.removeAllViews();
-                        if (badges != null) {
+                        
+                        android.util.Log.d("ChildHomeFragment", "Badges loaded: " + (badges != null ? badges.size() : "null"));
+                        
+                        if (badges != null && !badges.isEmpty()) {
+                            // Hide empty state message
+                            View emptyMsg = badgesLayout.getRootView().findViewById(R.id.textNoBadges);
+                            if (emptyMsg != null) emptyMsg.setVisibility(View.GONE);
+                            
                             for (Badge badge : badges) {
                                 if (badge != null) {
                                     try {
+                                        android.util.Log.d("ChildHomeFragment", "Adding badge: " + badge.getBadgeType() + ", unlocked=" + badge.isUnlocked() + ", progress=" + badge.getProgress());
                                         View badgeView = createBadgeView(badge);
                                         if (badgeView != null) {
                                             badgesLayout.addView(badgeView);
                                         }
                                     } catch (Exception e) {
-                                        // Skip this badge if there's an error
+                                        android.util.Log.e("ChildHomeFragment", "Error creating badge view: " + e.getMessage());
                                     }
                                 }
                             }
+                        } else {
+                            // No badges found - try to initialize them
+                            android.util.Log.d("ChildHomeFragment", "No badges found, initializing...");
+                            motivationService.initializeMotivationForChild(childId, new MotivationService.MotivationCallback() {
+                                @Override
+                                public void onSuccess(String message) {
+                                    android.util.Log.d("ChildHomeFragment", "Badges initialized: " + message);
+                                    // Reload badges after initialization
+                                    new android.os.Handler().postDelayed(() -> {
+                                        if (isAdded()) {
+                                            loadBadgesData(badgesLayout);
+                                        }
+                                    }, 1000);
+                                }
+
+                                @Override
+                                public void onError(String error) {
+                                    android.util.Log.e("ChildHomeFragment", "Error initializing badges: " + error);
+                                    showNoBadgesMessage(badgesLayout, "Unable to initialize badges. Please try again later.");
+                                }
+                            });
                         }
                     }
                 }
 
                 @Override
                 public void onError(String error) {
-                    // Silent error - don't interrupt user experience
+                    android.util.Log.e("ChildHomeFragment", "Error loading badges: " + error);
+                    if (isAdded() && badgesLayout != null) {
+                        showNoBadgesMessage(badgesLayout, "Badges haven't been set up yet. Check back soon!");
+                    }
                 }
             });
         } catch (Exception e) {
-            // Silent error - keep empty badges layout
+            android.util.Log.e("ChildHomeFragment", "Exception in loadBadgesData: " + e.getMessage());
+            showNoBadgesMessage(badgesLayout, "Unable to load badges");
+        }
+    }
+    
+    private void showNoBadgesMessage(LinearLayout badgesLayout, String message) {
+        if (badgesLayout != null && isAdded()) {
+            badgesLayout.removeAllViews();
+            TextView emptyText = new TextView(requireContext());
+            emptyText.setText(message);
+            emptyText.setTextSize(14);
+            emptyText.setTextColor(0xFF888888);
+            emptyText.setGravity(android.view.Gravity.CENTER);
+            emptyText.setPadding(20, 40, 20, 40);
+            badgesLayout.addView(emptyText);
         }
     }
 
     private View createBadgeView(Badge badge) {
         try {
-            View badgeView = getLayoutInflater().inflate(android.R.layout.simple_list_item_2, null);
-            TextView titleText = badgeView.findViewById(android.R.id.text1);
-            TextView descriptionText = badgeView.findViewById(android.R.id.text2);
+            View badgeView = getLayoutInflater().inflate(R.layout.item_badge, null);
+            TextView trophyText = badgeView.findViewById(R.id.textBadgeTrophy);
+            TextView titleText = badgeView.findViewById(R.id.textBadgeTitle);
+            TextView descriptionText = badgeView.findViewById(R.id.textBadgeDescription);
+            ProgressBar progressBar = badgeView.findViewById(R.id.progressBadge);
+            TextView progressText = badgeView.findViewById(R.id.textBadgeProgress);
+            TextView countText = badgeView.findViewById(R.id.textBadgeCount);
             
-            if (titleText != null && descriptionText != null) {
-                String title = badge.getTitle() != null ? badge.getTitle() : "Badge";
-                String description = badge.getDescription() != null ? badge.getDescription() : "Achievement";
+            if (titleText != null && descriptionText != null && trophyText != null) {
+                // Update tier based on progress
+                badge.updateTierBasedOnProgress();
                 
-                titleText.setText((badge.isUnlocked() ? "🏆 " : "🔒 ") + title);
-                
+                // Set trophy emoji based on tier
                 if (badge.isUnlocked()) {
-                    descriptionText.setText("Earned! " + description);
-                    try {
-                        titleText.setTextColor(getResources().getColor(R.color.badge_earned));
-                    } catch (Exception e) {
-                        // Fallback color
-                        titleText.setTextColor(0xFFD700);
-                    }
+                    trophyText.setText(badge.getTrophyEmoji());
                 } else {
+                    trophyText.setText("🔒"); // Locked
+                }
+                
+                // Set title and description
+                String title = getBadgeTitle(badge.getBadgeType());
+                String description = getBadgeDescription(badge.getBadgeType());
+                
+                titleText.setText(title);
+                descriptionText.setText(description);
+                
+                // Set progress
+                if (progressBar != null && progressText != null) {
                     int progress = Math.min(badge.getProgress(), badge.getTargetValue());
-                    descriptionText.setText("Progress: " + progress + "/" + badge.getTargetValue() + " - " + description);
-                    try {
-                        titleText.setTextColor(getResources().getColor(R.color.badge_locked));
-                    } catch (Exception e) {
-                        // Fallback color
-                        titleText.setTextColor(0xCCCCCC);
+                    int progressPercentage = (int) badge.getProgressPercentage();
+                    
+                    progressBar.setProgress(progressPercentage);
+                    
+                    if (badge.isUnlocked()) {
+                        progressText.setText("Achieved! ✓");
+                        progressBar.setProgressTintList(android.content.res.ColorStateList.valueOf(
+                            android.graphics.Color.parseColor("#FFD700"))); // Gold
+                    } else {
+                        progressText.setText(progress + "/" + badge.getTargetValue());
+                        progressBar.setProgressTintList(android.content.res.ColorStateList.valueOf(
+                            android.graphics.Color.parseColor("#8E7CFF"))); // Purple
+                    }
+                }
+                
+                // Show achievement count for multiple unlocks
+                if (countText != null) {
+                    int achievementCount = badge.getProgress() / badge.getTargetValue();
+                    if (achievementCount > 1) {
+                        countText.setVisibility(View.VISIBLE);
+                        countText.setText("x" + achievementCount);
+                    } else {
+                        countText.setVisibility(View.GONE);
                     }
                 }
             }
@@ -1362,6 +1438,34 @@ public class ChildHomeFragment extends ProtectedFragment {
         } catch (Exception e) {
             // Return null if badge creation fails
             return null;
+        }
+    }
+
+    private String getBadgeTitle(String badgeType) {
+        if (badgeType == null) return "Achievement";
+        switch (badgeType) {
+            case "perfect_controller_week":
+                return getString(R.string.badge_perfect_controller_week);
+            case "technique_master":
+                return getString(R.string.badge_technique_master);
+            case "low_rescue_month":
+                return getString(R.string.badge_low_rescue_month);
+            default:
+                return "Achievement";
+        }
+    }
+
+    private String getBadgeDescription(String badgeType) {
+        if (badgeType == null) return "Complete the challenge";
+        switch (badgeType) {
+            case "perfect_controller_week":
+                return getString(R.string.badge_perfect_controller_week_desc);
+            case "technique_master":
+                return getString(R.string.badge_technique_master_desc);
+            case "low_rescue_month":
+                return getString(R.string.badge_low_rescue_month_desc);
+            default:
+                return "Complete the challenge";
         }
     }
 

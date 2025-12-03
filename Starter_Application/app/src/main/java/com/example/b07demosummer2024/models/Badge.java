@@ -12,11 +12,13 @@ public class Badge {
     private int progress;
     private int targetValue;
     private long createdAt;
+    private String tier; // "bronze", "silver", "gold"
 
     public Badge() {
         this.createdAt = System.currentTimeMillis();
         this.isUnlocked = false;
         this.progress = 0;
+        this.tier = "gold"; // all badges are gold when unlocked
     }
 
     public Badge(String badgeId, String childId, String badgeType, String title, String description, int targetValue) {
@@ -65,6 +67,7 @@ public class Badge {
         this.progress = progress;
         if (progress >= targetValue && !isUnlocked) {
             setUnlocked(true);
+            updateTierBasedOnProgress();
         }
     }
 
@@ -74,6 +77,9 @@ public class Badge {
     public long getCreatedAt() { return createdAt; }
     public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
 
+    public String getTier() { return tier; }
+    public void setTier(String tier) { this.tier = tier; }
+
     // Utility methods
     public double getProgressPercentage() {
         if (targetValue == 0) return 0;
@@ -82,6 +88,23 @@ public class Badge {
 
     public void incrementProgress() {
         setProgress(progress + 1);
+    }
+
+    /**
+     * Get trophy emoji based on achievement status
+     * 🥇 Gold - Achievement unlocked
+     */
+    public String getTrophyEmoji() {
+        return "🥇";
+    }
+
+    /**
+     * No tier system - all unlocked badges are gold
+     */
+    public void updateTierBasedOnProgress() {
+        if (isUnlocked) {
+            tier = "gold";
+        }
     }
 
     private String getDefaultIconForType(String badgeType) {

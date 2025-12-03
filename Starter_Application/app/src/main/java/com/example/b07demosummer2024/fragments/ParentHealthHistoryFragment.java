@@ -21,6 +21,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.b07demosummer2024.R;
 import com.example.b07demosummer2024.adapters.HealthHistoryAdapter;
+import com.example.b07demosummer2024.auth.ProviderSharingService;
+import com.example.b07demosummer2024.models.ChildSharingSettings;
 import com.example.b07demosummer2024.models.DailyWellnessLog;
 import com.example.b07demosummer2024.models.MedicineLog;
 import com.example.b07demosummer2024.models.SymptomLog;
@@ -32,6 +34,9 @@ import com.example.b07demosummer2024.services.TriageService;
 
 import android.content.Intent;
 import android.graphics.Color;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -139,6 +144,9 @@ public class ParentHealthHistoryFragment extends ProtectedFragment {
 
                 populateFilters();
                 applyFilters();
+                
+                // Load sharing settings after data is loaded
+                loadSharingSettings();
             }
 
             @Override
@@ -148,6 +156,55 @@ public class ParentHealthHistoryFragment extends ProtectedFragment {
                         Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void loadSharingSettings() {
+        // Get parent ID
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            return;
+        }
+        String parentId = auth.getCurrentUser().getUid();
+        
+        // Query all providers that have access to this parent
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("providerAccess")
+                .whereEqualTo("parentId", parentId)
+                .whereEqualTo("status", "active")
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (!querySnapshot.isEmpty()) {
+                        // Get the first active provider (you could iterate through all providers if needed)
+                        String providerId = querySnapshot.getDocuments().get(0).getString("providerId");
+                        
+                        // Load sharing settings for this provider
+                        db.collection("sharingSettings")
+                                .document(parentId)
+                                .collection("providers")
+                                .document(providerId)
+                                .get()
+                                .addOnSuccessListener(doc -> {
+                                    if (doc.exists() && doc.get("childSettings") != null) {
+                                        @SuppressWarnings("unchecked")
+                                        Map<String, Object> childSettingsMap = (Map<String, Object>) doc.get("childSettings");
+                                        
+                                        if (childSettingsMap != null && childSettingsMap.containsKey(childId)) {
+                                            @SuppressWarnings("unchecked")
+                                            Map<String, Object> childData = (Map<String, Object>) childSettingsMap.get(childId);
+                                            
+                                            if (childData != null && childData.containsKey("sharedFields")) {
+                                                @SuppressWarnings("unchecked")
+                                                Map<String, Boolean> sharedFields = (Map<String, Boolean>) childData.get("sharedFields");
+                                                
+                                                if (sharedFields != null) {
+                                                    adapter.setSharingSettings(sharedFields);
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+                    }
+                });
     }
 
     private void populateFilters() {

@@ -45,13 +45,13 @@
     <string name="provider_greeting">Hello %1$s, welcome to SMART-AIR, review your patients\' shared asthma data.</string>
     
     <!-- Child Tutorial Content -->
-    <string name="child_tutorial_content"> <b>Welcome to SMART-AIR!</b> 🌟\nAs a Child, you can track your asthma symptoms and medicine use to stay healthy.\n\n💊 <b>Log Your Medicines</b>\n• Rescue inhaler for sudden symptoms\n• Controller medicine for daily prevention\n\n📊 <b>Track Symptoms</b>\n• Record how you feel daily\n• Note triggers and patterns\n\n🔒 <b>Your Privacy</b>\n• Only you can see your data\n• Parents control what providers see\n\nTap any button to get started!</string>
+    <string name="child_tutorial_content">&lt;p>&lt;b>Welcome to SMART-AIR!&lt;/b> 🌟&lt;/p>&lt;p>As a Child, you can track your asthma symptoms and medicine use to stay healthy.&lt;/p>&lt;p>💊 &lt;b>Log Your Medicines&lt;/b>&lt;br/>• Rescue inhaler for sudden symptoms&lt;br/>• Controller medicine for daily prevention&lt;/p>&lt;p>📊 &lt;b>Track Symptoms&lt;/b>&lt;br/>• Record how you feel daily&lt;br/>• Note triggers and patterns&lt;/p>&lt;p>🔒 &lt;b>Your Privacy&lt;/b>&lt;br/>• Only you can see your data&lt;br/>• Parents control what providers see&lt;/p>&lt;p>Tap any button to get started!&lt;/p></string>
 
     <!-- Parent Tutorial Content -->
-    <string name="parent_tutorial_content"> <b>Welcome to SMART-AIR!</b> 👪\nAs a Parent, you can monitor and manage your children\'s asthma care from one central place.\n\n🔗 <b>Manage Children</b>\n• Link and monitor multiple children\n• View individual health dashboards\n\n📊 <b>Track Progress</b>\n• Monitor medicine adherence\n• Review symptom patterns\n• Export reports for doctors\n\n🔐 <b>Control Sharing</b>\n• Choose what providers can see\n• Send secure invite codes (7-day expiry)\n• Revoke access anytime\n\nYou have complete control over your family\'s data!</string>
+    <string name="parent_tutorial_content">&lt;p>&lt;b>Welcome to SMART-AIR!&lt;/b> 👪&lt;/p>&lt;p>As a Parent, you can monitor and manage your children\'s asthma care from one central place.&lt;/p>&lt;p>🔗 &lt;b>Manage Children&lt;/b>&lt;br/>• Link and monitor multiple children&lt;br/>• View individual health dashboards&lt;/p>&lt;p>📊 &lt;b>Track Progress&lt;/b>&lt;br/>• Monitor medicine adherence&lt;br/>• Review symptom patterns&lt;br/>• Export reports for doctors&lt;/p>&lt;p>🔐 &lt;b>Control Sharing&lt;/b>&lt;br/>• Choose what providers can see&lt;br/>• Send secure invite codes (7-day expiry)&lt;br/>• Revoke access anytime&lt;/p>&lt;p>You have complete control over your family\'s data!&lt;/p></string>
 
     <!-- Provider Tutorial Content -->
-    <string name="provider_tutorial_content"> <b>Welcome to SMART-AIR!</b> 🩺\nAs a Healthcare Provider, you can review shared patient data to provide better asthma care.\n\n📊 <b>View Patient Data</b>\n• Access shared health reports\n• Monitor medicine adherence\n• Track symptom trends\n\n🔐 <b>Privacy-First</b>\n• Only see what parents share\n• Access can be revoked anytime\n• All data updates in real-time\n\n📧 <b>Getting Access</b>\n• Parents send you invite codes\n• Codes expire in 7 days\n• Accept invites to view patient data\n\nStart by accepting an invite code!</string>
+    <string name="provider_tutorial_content">&lt;p>&lt;b>Welcome to SMART-AIR!&lt;/b> 🩺&lt;/p>&lt;p>As a Healthcare Provider, you can review shared patient data to provide better asthma care.&lt;/p>&lt;p>📊 &lt;b>View Patient Data&lt;/b>&lt;br/>• Access shared health reports&lt;br/>• Monitor medicine adherence&lt;br/>• Track symptom trends&lt;/p>&lt;p>🔐 &lt;b>Privacy-First&lt;/b>&lt;br/>• Only see what parents share&lt;br/>• Access can be revoked anytime&lt;br/>• All data updates in real-time&lt;/p>&lt;p>📧 &lt;b>Getting Access&lt;/b>&lt;br/>• Parents send you invite codes&lt;br/>• Codes expire in 7 days&lt;br/>• Accept invites to view patient data&lt;/p>&lt;p>Start by accepting an invite code!&lt;/p></string>
 
     <!-- Provider Invite Functionality -->
     <string name="accept_invite_code">Accept Invite Code</string>
@@ -231,5 +231,16 @@
     <string name="streak_milestone">Streak Milestone!</string>
     <string name="view_progress">🎯 View Progress</string>
     <string name="select_date_range">Select Date Range</string>
+    <string name="shared_with_provider">Shared With Provider</string>
+    
+    <!-- Badge Titles -->
+    <string name="badge_perfect_controller_week">Perfect Controller Week</string>
+    <string name="badge_technique_master">Technique Master</string>
+    <string name="badge_low_rescue_month">Low Rescue Month</string>
+    
+    <!-- Badge Descriptions -->
+    <string name="badge_perfect_controller_week_desc">Complete 7 consecutive days of controller medicine</string>
+    <string name="badge_technique_master_desc">Complete 10 high-quality breathing technique sessions</string>
+    <string name="badge_low_rescue_month_desc">Use rescue inhaler ≤4 days in a 30-day period</string>
 
 </resources>
