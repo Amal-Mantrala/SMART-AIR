@@ -20,7 +20,7 @@
             android:text="Medicine Log"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="@android:color/black"
+            android:textColor="#2D2D2D"
             android:layout_marginBottom="4dp" />
 
         <TextView
@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:text="Nov 25, 2024 10:30 AM"
             android:textSize="12sp"
-            android:textColor="@android:color/darker_gray"
+            android:textColor="#888888"
             android:layout_marginBottom="8dp" />
 
         <TextView

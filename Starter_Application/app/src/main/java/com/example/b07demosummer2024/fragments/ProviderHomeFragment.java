@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,7 +44,6 @@ public class ProviderHomeFragment extends ProtectedFragment {
         db = FirebaseFirestore.getInstance();
         sharingService = new ProviderSharingService();
 
-        // Initialize views
         TextView greetingText = view.findViewById(R.id.textGreeting);
 
         Button signOut = view.findViewById(R.id.buttonSignOut);
@@ -52,7 +52,6 @@ public class ProviderHomeFragment extends ProtectedFragment {
         Button acceptInviteButton = view.findViewById(R.id.buttonAcceptInvite);
         Button viewPatientDataButton = view.findViewById(R.id.buttonViewPatientData);
         
-        // Load user name and set greeting
         loadUserNameAndSetGreeting(greetingText);
         
         signOut.setOnClickListener(v -> signOutAndReturnToHome());
@@ -65,9 +64,6 @@ public class ProviderHomeFragment extends ProtectedFragment {
         showTutorialIfFirstTime();
     }
 
-    /**
-     * Load user name from Firestore and set greeting text
-     */
     private void loadUserNameAndSetGreeting(TextView greetingText) {
         if (auth.getCurrentUser() != null) {
             db.collection("users")
@@ -83,26 +79,33 @@ public class ProviderHomeFragment extends ProtectedFragment {
                         }
                     })
                     .addOnFailureListener(e -> {
-                        // Keep default greeting if Firestore fails
                     });
         }
     }
 
-    /**
-     * Show tutorial dialog with provider-specific content
-     */
     private void showTutorial() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle(R.string.tutorial_title)
-                .setMessage(R.string.provider_tutorial_content)
-                .setPositiveButton(R.string.tutorial_got_it, null)
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_provider_tutorial, null);
+        TextView tutorialContent = dialogView.findViewById(R.id.textTutorialContent);
+        Button gotItButton = dialogView.findViewById(R.id.buttonGotIt);
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            tutorialContent.setText(Html.fromHtml(getString(R.string.provider_tutorial_content), Html.FROM_HTML_MODE_LEGACY));
+        } else {
+            tutorialContent.setText(Html.fromHtml(getString(R.string.provider_tutorial_content)));
+        }
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
                 .setCancelable(true)
-                .show();
+                .create();
+
+        gotItButton.setOnClickListener(v -> dialog.dismiss());
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+        dialog.show();
     }
 
-    /**
-     * Show tutorial if it's the first time for provider role
-     */
     private void showTutorialIfFirstTime() {
         SharedPreferences prefs = requireContext().getSharedPreferences("tutorial_prefs", Context.MODE_PRIVATE);
         String key = "tutorial_seen_provider";
@@ -112,11 +115,7 @@ public class ProviderHomeFragment extends ProtectedFragment {
         }
     }
 
-    /**
-     * Common sign out functionality
-     */
     private void signOutAndReturnToHome() {
-        // Clear cached role data before signing out
         SharedPreferences prefs = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
         if (auth.getCurrentUser() != null) {
             prefs.edit().remove("user_role_" + auth.getCurrentUser().getUid()).apply();
@@ -130,9 +129,6 @@ public class ProviderHomeFragment extends ProtectedFragment {
                 .commit();
     }
 
-    /**
-     * Show user details dialog for editing profile
-     */
     private void showUserDetailsDialog() {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_user_details, null);
         TextView emailText = dialogView.findViewById(R.id.textUserEmail);
@@ -141,10 +137,8 @@ public class ProviderHomeFragment extends ProtectedFragment {
         Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
 
         if (auth.getCurrentUser() != null) {
-            // Set email
             emailText.setText(auth.getCurrentUser().getEmail());
             
-            // Load name from Firestore
             db.collection("users")
                     .document(auth.getCurrentUser().getUid())
                     .get()
@@ -163,6 +157,10 @@ public class ProviderHomeFragment extends ProtectedFragment {
                 .setCancelable(true)
                 .create();
 
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
         saveButton.setOnClickListener(v -> {
             String newName = nameEdit.getText().toString().trim();
             if (!newName.isEmpty() && auth.getCurrentUser() != null) {
@@ -172,7 +170,6 @@ public class ProviderHomeFragment extends ProtectedFragment {
                         .addOnSuccessListener(aVoid -> {
                             Toast.makeText(requireContext(), R.string.name_saved, Toast.LENGTH_SHORT).show();
                             dialog.dismiss();
-                            // Refresh greeting
                             View fragmentView = getView();
                             if (fragmentView != null) {
                                 TextView greetingText = fragmentView.findViewById(R.id.textGreeting);
@@ -201,6 +198,10 @@ public class ProviderHomeFragment extends ProtectedFragment {
                 .setView(dialogView)
                 .setCancelable(true)
                 .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
         acceptButton.setOnClickListener(v -> {
             String inviteCode = inviteCodeEdit.getText().toString().trim().toUpperCase();

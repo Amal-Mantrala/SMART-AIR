@@ -3,16 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="@drawable/gradient_bg"
+    android:padding="20dp">
 
     <TextView
         android:id="@+id/textTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Children Management"
-        android:textSize="24sp"
+        android:textSize="28sp"
         android:textStyle="bold"
-        android:textColor="@android:color/black"
+        android:textColor="@android:color/white"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -23,8 +24,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Manage all your children's accounts and view their health history"
-        android:textSize="16sp"
-        android:textColor="@android:color/darker_gray"
+        android:textSize="17sp"
+        android:textColor="#E0E0E0"
         android:gravity="center"
         app:layout_constraintTop_toBottomOf="@+id/textTitle"
         app:layout_constraintStart_toStartOf="parent"
@@ -42,22 +43,30 @@
         app:layout_constraintBottom_toTopOf="@+id/buttonBack">
 
         <Button
-            android:id="@+id/buttonAddChild"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Add Child"
-            android:textSize="16sp"
-            android:layout_marginBottom="16dp"
-            android:padding="16dp"/>
-
-        <Button
             android:id="@+id/buttonManageChildren"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Manage Children"
-            android:textSize="16sp"
-            android:layout_marginBottom="16dp"
-            android:padding="16dp"/>
+            android:textSize="17sp"
+            android:background="@drawable/btn_signin"
+            android:textColor="@android:color/white"
+            android:paddingVertical="16dp"
+            android:layout_marginBottom="12dp"
+            android:elevation="4dp"
+            android:stateListAnimator="@null"/>
+
+        <Button
+            android:id="@+id/buttonAddChild"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add Child"
+            android:textSize="17sp"
+            android:background="@drawable/btn_signin"
+            android:textColor="@android:color/white"
+            android:paddingVertical="16dp"
+            android:layout_marginBottom="12dp"
+            android:elevation="4dp"
+            android:stateListAnimator="@null"/>
 
     </LinearLayout>
 
@@ -66,11 +75,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Back to Dashboard"
-        android:textSize="16sp"
-        android:backgroundTint="@android:color/darker_gray"
+        android:textSize="17sp"
+        android:background="@drawable/btn_signin"
+        android:textColor="@android:color/white"
+        android:paddingVertical="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="16dp"
+        android:elevation="4dp"
+        android:stateListAnimator="@null"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

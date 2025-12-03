@@ -4,8 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@android:color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -37,8 +38,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Red flags present"
-            android:textSize="12sp"
-            android:textColor="@android:color/darker_gray" />
+            android:textSize="14sp"
+            android:textColor="#2D2D2D"
+            android:lineSpacingMultiplier="1.2" />
 
     </LinearLayout>
 

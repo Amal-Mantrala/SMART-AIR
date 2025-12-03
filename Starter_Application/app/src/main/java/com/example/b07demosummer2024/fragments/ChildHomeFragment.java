@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -208,12 +209,27 @@ public class ChildHomeFragment extends ProtectedFragment {
     }
 
     private void showTutorial() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle(R.string.tutorial_title)
-                .setMessage(R.string.child_tutorial_content)
-                .setPositiveButton(R.string.tutorial_got_it, null)
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_child_tutorial, null);
+        TextView tutorialContent = dialogView.findViewById(R.id.textTutorialContent);
+        Button gotItButton = dialogView.findViewById(R.id.buttonGotIt);
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            tutorialContent.setText(Html.fromHtml(getString(R.string.child_tutorial_content), Html.FROM_HTML_MODE_LEGACY));
+        } else {
+            tutorialContent.setText(Html.fromHtml(getString(R.string.child_tutorial_content)));
+        }
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
                 .setCancelable(true)
-                .show();
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        gotItButton.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 
     private void showUserDetailsDialog() {
@@ -244,6 +260,10 @@ public class ChildHomeFragment extends ProtectedFragment {
                 .setView(dialogView)
                 .setCancelable(true)
                 .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
         saveButton.setOnClickListener(v -> {
             String name = nameEdit.getText().toString().trim();
@@ -336,6 +356,10 @@ public class ChildHomeFragment extends ProtectedFragment {
                 .setView(dialogView)
                 .setCancelable(true)
                 .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
         saveButton.setOnClickListener(v -> {
             String medicineName = medicineNameEdit.getText().toString().trim();
@@ -458,6 +482,10 @@ public class ChildHomeFragment extends ProtectedFragment {
                 .setCancelable(true)
                 .create();
 
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
         saveButton.setOnClickListener(v -> {
             List<String> symptoms = new ArrayList<>();
             if (checkWheezing.isChecked()) symptoms.add("Wheezing");
@@ -540,6 +568,7 @@ public class ChildHomeFragment extends ProtectedFragment {
         TextView sleepText = dialogView.findViewById(R.id.textSleepValue);
         EditText nightWakingEdit = dialogView.findViewById(R.id.editNightWaking);
         EditText rescueUsesEdit = dialogView.findViewById(R.id.editRescueUses);
+        CheckBox checkController = dialogView.findViewById(R.id.checkController);
         Spinner moodSpinner = dialogView.findViewById(R.id.spinnerMood);
         EditText notesEdit = dialogView.findViewById(R.id.editNotes);
         Button saveButton = dialogView.findViewById(R.id.buttonSave);
@@ -588,6 +617,10 @@ public class ChildHomeFragment extends ProtectedFragment {
                 .setCancelable(true)
                 .create();
 
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
         saveButton.setOnClickListener(v -> {
             String rescueUsesStr = rescueUsesEdit.getText().toString().trim();
             if (rescueUsesStr.isEmpty()) rescueUsesStr = "0";
@@ -605,6 +638,10 @@ public class ChildHomeFragment extends ProtectedFragment {
                 wellnessLog.setBreathingEase(breathingSeekBar.getProgress() + 1);
                 wellnessLog.setSleepQuality(sleepSeekBar.getProgress() + 1);
                 wellnessLog.setRescueInhalerUses(rescueUses);
+                boolean tookController = checkController != null ? checkController.isChecked() : false;
+                wellnessLog.setMorningController(tookController);
+                wellnessLog.setEveningController(tookController);
+                android.util.Log.d("DailyCheckIn", "Controller checked: " + tookController);
                 wellnessLog.setMood(moodSpinner.getSelectedItem().toString());
                 wellnessLog.setEnteredBy("child");
                 String notes = notesEdit.getText().toString().trim();
@@ -673,6 +710,10 @@ public class ChildHomeFragment extends ProtectedFragment {
                 .setView(dialogView)
                 .setCancelable(true)
                 .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
         String childId = ImpersonationService.getActiveChildId(requireContext());
         TriageService triageService = new TriageService();
@@ -900,42 +941,48 @@ public class ChildHomeFragment extends ProtectedFragment {
 
         EditText pefInput = dialogView.findViewById(R.id.editTextPef);
         RadioGroup medGroup = dialogView.findViewById(R.id.radioGroupMedType);
+        Button saveButton = dialogView.findViewById(R.id.buttonSave);
+        Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
 
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Add PEF")
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setView(dialogView)
-                .setPositiveButton("Save", (dialog, which) -> {
-                    String pefText = pefInput.getText().toString().trim();
+                .setCancelable(true)
+                .create();
 
-                    if (pefText.isEmpty()) {
-                        Toast.makeText(getContext(), "Please enter a PEF value", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
-                    int selectedId = medGroup.getCheckedRadioButtonId();
-                    if (selectedId == -1) {
-                        Toast.makeText(getContext(), "Please select pre-med or post-med", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+        saveButton.setOnClickListener(v -> {
+            String pefText = pefInput.getText().toString().trim();
 
-                    String medType = (selectedId == R.id.radioPreMed) ? "pre" : "post";
+            if (pefText.isEmpty()) {
+                pefInput.setError("Please enter a PEF value");
+                return;
+            }
 
-                    int pefValue;
-                    try {
-                        pefValue = Integer.parseInt(pefText);
-                    } catch (NumberFormatException e) {
-                        Toast.makeText(getContext(), "PEF must be a number", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+            int selectedId = medGroup.getCheckedRadioButtonId();
+            if (selectedId == -1) {
+                Toast.makeText(getContext(), "Please select pre-med or post-med", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-                    if (pefValue <=0 || pefValue > 800) {
-                        Toast.makeText(getContext(), "PEF must be a number between 0 and 800", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+            String medType = (selectedId == R.id.radioPreMed) ? "pre" : "post";
 
+            int pefValue;
+            try {
+                pefValue = Integer.parseInt(pefText);
+            } catch (NumberFormatException e) {
+                pefInput.setError("PEF must be a number");
+                return;
+            }
 
+            if (pefValue <=0 || pefValue > 800) {
+                pefInput.setError("PEF must be between 0 and 800");
+                return;
+            }
 
-                    FirebaseFirestore db = FirebaseFirestore.getInstance();
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
                     String uid = ImpersonationService.getActiveChildId(requireContext());
 
                     String timestamp = String.valueOf(System.currentTimeMillis());
@@ -968,16 +1015,16 @@ public class ChildHomeFragment extends ProtectedFragment {
                                     }
                             });
 
-                    db.collection("users")
-                            .document(uid)
-                            .get()
-                            .addOnSuccessListener(snapshot -> {
+            db.collection("users")
+                    .document(uid)
+                    .get()
+                    .addOnSuccessListener(snapshot -> {
 
-                                Long existingPb = snapshot.getLong("pb");
-                                long newPb = (existingPb == null) ? pefValue :
-                                        Math.max(existingPb, pefValue);
+                        Long existingPb = snapshot.getLong("pb");
+                        long newPb = (existingPb == null) ? pefValue :
+                                Math.max(existingPb, pefValue);
 
-                                // First update PB
+                        // First update PB
                                 db.collection("users")
                                         .document(uid)
                                         .update("pb", newPb)
@@ -1026,14 +1073,16 @@ public class ChildHomeFragment extends ProtectedFragment {
                                                     .update("zone", zone, "lastZoneDate", today);
 
                                             // Update UI
-                                            zoneText.setText("Zone: " + zone);
+                                            zoneText.setText(zone);
                                             updateZoneUI(zone);
                                         });
                             });
 
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+            dialog.dismiss();
+        });
+
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 
     private void updateZoneUI(String zone) {
@@ -1046,6 +1095,9 @@ public class ChildHomeFragment extends ProtectedFragment {
                 break;
             case "Red":
                 zoneText.setTextColor(Color.parseColor("#e74c3c")); // red
+                break;
+            default:
+                zoneText.setTextColor(Color.parseColor("#888888")); // grey for "--"
                 break;
         }
     }
@@ -1070,7 +1122,7 @@ public class ChildHomeFragment extends ProtectedFragment {
 
                         if (lastZoneDate == null || !lastZoneDate.equals(today)) {
                             // New day — reset zone
-                            zoneText.setText("Zone: --");
+                            zoneText.setText("--");
                             updateZoneUI("none");
 
                             // reset value in Firestore too
@@ -1081,10 +1133,10 @@ public class ChildHomeFragment extends ProtectedFragment {
                         } else {
                             // Same day — show stored zone
                             if (zone != null) {
-                                zoneText.setText("Zone: " + zone);
+                                zoneText.setText(zone);
                                 updateZoneUI(zone);
                             } else {
-                                zoneText.setText("Zone: --");
+                                zoneText.setText("--");
                                 updateZoneUI("none");
                             }
                         }
@@ -1117,6 +1169,10 @@ public class ChildHomeFragment extends ProtectedFragment {
                     .setView(dialogView)
                     .setCancelable(true)
                     .create();
+
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            }
 
             // Set loading values first
             controllerStreakCount.setText("Calculating...");
@@ -1334,6 +1390,10 @@ public class ChildHomeFragment extends ProtectedFragment {
                     .setView(dialogView)
                     .setCancelable(true)
                     .create();
+
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            }
 
             // Set default values
             setDefaultSettingsValues(controllerThreshold, techniqueThreshold, perfectWeekDays, 

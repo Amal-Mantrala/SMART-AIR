@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:maxHeight="500dp"
+    android:background="@drawable/dialog_rounded_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="28dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tutorial_title"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:layout_marginBottom="20dp" />
+
+        <TextView
+            android:id="@+id/textTutorialContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/child_tutorial_content"
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:lineSpacingMultiplier="1.3"
+            android:layout_marginBottom="24dp" />
+
+        <Button
+            android:id="@+id/buttonGotIt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/tutorial_got_it"
+            android:textSize="17sp"
+            android:background="@drawable/btn_signin"
+            android:textColor="@android:color/white"
+            android:paddingVertical="14dp"
+            android:elevation="2dp"
+            android:stateListAnimator="@null"
+            android:layout_gravity="end" />
+
+    </LinearLayout>
+
+</ScrollView>

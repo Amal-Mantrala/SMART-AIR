@@ -83,6 +83,10 @@ public class ChildInventoryFragment extends Fragment implements InventoryAdapter
                 .setView(dialogView)
                 .create();
 
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
         saveButton.setOnClickListener(v -> {
             String dosesLeftStr = dosesLeftEdit.getText().toString().trim();
             if (dosesLeftStr.isEmpty()) {

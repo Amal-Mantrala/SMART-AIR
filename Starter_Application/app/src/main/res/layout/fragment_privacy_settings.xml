@@ -3,16 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="@drawable/gradient_bg"
+    android:padding="20dp">
 
     <TextView
         android:id="@+id/textPrivacyTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Privacy &amp; Sharing"
-        android:textSize="24sp"
+        android:textSize="28sp"
         android:textStyle="bold"
-        android:textColor="@android:color/black"
+        android:textColor="@android:color/white"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -23,60 +24,100 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Privacy Defaults"
+        android:textSize="17sp"
+        android:background="@drawable/btn_signin"
+        android:textColor="@android:color/white"
+        android:paddingVertical="16dp"
         app:layout_constraintTop_toBottomOf="@+id/textPrivacyTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="24dp"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="20dp"
+        android:elevation="4dp"
+        android:stateListAnimator="@null"/>
 
     <Button
         android:id="@+id/buttonSharingControls"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Sharing Controls"
+        android:textSize="17sp"
+        android:background="@drawable/btn_signin"
+        android:textColor="@android:color/white"
+        android:paddingVertical="16dp"
         app:layout_constraintTop_toBottomOf="@+id/buttonPrivacyDefaults"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:elevation="4dp"
+        android:stateListAnimator="@null"/>
 
     <Button
         android:id="@+id/buttonProviderInvites"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Provider Invites"
+        android:textSize="17sp"
+        android:background="@drawable/btn_signin"
+        android:textColor="@android:color/white"
+        android:paddingVertical="16dp"
         app:layout_constraintTop_toBottomOf="@+id/buttonSharingControls"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:elevation="4dp"
+        android:stateListAnimator="@null"/>
 
     <Button
         android:id="@+id/buttonManageSharing"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Manage Provider Sharing"
+        android:textSize="17sp"
+        android:background="@drawable/btn_signin"
+        android:textColor="@android:color/white"
+        android:paddingVertical="16dp"
         app:layout_constraintTop_toBottomOf="@+id/buttonProviderInvites"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:elevation="4dp"
+        android:stateListAnimator="@null"/>
 
     <Button
         android:id="@+id/buttonInviteProvider"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Invite Provider"
+        android:textSize="17sp"
+        android:background="@drawable/btn_signin"
+        android:textColor="@android:color/white"
+        android:paddingVertical="16dp"
         app:layout_constraintTop_toBottomOf="@+id/buttonManageSharing"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:elevation="4dp"
+        android:stateListAnimator="@null"/>
 
     <Button
         android:id="@+id/buttonBack"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/back"
+        android:textSize="17sp"
+        android:background="@drawable/btn_signin"
+        android:textColor="@android:color/white"
+        android:paddingVertical="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="16dp"
+        android:elevation="4dp"
+        android:stateListAnimator="@null"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

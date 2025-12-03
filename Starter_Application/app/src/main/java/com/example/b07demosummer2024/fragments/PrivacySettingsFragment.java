@@ -6,6 +6,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -75,30 +76,69 @@ public class PrivacySettingsFragment extends Fragment {
     }
 
     private void showPrivacyDefaultsDialog() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Privacy Defaults")
-                .setMessage(privacyService.getPrivacyDefaultsExplanation())
-                .setPositiveButton("OK", null)
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_privacy_defaults, null);
+        TextView contentText = dialogView.findViewById(R.id.textPrivacyContent);
+        Button okButton = dialogView.findViewById(R.id.buttonOK);
+
+        String content = privacyService.getPrivacyDefaultsExplanation();
+        content = content.replace("\n", "<br>");
+        contentText.setText(Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY));
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
                 .setCancelable(true)
-                .show();
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        okButton.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 
     private void showSharingControlsDialog() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Sharing Controls")
-                .setMessage(privacyService.getSharingControlsExplanation())
-                .setPositiveButton("OK", null)
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_sharing_controls, null);
+        TextView contentText = dialogView.findViewById(R.id.textSharingContent);
+        Button okButton = dialogView.findViewById(R.id.buttonOK);
+
+        String content = privacyService.getSharingControlsExplanation();
+        content = content.replace("\n", "<br>");
+        contentText.setText(Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY));
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
                 .setCancelable(true)
-                .show();
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        okButton.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 
     private void showProviderInvitesDialog() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Provider Invites")
-                .setMessage(privacyService.getProviderInvitesExplanation())
-                .setPositiveButton("OK", null)
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_provider_invites_info, null);
+        TextView contentText = dialogView.findViewById(R.id.textInvitesContent);
+        Button okButton = dialogView.findViewById(R.id.buttonOK);
+
+        String content = privacyService.getProviderInvitesExplanation();
+        content = content.replace("\n", "<br>");
+        contentText.setText(Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY));
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
                 .setCancelable(true)
-                .show();
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        okButton.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 
     private void showInviteProviderDialog() {
@@ -125,6 +165,10 @@ public class PrivacySettingsFragment extends Fragment {
                 .setView(dialogView)
                 .setCancelable(true)
                 .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
         final ProviderInvite[] generatedInvite = {null};
 

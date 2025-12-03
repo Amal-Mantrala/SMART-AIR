@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -255,38 +256,45 @@ public class ParentHomeFragment extends ProtectedFragment {
                             alertText.append("Time: ").append(timeStr).append("\n\n");
                         }
 
+                        View dialogView = getLayoutInflater().inflate(R.layout.dialog_parent_alerts, null);
+                        TextView alertsContent = dialogView.findViewById(R.id.textAlertsContent);
+                        Button markAsReadButton = dialogView.findViewById(R.id.buttonMarkAsRead);
+                        Button closeButton = dialogView.findViewById(R.id.buttonClose);
+
+                        alertsContent.setText(alertText.toString());
+
                         AlertDialog alertDialog = new AlertDialog.Builder(requireContext())
-                                .setTitle(getString(R.string.parent_alerts))
-                                .setMessage(alertText.toString())
-                                .setPositiveButton("Mark as Read", null)
-                                .setNegativeButton("Close", null)
+                                .setView(dialogView)
+                                .setCancelable(true)
                                 .create();
-                        
-                        alertDialog.setOnShowListener(dialog -> {
-                            Button markAsReadButton = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-                            markAsReadButton.setOnClickListener(v -> {
-                                for (Map<String, Object> alert : alerts) {
-                                    String alertId = (String) alert.get("alertId");
-                                    if (alertId != null) {
-                                        db.collection("parentAlerts")
-                                                .document(alertId)
-                                                .update("read", true);
-                                    }
+
+                        if (alertDialog.getWindow() != null) {
+                            alertDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+                        }
+
+                        markAsReadButton.setOnClickListener(v -> {
+                            for (Map<String, Object> alert : alerts) {
+                                String alertId = (String) alert.get("alertId");
+                                if (alertId != null) {
+                                    db.collection("parentAlerts")
+                                            .document(alertId)
+                                            .update("read", true);
                                 }
-                                
-                                if (isAdded() && getView() != null) {
-                                    Button alertButton = getView().findViewById(R.id.buttonViewAlerts);
-                                    if (alertButton != null) {
-                                        alertButton.setText(getString(R.string.parent_alerts));
-                                        checkForAlerts(alertButton);
-                                    }
+                            }
+                            
+                            if (isAdded() && getView() != null) {
+                                Button alertButton = getView().findViewById(R.id.buttonViewAlerts);
+                                if (alertButton != null) {
+                                    alertButton.setText(getString(R.string.parent_alerts));
+                                    checkForAlerts(alertButton);
                                 }
-                                
-                                Toast.makeText(requireContext(), "Alerts marked as read", Toast.LENGTH_SHORT).show();
-                                alertDialog.dismiss();
-                            });
+                            }
+                            
+                            Toast.makeText(requireContext(), "Alerts marked as read", Toast.LENGTH_SHORT).show();
+                            alertDialog.dismiss();
                         });
-                        
+
+                        closeButton.setOnClickListener(v -> alertDialog.dismiss());
                         alertDialog.show();
                     } else {
                         Exception e = task.getException();
@@ -346,12 +354,23 @@ public class ParentHomeFragment extends ProtectedFragment {
     }
 
     private void showTutorial() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle(R.string.tutorial_title)
-                .setMessage(R.string.parent_tutorial_content)
-                .setPositiveButton(R.string.tutorial_got_it, null)
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_parent_tutorial, null);
+        TextView tutorialContent = dialogView.findViewById(R.id.textTutorialContent);
+        Button gotItButton = dialogView.findViewById(R.id.buttonGotIt);
+
+        tutorialContent.setText(android.text.Html.fromHtml(getString(R.string.parent_tutorial_content), android.text.Html.FROM_HTML_MODE_LEGACY));
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
                 .setCancelable(true)
-                .show();
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        gotItButton.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 
     private void showUserDetailsDialog() {
@@ -385,6 +404,10 @@ public class ParentHomeFragment extends ProtectedFragment {
                 .setView(dialogView)
                 .setCancelable(true)
                 .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
         saveButton.setOnClickListener(v -> {
             String name = nameEdit.getText().toString().trim();
@@ -481,35 +504,45 @@ public class ParentHomeFragment extends ProtectedFragment {
 
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_set_pb, null);
         EditText pbInput = dialogView.findViewById(R.id.editPBValue);
+        Button saveButton = dialogView.findViewById(R.id.buttonSave);
+        Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
 
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Set Personal Best (PB)")
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setView(dialogView)
-                .setPositiveButton("Save", (dialog, which) -> {
-                    String text = pbInput.getText().toString().trim();
+                .setCancelable(true)
+                .create();
 
-                    if (text.isEmpty()) {
-                        Toast.makeText(getContext(), "PB cannot be empty", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
-                    int pbValue;
-                    try {
-                        pbValue = Integer.parseInt(text);
-                    } catch (NumberFormatException e) {
-                        Toast.makeText(getContext(), "PB must be a number", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+        saveButton.setOnClickListener(v -> {
+            String text = pbInput.getText().toString().trim();
 
-                    if (pbValue <=0 || pbValue > 800) {
-                        Toast.makeText(getContext(), "PB must be a number between 0 and 800", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+            if (text.isEmpty()) {
+                pbInput.setError("PB cannot be empty");
+                return;
+            }
 
-                    savePBToFirestore(selectedChildUid, pbValue);
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+            int pbValue;
+            try {
+                pbValue = Integer.parseInt(text);
+            } catch (NumberFormatException e) {
+                pbInput.setError("PB must be a number");
+                return;
+            }
+
+            if (pbValue <= 0 || pbValue > 800) {
+                pbInput.setError("PB must be between 1 and 800");
+                return;
+            }
+
+            savePBToFirestore(selectedChildUid, pbValue);
+            dialog.dismiss();
+        });
+
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 
     private void savePBToFirestore(String childUid, int pbValue) {
@@ -540,6 +573,10 @@ public class ParentHomeFragment extends ProtectedFragment {
                 .setView(dialogView)
                 .setCancelable(true)
                 .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
         closeButton.setOnClickListener(v -> dialog.dismiss());
 

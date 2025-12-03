@@ -1,61 +1,165 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="16dp">
-
-    <EditText
-        android:id="@+id/editChildName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Child\'s Name" />
-
-    <EditText
-        android:id="@+id/editChildUsername"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Username" />
-
-    <EditText
-        android:id="@+id/editChildPassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Password"
-        android:inputType="textPassword" />
-
-    <DatePicker
-        android:id="@+id/datePickerExpiry"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:calendarViewShown="false"
-        android:datePickerMode="spinner"/>
-
-    <EditText
-        android:id="@+id/editChildNote"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Optional note (e.g., allergies)"
-        android:inputType="textCapSentences" />
+    android:maxHeight="600dp"
+    android:background="@drawable/dialog_rounded_background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:padding="28dp">
 
-        <Button
-            android:id="@+id/buttonCancel"
-            android:layout_width="0dp"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Cancel" />
+            android:text="Add Child"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:layout_marginBottom="20dp" />
 
-        <Button
-            android:id="@+id/buttonSave"
-            android:layout_width="0dp"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Save" />
+            android:text="Child's Name"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp" />
+
+        <EditText
+            android:id="@+id/editChildName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Child's Name"
+            android:textSize="16sp"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="#1A1A1A"
+            android:textColorHint="#999999"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Username"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp" />
+
+        <EditText
+            android:id="@+id/editChildUsername"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Username"
+            android:textSize="16sp"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="#1A1A1A"
+            android:textColorHint="#999999"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Password"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp" />
+
+        <EditText
+            android:id="@+id/editChildPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:textSize="16sp"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="#1A1A1A"
+            android:textColorHint="#999999"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Date of Birth"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp" />
+
+        <DatePicker
+            android:id="@+id/datePickerExpiry"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:calendarViewShown="false"
+            android:datePickerMode="spinner"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Optional Note"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp" />
+
+        <EditText
+            android:id="@+id/editChildNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Optional note (e.g., allergies)"
+            android:inputType="textCapSentences"
+            android:textSize="16sp"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="#1A1A1A"
+            android:textColorHint="#999999"
+            android:layout_marginBottom="24dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/buttonCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cancel"
+                android:textSize="16sp"
+                android:textColor="#8E7CFF"
+                android:background="@android:color/transparent"
+                android:paddingVertical="12dp"
+                android:paddingHorizontal="20dp"
+                android:layout_marginEnd="12dp" />
+
+            <Button
+                android:id="@+id/buttonSave"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Save"
+                android:textSize="16sp"
+                android:background="@drawable/btn_signin"
+                android:textColor="@android:color/white"
+                android:paddingVertical="12dp"
+                android:paddingHorizontal="24dp"
+                android:elevation="2dp"
+                android:stateListAnimator="@null" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
-</LinearLayout>
+</ScrollView>

@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:maxHeight="600dp"
+    android:background="@drawable/dialog_rounded_background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="28dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/log_daily_checkin"
-            android:textSize="20sp"
+            android:textSize="24sp"
             android:textStyle="bold"
+            android:textColor="#1A1A1A"
             android:layout_marginBottom="20dp" />
 
         <TextView
@@ -22,6 +25,9 @@
             android:layout_height="wrap_content"
             android:text="@string/energy_level"
             android:textStyle="bold"
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:layout_marginTop="4dp"
             android:layout_marginBottom="8dp" />
 
         <SeekBar
@@ -46,6 +52,9 @@
             android:layout_height="wrap_content"
             android:text="@string/breathing_ease"
             android:textStyle="bold"
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp" />
 
         <SeekBar
@@ -70,6 +79,9 @@
             android:layout_height="wrap_content"
             android:text="@string/sleep_quality_last_night"
             android:textStyle="bold"
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp" />
 
         <SeekBar
@@ -94,7 +106,10 @@
             android:layout_height="wrap_content"
             android:text="@string/night_waking"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="6dp" />
 
         <EditText
             android:id="@+id/editNightWaking"
@@ -102,6 +117,12 @@
             android:layout_height="wrap_content"
             android:hint="Number of times (0 if none)"
             android:inputType="number"
+            android:textSize="16sp"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="#1A1A1A"
+            android:textColorHint="#999999"
             android:layout_marginBottom="16dp" />
 
         <TextView
@@ -109,7 +130,9 @@
             android:layout_height="wrap_content"
             android:text="@string/rescue_inhaler_uses_today"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp" />
 
         <EditText
             android:id="@+id/editRescueUses"
@@ -117,6 +140,19 @@
             android:layout_height="wrap_content"
             android:hint="@string/rescue_uses_hint"
             android:inputType="number"
+            android:textSize="16sp"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="#1A1A1A"
+            android:textColorHint="#999999"
+            android:layout_marginBottom="16dp" />
+
+        <CheckBox
+            android:id="@+id/checkController"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Took controller medication today"
             android:layout_marginBottom="16dp" />
 
         <TextView
@@ -124,12 +160,19 @@
             android:layout_height="wrap_content"
             android:text="@string/mood"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="6dp" />
 
         <Spinner
             android:id="@+id/spinnerMood"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@drawable/spinner_background"
+            android:paddingVertical="10dp"
+            android:paddingHorizontal="12dp"
+            android:minHeight="44dp"
             android:layout_marginBottom="16dp" />
 
         <TextView
@@ -137,7 +180,9 @@
             android:layout_height="wrap_content"
             android:text="@string/notes"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp" />
 
         <EditText
             android:id="@+id/editNotes"
@@ -146,7 +191,13 @@
             android:hint="@string/notes_checkin"
             android:gravity="top"
             android:inputType="textMultiLine"
-            android:layout_marginBottom="16dp" />
+            android:textSize="16sp"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="#1A1A1A"
+            android:textColorHint="#999999"
+            android:layout_marginBottom="24dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -159,14 +210,25 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/cancel"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_marginEnd="8dp" />
+                android:textSize="16sp"
+                android:textColor="#8E7CFF"
+                android:background="@android:color/transparent"
+                android:paddingVertical="12dp"
+                android:paddingHorizontal="20dp"
+                android:layout_marginEnd="12dp" />
 
             <Button
                 android:id="@+id/buttonSave"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/save_checkin" />
+                android:text="@string/save_checkin"
+                android:textSize="16sp"
+                android:background="@drawable/btn_signin"
+                android:textColor="@android:color/white"
+                android:paddingVertical="12dp"
+                android:paddingHorizontal="24dp"
+                android:elevation="2dp"
+                android:stateListAnimator="@null" />
 
         </LinearLayout>
 

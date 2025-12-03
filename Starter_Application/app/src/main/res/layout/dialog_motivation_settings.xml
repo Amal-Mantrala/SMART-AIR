@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:maxHeight="600dp"
+    android:background="@drawable/dialog_rounded_background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="28dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/motivation_settings"
-            android:textSize="20sp"
+            android:textSize="24sp"
             android:textStyle="bold"
+            android:textColor="#1A1A1A"
             android:layout_marginBottom="20dp" />
 
         <!-- Streak Thresholds Section -->
@@ -22,8 +25,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/streak_thresholds"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:textStyle="bold"
+            android:textColor="#1A1A1A"
             android:layout_marginBottom="12dp" />
 
         <!-- Controller Streak Threshold -->
@@ -32,7 +36,9 @@
             android:layout_height="wrap_content"
             android:text="@string/controller_streak_threshold"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp" />
 
         <EditText
             android:id="@+id/editControllerStreakThreshold"
@@ -41,6 +47,12 @@
             android:hint="@string/days"
             android:inputType="number"
             android:text="7"
+            android:textSize="16sp"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="#1A1A1A"
+            android:textColorHint="#999999"
             android:layout_marginBottom="16dp" />
 
         <!-- Technique Streak Threshold -->
@@ -49,7 +61,9 @@
             android:layout_height="wrap_content"
             android:text="@string/technique_streak_threshold"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp" />
 
         <EditText
             android:id="@+id/editTechniqueStreakThreshold"
@@ -58,6 +72,12 @@
             android:hint="@string/days"
             android:inputType="number"
             android:text="5"
+            android:textSize="16sp"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="#1A1A1A"
+            android:textColorHint="#999999"
             android:layout_marginBottom="20dp" />
 
         <!-- Badge Thresholds Section -->
@@ -65,8 +85,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/badge_thresholds"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:layout_marginTop="8dp"
             android:layout_marginBottom="12dp" />
 
         <!-- Perfect Controller Week -->
@@ -75,7 +97,9 @@
             android:layout_height="wrap_content"
             android:text="@string/perfect_controller_week_days"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp" />
 
         <EditText
             android:id="@+id/editPerfectWeekDays"
@@ -84,6 +108,12 @@
             android:hint="@string/days"
             android:inputType="number"
             android:text="7"
+            android:textSize="16sp"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="#1A1A1A"
+            android:textColorHint="#999999"
             android:layout_marginBottom="16dp" />
 
         <!-- Technique Master Sessions -->
@@ -92,7 +122,9 @@
             android:layout_height="wrap_content"
             android:text="@string/technique_master_sessions"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp" />
 
         <EditText
             android:id="@+id/editTechniqueSessions"
@@ -101,6 +133,12 @@
             android:hint="@string/sessions"
             android:inputType="number"
             android:text="10"
+            android:textSize="16sp"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="#1A1A1A"
+            android:textColorHint="#999999"
             android:layout_marginBottom="16dp" />
 
         <!-- Low Rescue Month Limit -->
@@ -109,7 +147,9 @@
             android:layout_height="wrap_content"
             android:text="@string/low_rescue_month_limit"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp" />
 
         <EditText
             android:id="@+id/editLowRescueLimit"
@@ -118,6 +158,12 @@
             android:hint="@string/max_rescue_days"
             android:inputType="number"
             android:text="4"
+            android:textSize="16sp"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="#1A1A1A"
+            android:textColorHint="#999999"
             android:layout_marginBottom="16dp" />
 
         <!-- Low Rescue Tracking Period -->
@@ -126,7 +172,9 @@
             android:layout_height="wrap_content"
             android:text="@string/low_rescue_tracking_period"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp" />
 
         <EditText
             android:id="@+id/editLowRescuePeriod"
@@ -135,6 +183,12 @@
             android:hint="@string/days"
             android:inputType="number"
             android:text="30"
+            android:textSize="16sp"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="#1A1A1A"
+            android:textColorHint="#999999"
             android:layout_marginBottom="20dp" />
 
         <!-- Notification Settings -->
@@ -142,8 +196,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/notification_settings"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:layout_marginTop="8dp"
             android:layout_marginBottom="12dp" />
 
         <CheckBox
@@ -182,14 +238,25 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/cancel"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_marginEnd="8dp" />
+                android:textSize="16sp"
+                android:textColor="#8E7CFF"
+                android:background="@android:color/transparent"
+                android:paddingVertical="12dp"
+                android:paddingHorizontal="20dp"
+                android:layout_marginEnd="12dp" />
 
             <Button
                 android:id="@+id/buttonSave"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/save_settings" />
+                android:text="@string/save_settings"
+                android:textSize="16sp"
+                android:background="@drawable/btn_signin"
+                android:textColor="@android:color/white"
+                android:paddingVertical="12dp"
+                android:paddingHorizontal="24dp"
+                android:elevation="2dp"
+                android:stateListAnimator="@null" />
 
         </LinearLayout>
 
