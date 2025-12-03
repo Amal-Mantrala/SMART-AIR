@@ -1,57 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@drawable/gradient_bg">
 
-    <EditText
-        android:id="@+id/signupName"
+    <LinearLayout
+        android:id="@+id/signup_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/name_hint"
-        android:autofillHints=""
-        android:inputType="textPersonName" />
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:layout_marginHorizontal="32dp"
+        android:padding="28dp"
+        android:background="@drawable/round_card"
+        android:elevation="8dp">
 
-    <EditText
-        android:id="@+id/signupEmail"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/email"
-        android:autofillHints=""
-        android:inputType="textEmailAddress"
-        android:layout_marginTop="12dp" />
+        <ImageView
+            android:id="@+id/signup_logo"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:src="@drawable/smart_air_logo"
+            android:layout_marginBottom="16dp"
+            android:layout_gravity="center" />
 
-    <EditText
-        android:id="@+id/signupPassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/password"
-        android:inputType="textPassword"
-        android:autofillHints=""
-        android:layout_marginTop="12dp" />
+        <TextView
+            android:id="@+id/signup_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Create Account"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:layout_marginBottom="4dp"
+            android:layout_gravity="center" />
 
-    <EditText
-        android:id="@+id/signupConfirmPassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/confirm_password"
-        android:inputType="textPassword"
-        android:autofillHints=""
-        android:layout_marginTop="12dp" />
+        <TextView
+            android:id="@+id/signup_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Join SMART AIR today"
+            android:textSize="15sp"
+            android:textColor="#555555"
+            android:layout_marginBottom="24dp"
+            android:layout_gravity="center" />
 
-    <Button
-        android:id="@+id/buttonCreateAccount"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/create_account"
-        android:layout_marginTop="16dp" />
+        <EditText
+            android:id="@+id/signupName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Full Name"
+            android:padding="14dp"
+            android:background="@drawable/input_field_bg"
+            android:textColor="#000000"
+            android:textColorHint="#888888"
+            android:layout_marginBottom="16dp" />
 
-    <TextView
-        android:id="@+id/textGoToLogin"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/already_have_an_account_log_in"
-        android:layout_marginTop="16dp" />
+        <EditText
+            android:id="@+id/signupEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Email"
+            android:padding="14dp"
+            android:background="@drawable/input_field_bg"
+            android:textColor="#000000"
+            android:textColorHint="#888888"
+            android:inputType="textEmailAddress"
+            android:layout_marginBottom="16dp" />
 
-</LinearLayout>
+        <EditText
+            android:id="@+id/signupPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Password"
+            android:padding="14dp"
+            android:background="@drawable/input_field_bg"
+            android:textColor="#000000"
+            android:textColorHint="#888888"
+            android:inputType="textPassword"
+            android:layout_marginBottom="16dp" />
+
+        <EditText
+            android:id="@+id/signupConfirmPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Confirm Password"
+            android:padding="14dp"
+            android:background="@drawable/input_field_bg"
+            android:textColor="#000000"
+            android:textColorHint="#888888"
+            android:inputType="textPassword"
+            android:layout_marginBottom="22dp" />
+
+        <Button
+            android:id="@+id/buttonCreateAccount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sign Up"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:background="@drawable/btn_signin"
+            android:layout_marginBottom="18dp" />
+
+        <TextView
+            android:id="@+id/textGoToLogin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Already have an account? Sign In"
+            android:textSize="15sp"
+            android:textColor="#444444"
+            android:layout_gravity="center" />
+
+    </LinearLayout>
+
+</RelativeLayout>
